@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GemSpots - Premium Crystal Planters with NFT Integration</title>
+    <meta name="description" content="Discover our exclusive collection of crystal planters. Each GemSpot comes with a unique NFT certificate and QR code for authenticity verification.">
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/animations.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <i class="fas fa-gem"></i>
+                <span>GemSpots</span>
+            </div>
+            <ul class="nav-menu" id="nav-menu">
+                <li class="nav-item">
+                    <a href="#home" class="nav-link active">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#gallery" class="nav-link">Gallery</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#about" class="nav-link">About</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#contact" class="nav-link">Contact</a>
+                </li>
+            </ul>
+            <div class="nav-toggle" id="nav-toggle">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="hero-background">
+            <div class="hero-particles"></div>
+        </div>
+        <div class="hero-content">
+            <div class="hero-text">
+                <h1 class="hero-title">
+                    <span class="title-line">Premium Crystal</span>
+                    <span class="title-line highlight">Planters</span>
+                    <span class="title-line">with NFT</span>
+                </h1>
+                <p class="hero-description">
+                    Discover our exclusive collection of handcrafted crystal planters. 
+                    Each piece comes with a unique NFT certificate and QR code for authenticity verification.
+                </p>
+                <div class="hero-buttons">
+                    <a href="#gallery" class="btn btn-primary">
+                        <span>Explore Collection</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                    <a href="#about" class="btn btn-secondary">
+                        <span>Learn More</span>
+                        <i class="fas fa-info-circle"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="crystal-showcase">
+                    <div class="crystal crystal-1">
+                        <div class="crystal-inner"></div>
+                    </div>
+                    <div class="crystal crystal-2">
+                        <div class="crystal-inner"></div>
+                    </div>
+                    <div class="crystal crystal-3">
+                        <div class="crystal-inner"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="scroll-indicator">
+            <div class="scroll-arrow">
+                <i class="fas fa-chevron-down"></i>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Why Choose GemSpots?</h2>
+                <p class="section-subtitle">Experience the perfect fusion of nature, technology, and luxury</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="100">
+                    <div class="feature-icon">
+                        <i class="fas fa-gem"></i>
+                    </div>
+                    <h3>Authentic Crystals</h3>
+                    <p>Hand-selected premium crystals with verified authenticity and natural beauty.</p>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="200">
+                    <div class="feature-icon">
+                        <i class="fas fa-qrcode"></i>
+                    </div>
+                    <h3>NFT Integration</h3>
+                    <p>Each planter comes with a unique NFT certificate and QR code for verification.</p>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="300">
+                    <div class="feature-icon">
+                        <i class="fas fa-leaf"></i>
+                    </div>
+                    <h3>Eco-Friendly</h3>
+                    <p>Sustainable materials and environmentally conscious manufacturing processes.</p>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="400">
+                    <div class="feature-icon">
+                        <i class="fas fa-magic"></i>
+                    </div>
+                    <h3>Energy Properties</h3>
+                    <p>Each crystal is carefully selected for its unique healing and energy properties to enhance your space.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Gallery Preview -->
+    <section id="gallery" class="gallery-preview">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Featured Collection</h2>
+                <p class="section-subtitle">Discover our most popular crystal planters</p>
+            </div>
+            <div class="gallery-grid" id="gallery-grid">
+                <!-- Gallery items will be loaded dynamically -->
+            </div>
+            <div class="gallery-cta">
+                <a href="/gallery" class="btn btn-primary">
+                    <span>View Full Gallery</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about">
+        <div class="container">
+            <div class="about-content">
+                <div class="about-text">
+                    <h2 class="section-title">About GemSpots</h2>
+                    <p class="about-description">
+                        We believe in the power of crystals to enhance your living space and bring positive energy into your life. 
+                        Our handcrafted planters combine the beauty of nature with cutting-edge NFT technology, 
+                        creating unique pieces that are both functional and collectible.
+                    </p>
+                    
+                    <!-- Blockchain Technology Section -->
+                    <div class="blockchain-section">
+                        <h3 class="blockchain-title">
+                            <i class="fas fa-link"></i>
+                            Blockchain Technology
+                        </h3>
+                        <p class="blockchain-description">
+                            Each GemSpot comes with a unique NFT certificate stored on an immutable blockchain network. 
+                            This means every planter's documentation, authenticity, and ownership history is permanently 
+                            recorded and publicly verifiable by anyone, anywhere in the world.
+                        </p>
+                        <div class="blockchain-features">
+                            <div class="blockchain-feature">
+                                <div class="feature-icon">
+                                    <i class="fas fa-shield-alt"></i>
+                                </div>
+                                <div class="feature-text">
+                                    <h4>Immutable Records</h4>
+                                    <p>Documentation that cannot be altered or falsified</p>
+                                </div>
+                            </div>
+                            <div class="blockchain-feature">
+                                <div class="feature-icon">
+                                    <i class="fas fa-globe"></i>
+                                </div>
+                                <div class="feature-text">
+                                    <h4>Public Verification</h4>
+                                    <p>Anyone can verify authenticity and ownership</p>
+                                </div>
+                            </div>
+                            <div class="blockchain-feature">
+                                <div class="feature-icon">
+                                    <i class="fas fa-history"></i>
+                                </div>
+                                <div class="feature-text">
+                                    <h4>Complete History</h4>
+                                    <p>Full ownership and transaction history</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="about-visual">
+                    <div class="about-image">
+                        <img src="/images/about-image.jpg" alt="About GemSpots - Crystal Planters" class="about-img">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Get In Touch</h2>
+                <p class="section-subtitle">Have questions about our crystal planters? We'd love to hear from you.</p>
+            </div>
+            <div class="contact-content">
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <div class="contact-icon">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <div class="contact-details">
+                            <h3>Email</h3>
+                            <p>info@gemspots.ca</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-icon">
+                            <i class="fas fa-phone"></i>
+                        </div>
+                        <div class="contact-details">
+                            <h3>Phone</h3>
+                            <p>+1 (613) 617-7296</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-icon">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                        <div class="contact-details">
+                            <h3>Location</h3>
+                            <p>Ottawa, Ontario, Canada</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="contact-form">
+                    <form id="contact-form">
+                        <div class="form-group">
+                            <input type="text" id="name" name="name" placeholder="Your Name" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="email" id="email" name="email" placeholder="Your Email" required>
+                        </div>
+                        <div class="form-group">
+                            <textarea id="message" name="message" placeholder="Your Message" rows="5" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <span>Send Message</span>
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-logo">
+                        <i class="fas fa-gem"></i>
+                        <span>GemSpots</span>
+                    </div>
+                    <p>Premium crystal planters with NFT integration for the modern collector.</p>
+                    <div class="social-links">
+                        <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-facebook"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-pinterest"></i></a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="#home">Home</a></li>
+                        <li><a href="#gallery">Gallery</a></li>
+                        <li><a href="#about">About</a></li>
+                        <li><a href="#contact">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Support</h3>
+                    <ul>
+                        <li><a href="#">FAQ</a></li>
+                        <li><a href="#">Shipping</a></li>
+                        <li><a href="#">Returns</a></li>
+                        <li><a href="#">NFT Guide</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Newsletter</h3>
+                    <p>Subscribe for updates on new collections and exclusive offers.</p>
+                    <form class="newsletter-form">
+                        <input type="email" placeholder="Your email" required>
+                        <button type="submit"><i class="fas fa-arrow-right"></i></button>
+                    </form>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 GemSpots. All rights reserved.</p>
+                <div class="footer-links">
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="/js/main.js"></script>
+</body>
+</html>

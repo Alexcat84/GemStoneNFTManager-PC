@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GemStone NFT Code Generator</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>💎 GemStone NFT Code Generator</h1>
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <span class="stat-label">Total Codes:</span>
+                    <span class="stat-value" id="totalCodes">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">This Month:</span>
+                    <span class="stat-value" id="thisMonthCodes">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Next Number:</span>
+                    <span class="stat-value" id="nextNumber">001</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <div class="sidebar">
+                <div class="code-generator">
+                    <h3>Generate New Code</h3>
+                    <form id="codeForm">
+                        <div class="form-group">
+                            <label for="gemstoneInput">Gemstones:</label>
+                            <input type="text" id="gemstoneInput" placeholder="Enter gemstone names (e.g., Amethyst, Quartz, Ruby)" class="form-input">
+                            <small class="form-help">Separate multiple gemstones with commas</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="locationSelect">Location:</label>
+                            <select id="locationSelect" required>
+                                <option value="">Select Location...</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="monthSelect">Month:</label>
+                                <select id="monthSelect" required>
+                                    <option value="1">January</option>
+                                    <option value="2">February</option>
+                                    <option value="3">March</option>
+                                    <option value="4">April</option>
+                                    <option value="5">May</option>
+                                    <option value="6">June</option>
+                                    <option value="7">July</option>
+                                    <option value="8">August</option>
+                                    <option value="9">September</option>
+                                    <option value="10">October</option>
+                                    <option value="11">November</option>
+                                    <option value="12">December</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="yearSelect">Year:</label>
+                                <select id="yearSelect" required>
+                                    <!-- Years will be populated by JavaScript -->
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="notesInput">Notes (Optional):</label>
+                            <textarea id="notesInput" rows="2" placeholder="Additional notes..."></textarea>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Generate Code</button>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="filters">
+                    <h3>Search & Filter</h3>
+                    <div class="search-container">
+                        <input type="text" id="searchInput" placeholder="Search codes..." class="search-input">
+                        <button type="button" id="searchBtn" class="btn-search">🔍</button>
+                    </div>
+                    <select id="locationFilter" class="filter-select">
+                        <option value="">All Locations</option>
+                    </select>
+                    <select id="gemstoneFilter" class="filter-select">
+                        <option value="">All Gemstones</option>
+                    </select>
+                </div>
+
+                <div class="chart-container">
+                    <h3>Generation Stats</h3>
+                    <canvas id="statsChart"></canvas>
+                </div>
+            </div>
+
+            <div class="content">
+                <div class="content-header">
+                    <h2>Generated Codes</h2>
+                    <div class="content-actions">
+                        <button id="exportBtn" class="btn btn-secondary">📊 Export CSV</button>
+                        <button id="refreshBtn" class="btn btn-secondary">🔄 Refresh</button>
+                    </div>
+                </div>
+                
+                <div class="codes-list" id="codesList">
+                    <!-- Generated codes will be displayed here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Code Preview Modal -->
+    <div id="previewModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Code Preview</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="preview-content">
+                    <div class="code-display">
+                        <h3>Generated Code:</h3>
+                        <div class="code-value" id="previewCode">GM-2509-CAL-001-X7K9</div>
+                    </div>
+                    
+                    <div class="code-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Gemstones:</span>
+                            <span class="detail-value" id="previewGemstones">Calcite</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Location:</span>
+                            <span class="detail-value" id="previewLocation">California, USA</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Date:</span>
+                            <span class="detail-value" id="previewDate">September 2025</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Piece Number:</span>
+                            <span class="detail-value" id="previewPiece">001</span>
+                        </div>
+                    </div>
+                    
+                    <div class="qr-section">
+                        <h4>QR Code:</h4>
+                        <canvas id="qrCanvas" width="200" height="200"></canvas>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button id="confirmGenerateBtn" class="btn btn-primary">Confirm & Generate</button>
+                    <button id="cancelPreviewBtn" class="btn btn-secondary">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Gemstone Modal -->
+    <div id="addGemstoneModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add New Gemstone</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="addGemstoneForm">
+                    <div class="form-group">
+                        <label for="gemstoneCode">Code (3 letters):</label>
+                        <input type="text" id="gemstoneCode" maxlength="3" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="gemstoneName">Name:</label>
+                        <input type="text" id="gemstoneName" required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Add Gemstone</button>
+                        <button type="button" id="cancelAddGemstoneBtn" class="btn btn-secondary">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Location Modal -->
+    <div id="addLocationModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add New Location</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="addLocationForm">
+                    <div class="form-group">
+                        <label for="locationProvince">Province/State:</label>
+                        <input type="text" id="locationProvince" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="locationCountry">Country:</label>
+                        <input type="text" id="locationCountry" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="locationRegion">Region:</label>
+                        <input type="text" id="locationRegion" required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Add Location</button>
+                        <button type="button" id="cancelAddLocationBtn" class="btn btn-secondary">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="renderer.js"></script>
+</body>
+</html>

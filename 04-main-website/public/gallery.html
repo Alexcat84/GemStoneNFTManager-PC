@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gallery - GemSpots</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/main.css">
+    <style>
+        .gallery-hero {
+            background: var(--gradient-primary);
+            color: white;
+            padding: 8rem 0 4rem;
+            text-align: center;
+        }
+        .gallery-hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        .gallery-hero p {
+            font-size: 1.25rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .gallery-section {
+            padding: 4rem 0;
+        }
+        .gallery-filters {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 3rem;
+            flex-wrap: wrap;
+        }
+        .filter-btn {
+            padding: 0.75rem 1.5rem;
+            border: 2px solid var(--primary-color);
+            background: transparent;
+            color: var(--primary-color);
+            border-radius: var(--radius-lg);
+            cursor: pointer;
+            transition: all var(--transition-normal);
+            font-weight: 500;
+        }
+        .filter-btn.active,
+        .filter-btn:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+        .gallery-grid-full {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+        .gallery-item-full {
+            background: white;
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            box-shadow: var(--shadow-light);
+            transition: all var(--transition-normal);
+            border: 1px solid var(--border-color);
+        }
+        .gallery-item-full:hover {
+            transform: translateY(-10px);
+            box-shadow: var(--shadow-large);
+        }
+        .gallery-image-full {
+            height: 300px;
+            background: var(--gradient-accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 4rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .gallery-content-full {
+            padding: 2rem;
+        }
+        .gallery-title-full {
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+        .gallery-price-full {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        .gallery-description-full {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+        .gallery-meta-full {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .crystal-type {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        .rarity {
+            padding: 0.25rem 0.75rem;
+            border-radius: var(--radius-md);
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .rarity.common { background: #e5e7eb; color: #374151; }
+        .rarity.uncommon { background: #dbeafe; color: #1e40af; }
+        .rarity.rare { background: #fef3c7; color: #92400e; }
+        .rarity.very-rare { background: #fce7f3; color: #be185d; }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <i class="fas fa-gem"></i>
+                <span>GemSpots</span>
+            </div>
+            <ul class="nav-menu" id="nav-menu">
+                <li class="nav-item">
+                    <a href="/" class="nav-link">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/gallery" class="nav-link active">Gallery</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/about" class="nav-link">About</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/contact" class="nav-link">Contact</a>
+                </li>
+            </ul>
+            <div class="nav-toggle" id="nav-toggle">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Gallery Hero -->
+    <section class="gallery-hero">
+        <div class="container">
+            <h1>Our Collection</h1>
+            <p>Discover our complete range of premium crystal planters, each with unique NFT certificates and QR codes for authenticity verification.</p>
+        </div>
+    </section>
+
+    <!-- Gallery Section -->
+    <section class="gallery-section">
+        <div class="container">
+            <!-- Filters -->
+            <div class="gallery-filters">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="premium">Premium</button>
+                <button class="filter-btn" data-filter="luxury">Luxury</button>
+                <button class="filter-btn" data-filter="rare">Rare</button>
+            </div>
+
+            <!-- Gallery Grid -->
+            <div class="gallery-grid-full" id="gallery-grid-full">
+                <!-- Gallery items will be loaded dynamically -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-logo">
+                        <i class="fas fa-gem"></i>
+                        <span>GemSpots</span>
+                    </div>
+                    <p>Premium crystal planters with NFT integration for the modern collector.</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="/">Home</a></li>
+                        <li><a href="/gallery">Gallery</a></li>
+                        <li><a href="/about">About</a></li>
+                        <li><a href="/contact">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Contact</h3>
+                    <ul>
+                        <li>Gatineau, QC, Canada</li>
+                        <li>+1 (613) 617-7296</li>
+                        <li>info@gemspots.ca</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 GemSpots. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/js/main.js"></script>
+    <script>
+        // Load full gallery
+        async function loadFullGallery() {
+            try {
+                const response = await fetch('/api/gemspots');
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayFullGallery(data.gemspots);
+                }
+            } catch (error) {
+                console.error('Error loading gallery:', error);
+            }
+        }
+
+        function displayFullGallery(gemspots) {
+            const galleryGrid = document.getElementById('gallery-grid-full');
+            if (!galleryGrid) return;
+
+            galleryGrid.innerHTML = gemspots.map(gemspot => `
+                <div class="gallery-item-full hover-lift" data-category="${gemspot.category}">
+                    <div class="gallery-image-full">
+                        <i class="fas fa-gem"></i>
+                    </div>
+                    <div class="gallery-content-full">
+                        <h3 class="gallery-title-full">${gemspot.name}</h3>
+                        <div class="gallery-price-full">$${gemspot.price} CAD</div>
+                        <p class="gallery-description-full">${gemspot.description}</p>
+                        <div class="gallery-meta-full">
+                            <span class="crystal-type">
+                                <i class="fas fa-gem"></i>
+                                ${gemspot.crystal}
+                            </span>
+                            <span class="rarity ${gemspot.rarity.toLowerCase().replace(' ', '-')}">
+                                ${gemspot.rarity}
+                            </span>
+                        </div>
+                        <button class="btn btn-primary" onclick="viewGemspot(${gemspot.id})">
+                            <span>View Details</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Filter functionality
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                const filter = btn.dataset.filter;
+                const items = document.querySelectorAll('.gallery-item-full');
+                
+                items.forEach(item => {
+                    if (filter === 'all' || item.dataset.category === filter) {
+                        item.style.display = 'block';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+        });
+
+        // Load gallery on page load
+        document.addEventListener('DOMContentLoaded', loadFullGallery);
+    </script>
+</body>
+</html>
