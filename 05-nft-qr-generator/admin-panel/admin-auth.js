@@ -4,7 +4,7 @@ const crypto = require('crypto');
 
 class AdminAuth {
     constructor() {
-        this.secretKey = process.env.JWT_SECRET || 'gemstone-nft-secret-key-2024';
+        this.secretKey = process.env.JWT_SECRET || 'GemSpots2025!@#QRGenerator$%^&()+{}|:<>?[]\\;\',./~-=_+{}|:<>?[]\\;\',./~-=_';
         this.sessionTimeout = 30 * 60 * 1000; // 30 minutes
         this.sessions = new Map();
         
@@ -15,6 +15,8 @@ class AdminAuth {
             role: 'admin',
             createdAt: new Date()
         };
+        
+        console.log('AdminAuth initialized with JWT_SECRET:', this.secretKey ? 'SET' : 'NOT SET');
     }
 
     async hashPassword(password) {
@@ -48,14 +50,19 @@ class AdminAuth {
 
     async login(username, password) {
         try {
+            console.log('Login attempt:', { username, passwordLength: password ? password.length : 0 });
+            
             // Check if user exists (in production, this would be from database)
             if (username !== this.defaultAdmin.username) {
+                console.log('Invalid username:', username);
                 return null;
             }
 
             // Verify password
             const isValidPassword = await this.verifyPassword(password, this.defaultAdmin.password);
+            console.log('Password verification result:', isValidPassword);
             if (!isValidPassword) {
+                console.log('Invalid password for user:', username);
                 return null;
             }
 
