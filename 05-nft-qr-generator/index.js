@@ -59,7 +59,24 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'admin-panel', 'login.html'));
 });
 
-app.get('/dashboard', (req, res) => {
+// Middleware to check authentication
+const requireAuth = (req, res, next) => {
+  const token = req.headers.authorization?.replace('Bearer ', '') || req.query.token;
+  
+  if (!token) {
+    return res.redirect('/');
+  }
+  
+  const decoded = adminAuth.verifyToken(token);
+  if (!decoded) {
+    return res.redirect('/');
+  }
+  
+  req.user = decoded;
+  next();
+};
+
+app.get('/dashboard', requireAuth, (req, res) => {
   res.sendFile(path.join(__dirname, 'admin-panel', 'dashboard.html'));
 });
 
@@ -79,6 +96,32 @@ app.post('/api/login', async (req, res) => {
     }
   } catch (error) {
     console.error('Error en login:', error);
+    res.status(500).json({ success: false, message: 'Error interno del servidor' });
+  }
+});
+
+// Change password endpoint
+app.post('/api/change-password', requireAuth, async (req, res) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+    
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({ success: false, message: 'Contraseña actual y nueva contraseña son requeridas' });
+    }
+    
+    if (newPassword.length < 8) {
+      return res.status(400).json({ success: false, message: 'La nueva contraseña debe tener al menos 8 caracteres' });
+    }
+    
+    const success = await adminAuth.changePassword(req.user.username, oldPassword, newPassword);
+    
+    if (success) {
+      res.json({ success: true, message: 'Contraseña cambiada exitosamente' });
+    } else {
+      res.status(400).json({ success: false, message: 'Contraseña actual incorrecta' });
+    }
+  } catch (error) {
+    console.error('Error changing password:', error);
     res.status(500).json({ success: false, message: 'Error interno del servidor' });
   }
 });

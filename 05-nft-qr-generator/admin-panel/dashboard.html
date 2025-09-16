@@ -335,6 +335,7 @@
         <div class="logo">💎 GemStone NFT QR Generator</div>
         <div class="user-info">
             <span>Administrator</span>
+            <button class="btn-logout" onclick="openChangePasswordModal()">Change Password</button>
             <button class="btn-logout" onclick="logout()">Log Out</button>
         </div>
     </div>
@@ -522,6 +523,39 @@
                     </button>
                     <button type="submit" class="btn" id="updateBtn">
                         Update QR
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div id="changePasswordModal" class="qr-modal">
+        <div class="qr-modal-content" style="max-width: 500px;">
+            <span class="qr-modal-close" onclick="closeChangePasswordModal()">&times;</span>
+            <h3>🔐 Change Password</h3>
+            <form id="changePasswordForm">
+                <div class="form-group">
+                    <label for="currentPassword">Current Password:</label>
+                    <input type="password" id="currentPassword" name="oldPassword" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="newPassword">New Password:</label>
+                    <input type="password" id="newPassword" name="newPassword" required minlength="8">
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm New Password:</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" required minlength="8">
+                </div>
+                
+                <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem;">
+                    <button type="button" class="btn btn-secondary" onclick="closeChangePasswordModal()">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn" id="changePasswordBtn">
+                        Change Password
                     </button>
                 </div>
             </form>
@@ -901,11 +935,14 @@
         window.onclick = function(event) {
             const qrModal = document.getElementById('qrModal');
             const editModal = document.getElementById('editModal');
+            const changePasswordModal = document.getElementById('changePasswordModal');
             
             if (event.target === qrModal) {
                 closeQRModal();
             } else if (event.target === editModal) {
                 closeEditModal();
+            } else if (event.target === changePasswordModal) {
+                closeChangePasswordModal();
             }
         }
 
@@ -1010,6 +1047,65 @@
             localStorage.removeItem('sessionId');
             window.location.href = '/';
         }
+
+        // Change Password Functions
+        function openChangePasswordModal() {
+            document.getElementById('changePasswordModal').style.display = 'block';
+        }
+
+        function closeChangePasswordModal() {
+            document.getElementById('changePasswordModal').style.display = 'none';
+            document.getElementById('changePasswordForm').reset();
+        }
+
+        document.getElementById('changePasswordForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const oldPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (newPassword !== confirmPassword) {
+                showMessage('New passwords do not match', 'error');
+                return;
+            }
+            
+            if (newPassword.length < 8) {
+                showMessage('New password must be at least 8 characters long', 'error');
+                return;
+            }
+            
+            const changePasswordBtn = document.getElementById('changePasswordBtn');
+            changePasswordBtn.disabled = true;
+            changePasswordBtn.textContent = 'Changing...';
+            
+            try {
+                const token = localStorage.getItem('adminToken');
+                const response = await fetch('/api/change-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ oldPassword, newPassword })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMessage('Password changed successfully!', 'success');
+                    closeChangePasswordModal();
+                } else {
+                    showMessage(result.message || 'Error changing password', 'error');
+                }
+            } catch (error) {
+                console.error('Error changing password:', error);
+                showMessage('Error changing password. Please try again.', 'error');
+            } finally {
+                changePasswordBtn.disabled = false;
+                changePasswordBtn.textContent = 'Change Password';
+            }
+        });
     </script>
 </body>
 </html>
