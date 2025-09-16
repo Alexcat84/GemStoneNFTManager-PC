@@ -1,7 +1,7 @@
 const QRCode = require('qrcode');
 const path = require('path');
 const fs = require('fs');
-const sqlite3 = require('sqlite3').verbose();
+const { Pool } = require('pg');
 
 class QRGenerator {
     constructor() {
@@ -17,38 +17,38 @@ class QRGenerator {
     }
 
     initializeDatabase() {
-        const dbPath = path.join(process.env.APPDATA || (process.platform == 'darwin' ? process.env.HOME + '/Library/Preferences' : process.env.HOME + '/.local/share'), 'GemStoneNFTManager', 'qr_codes.db');
-        
-        const dbDir = path.dirname(dbPath);
-        if (!fs.existsSync(dbDir)) {
-            fs.mkdirSync(dbDir, { recursive: true });
-        }
-
-        this.db = new sqlite3.Database(dbPath);
+        this.pool = new Pool({
+            connectionString: process.env.DATABASE_URL,
+            ssl: {
+                rejectUnauthorized: false
+            }
+        });
         this.createTable();
     }
 
-    createTable() {
-        const createTableQuery = `
-            CREATE TABLE IF NOT EXISTS qr_codes (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                qr_id TEXT UNIQUE NOT NULL,
-                url TEXT NOT NULL,
-                status VARCHAR(20) DEFAULT 'ready',
-                nft_url TEXT,
-                estimated_ready_date DATETIME,
-                notes TEXT,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
-        `;
+    async createTable() {
+        const client = await this.pool.connect();
+        try {
+            const createTableQuery = `
+                CREATE TABLE IF NOT EXISTS qr_codes (
+                    id SERIAL PRIMARY KEY,
+                    qr_id VARCHAR(50) UNIQUE NOT NULL,
+                    url TEXT NOT NULL,
+                    status VARCHAR(20) DEFAULT 'ready',
+                    nft_url TEXT,
+                    estimated_ready_date TIMESTAMP WITH TIME ZONE,
+                    notes TEXT,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                )
+            `;
 
-        this.db.run(createTableQuery, (err) => {
-            if (err) {
-                console.error('Error creating qr_codes table:', err);
-            } else {
-                console.log('QR codes table ready');
-            }
-        });
+            await client.query(createTableQuery);
+            console.log('QR codes table ready');
+        } catch (err) {
+            console.error('Error creating qr_codes table:', err);
+        } finally {
+            client.release();
+        }
     }
 
     async generateSimpleQR(url, status = 'ready', nft_url = null, estimated_ready_date = null, notes = null) {
@@ -58,7 +58,7 @@ class QRGenerator {
             const filePath = path.join(this.qrCodesDir, fileName);
             
             // Generate QR code that points to our smart redirect endpoint
-            const qrUrl = `http://192.168.18.19:3000/qr/${qrId}`;
+            const qrUrl = `https://qr-generator-nine-delta.vercel.app/qr/${qrId}`;
             
             // Generate QR code in HD
             await QRCode.toFile(filePath, qrUrl, {
@@ -72,20 +72,19 @@ class QRGenerator {
             });
 
             // Store QR info in database
-            return new Promise((resolve, reject) => {
+            const client = await this.pool.connect();
+            try {
                 const sql = `
                     INSERT INTO qr_codes (qr_id, url, status, nft_url, estimated_ready_date, notes)
-                    VALUES (?, ?, ?, ?, ?, ?)
+                    VALUES ($1, $2, $3, $4, $5, $6)
+                    RETURNING qr_id
                 `;
                 
-                this.db.run(sql, [qrId, url, status, nft_url, estimated_ready_date, notes], function(err) {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        resolve(qrId);
-                    }
-                });
-            });
+                const result = await client.query(sql, [qrId, url, status, nft_url, estimated_ready_date, notes]);
+                return result.rows[0].qr_id;
+            } finally {
+                client.release();
+            }
         } catch (error) {
             console.error('Error generating QR code:', error);
             throw error;
@@ -93,57 +92,51 @@ class QRGenerator {
     }
 
     async getAllQRs() {
-        return new Promise((resolve, reject) => {
-            this.db.all(`
+        const client = await this.pool.connect();
+        try {
+            const result = await client.query(`
                 SELECT qr_id as id, url, status, nft_url, estimated_ready_date, notes, created_at,
-                       datetime(created_at, 'localtime') as timestamp
+                       to_char(created_at, 'YYYY-MM-DD HH24:MI:SS') as timestamp
                 FROM qr_codes 
                 ORDER BY created_at DESC
-            `, (err, rows) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(rows);
-                }
-            });
-        });
+            `);
+            return result.rows;
+        } finally {
+            client.release();
+        }
     }
 
     async getQRById(qrId) {
-        return new Promise((resolve, reject) => {
-            this.db.get(`
+        const client = await this.pool.connect();
+        try {
+            const result = await client.query(`
                 SELECT qr_id as id, url, status, nft_url, estimated_ready_date, notes, created_at,
-                       datetime(created_at, 'localtime') as timestamp
+                       to_char(created_at, 'YYYY-MM-DD HH24:MI:SS') as timestamp
                 FROM qr_codes 
-                WHERE qr_id = ?
-            `, [qrId], (err, row) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(row);
-                }
-            });
-        });
+                WHERE qr_id = $1
+            `, [qrId]);
+            return result.rows[0];
+        } finally {
+            client.release();
+        }
     }
 
     async updateQRCode(qrId, updates) {
-        return new Promise((resolve, reject) => {
+        const client = await this.pool.connect();
+        try {
             const { url, status, nft_url, estimated_ready_date, notes } = updates;
             
             const sql = `
                 UPDATE qr_codes 
-                SET url = ?, status = ?, nft_url = ?, estimated_ready_date = ?, notes = ?
-                WHERE qr_id = ?
+                SET url = $1, status = $2, nft_url = $3, estimated_ready_date = $4, notes = $5
+                WHERE qr_id = $6
             `;
             
-            this.db.run(sql, [url, status, nft_url, estimated_ready_date, notes, qrId], function(err) {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve({ changes: this.changes });
-                }
-            });
-        });
+            const result = await client.query(sql, [url, status, nft_url, estimated_ready_date, notes, qrId]);
+            return { changes: result.rowCount };
+        } finally {
+            client.release();
+        }
     }
 }
 
