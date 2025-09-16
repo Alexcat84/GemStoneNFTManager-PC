@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GemStone NFT QR Generator - Dashboard v2.3</title>
+    <title>GemStone NFT QR Generator - Dashboard v2.4</title>
     <style>
         * {
             margin: 0;
@@ -223,6 +223,125 @@
             background: #dc2626;
             transform: translateY(-1px) scale(1.1);
             box-shadow: 0 3px 8px rgba(239, 68, 68, 0.4);
+        }
+
+        /* QR Code Item Styles */
+        .qr-item {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .qr-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #feca57);
+        }
+
+        .qr-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .qr-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .qr-title-section {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .qr-title {
+            font-weight: bold;
+            font-size: 1.3rem;
+            color: #ffffff;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            font-family: 'Courier New', monospace;
+            letter-spacing: 1px;
+        }
+
+        .qr-actions {
+            display: flex;
+            gap: 0.8rem;
+        }
+
+        .btn-view-qr {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-view-qr:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-edit-qr {
+            background: #f59e0b;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 6px rgba(245, 158, 11, 0.3);
+        }
+
+        .btn-edit-qr:hover {
+            background: #d97706;
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(245, 158, 11, 0.4);
+        }
+
+        .qr-details {
+            color: rgba(255,255,255,0.95);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            background: rgba(255,255,255,0.1);
+            padding: 1rem;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+        }
+
+        .qr-details strong {
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .qr-url, .qr-redirect {
+            margin-bottom: 0.5rem;
+        }
+
+        .qr-timestamp {
+            color: rgba(255,255,255,0.7);
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+            font-style: italic;
         }
 
         /* Clean design - simple action buttons */
@@ -957,25 +1076,32 @@
                 const statusInfo = getStatusInfo(qr);
                 
                 return `
-                <div class="nft-item">
-                    <div class="nft-info">
-                            <div class="nft-code">QR #${qr.id} ${statusBadge}</div>
-                        <div class="nft-details">
-                                <strong>QR URL:</strong> http://192.168.18.19:3000/qr/${qr.id}<br>
-                                <strong>Redirects to:</strong> ${qr.url}
-                            </div>
-                            ${statusInfo}
-                            <div class="nft-timestamp" style="color: #999; font-size: 0.8rem; margin-top: 0.25rem;">
-                                ${qr.timestamp || new Date(qr.created_at).toLocaleString()}
+                <div class="qr-item">
+                    <div class="qr-header">
+                        <div class="qr-title-section">
+                            <div class="qr-title">QR #${qr.id}</div>
+                            ${statusBadge}
                         </div>
+                        <div class="qr-actions">
+                            <button class="btn-view-qr" onclick="viewQR('${qr.id}')">
+                                👁️ View QR
+                        </button>
+                            <button class="btn-edit-qr" onclick="editQR('${qr.id}')">
+                                ✏️ Edit
+                        </button>
                     </div>
-                    <div class="nft-actions">
-                            <button class="btn btn-small" onclick="viewQR('${qr.id}')">
-                                View QR
-                        </button>
-                            <button class="btn btn-small btn-secondary" onclick="editQR('${qr.id}')">
-                                Edit
-                        </button>
+                </div>
+                    <div class="qr-details">
+                        <div class="qr-url">
+                            <strong>QR URL:</strong> http://192.168.18.19:3000/qr/${qr.id}
+                        </div>
+                        <div class="qr-redirect">
+                            <strong>Redirects to:</strong> ${qr.url}
+                        </div>
+                        ${statusInfo}
+                        <div class="qr-timestamp">
+                            ${qr.timestamp || new Date(qr.created_at).toLocaleString()}
+                        </div>
                     </div>
                 </div>
                 `;
