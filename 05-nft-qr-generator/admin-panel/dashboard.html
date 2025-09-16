@@ -105,17 +105,30 @@
         }
 
         .code-item {
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 8px;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .code-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #feca57);
         }
 
         .code-item:hover {
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            transform: translateY(-1px);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
         }
 
         .code-header {
@@ -126,31 +139,123 @@
         }
 
         .code-title {
-            font-weight: 600;
-            color: #333;
-            font-size: 1.1rem;
+            font-weight: bold;
+            font-size: 1.3rem;
+            color: #ffffff;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            font-family: 'Courier New', monospace;
+            letter-spacing: 1px;
         }
 
         .code-date {
-            color: #666;
+            color: rgba(255,255,255,0.8);
             font-size: 0.9rem;
+            background: rgba(255,255,255,0.1);
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
         }
 
         .code-details {
-            color: #555;
-            font-size: 0.9rem;
-            line-height: 1.4;
+            color: rgba(255,255,255,0.95);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            background: rgba(255,255,255,0.1);
+            padding: 1rem;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+            margin-bottom: 1rem;
+        }
+
+        .code-details strong {
+            color: #ffffff;
+            font-weight: 600;
         }
 
         .code-actions {
-            margin-top: 0.5rem;
             display: flex;
-            gap: 0.5rem;
+            gap: 0.8rem;
         }
 
         .btn-small {
-            padding: 0.25rem 0.75rem;
-            font-size: 0.8rem;
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            border-radius: 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: #ffffff;
+            border: 2px solid rgba(255,255,255,0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.3);
+            border-color: rgba(255,255,255,0.5);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255,255,255,0.2);
+        }
+
+        /* Search area styling */
+        .form-group label {
+            color: #4a5568;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .form-group input[type="text"] {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            background: #ffffff;
+        }
+
+        .form-group input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .form-group input[type="text"]::placeholder {
+            color: #a0aec0;
+        }
+
+        /* Empty state styling */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: #718096;
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            border-radius: 12px;
+            border: 2px dashed #cbd5e0;
+        }
+
+        .empty-state::before {
+            content: '💎';
+            font-size: 3rem;
+            display: block;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state h3 {
+            color: #4a5568;
+            margin-bottom: 0.5rem;
+            font-size: 1.2rem;
+        }
+
+        .empty-state p {
+            font-size: 0.95rem;
+            line-height: 1.5;
         }
 
         .container {
@@ -1399,7 +1504,12 @@
         function renderCodes() {
             const codesList = document.getElementById('codesList');
             if (!Array.isArray(generatedCodes) || generatedCodes.length === 0) {
-                codesList.innerHTML = '<p style="text-align: center; color: #666; padding: 2rem;">No codes generated yet.</p>';
+                codesList.innerHTML = `
+                    <div class="empty-state">
+                        <h3>No codes generated yet</h3>
+                        <p>Start by filling out the form above to generate your first NFT code!</p>
+                    </div>
+                `;
                 return;
             }
 
