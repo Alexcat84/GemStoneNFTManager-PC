@@ -63,15 +63,20 @@ app.get('/', (req, res) => {
 const requireAuth = (req, res, next) => {
   const token = req.headers.authorization?.replace('Bearer ', '') || req.query.token;
   
+  console.log('Auth check - token:', token ? 'present' : 'missing');
+  
   if (!token) {
+    console.log('No token provided, redirecting to login');
     return res.redirect('/');
   }
   
   const decoded = adminAuth.verifyToken(token);
   if (!decoded) {
+    console.log('Invalid token, redirecting to login');
     return res.redirect('/');
   }
   
+  console.log('Token valid for user:', decoded.username);
   req.user = decoded;
   next();
 };
@@ -89,7 +94,7 @@ app.post('/api/login', async (req, res) => {
     
     if (token) {
       console.log('Login successful for user:', username);
-      res.json({ success: true, token });
+      res.json({ success: true, token: token.token, sessionId: token.sessionId, user: token.user });
     } else {
       console.log('Login failed for user:', username);
       res.status(401).json({ success: false, message: 'Credenciales inválidas' });
