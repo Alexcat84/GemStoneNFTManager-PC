@@ -8,10 +8,10 @@ class AdminAuth {
         this.sessionTimeout = 30 * 60 * 1000; // 30 minutes
         this.sessions = new Map();
         
-        // Default admin credentials (should be changed in production)
+        // Admin credentials from environment variables or defaults
         this.defaultAdmin = {
-            username: 'admin',
-            password: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // 'password'
+            username: process.env.ADMIN_USERNAME || 'admin',
+            password: process.env.ADMIN_PASSWORD_HASH || '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // 'password'
             role: 'admin',
             createdAt: new Date()
         };
