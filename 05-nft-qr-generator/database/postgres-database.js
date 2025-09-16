@@ -424,14 +424,22 @@ class PostgresDatabase {
 
     async getAllLocations() {
         try {
+            console.log('🔍 [DB DEBUG] getAllLocations called');
+            console.log('🔍 [DB DEBUG] Pool exists:', !!this.pool);
+            
             const client = await this.pool.connect();
+            console.log('🔍 [DB DEBUG] Client connected successfully');
             
             const result = await client.query('SELECT * FROM locations ORDER BY country, region');
+            console.log('🔍 [DB DEBUG] Query executed, rows:', result.rows.length);
+            console.log('🔍 [DB DEBUG] First few rows:', result.rows.slice(0, 3));
             
             client.release();
+            console.log('🔍 [DB DEBUG] Client released');
             return result.rows;
         } catch (error) {
-            console.error('Error getting all locations:', error);
+            console.error('❌ [DB ERROR] Error getting all locations:', error);
+            console.error('❌ [DB ERROR] Error stack:', error.stack);
             throw error;
         }
     }

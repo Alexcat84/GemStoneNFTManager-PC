@@ -321,11 +321,23 @@ app.get('/qr/:qrId', async (req, res) => {
 // Code Generator API Routes
 app.get('/api/locations', requireAuth, async (req, res) => {
   try {
+    console.log('🔍 [DEBUG] Starting getAllLocations...');
+    console.log('🔍 [DEBUG] Database pool exists:', !!nftDatabase.pool);
+    
     const locations = await nftDatabase.getAllLocations();
+    console.log('🔍 [DEBUG] Locations retrieved:', locations.length);
+    console.log('🔍 [DEBUG] First few locations:', locations.slice(0, 3));
+    
     res.json(locations);
   } catch (error) {
-    console.error('Error getting locations:', error);
-    res.status(500).json({ success: false, message: 'Error getting locations' });
+    console.error('❌ [ERROR] Error getting locations:', error);
+    console.error('❌ [ERROR] Error stack:', error.stack);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error getting locations',
+      error: error.message,
+      stack: error.stack
+    });
   }
 });
 
@@ -402,6 +414,49 @@ app.get('/api/codes/search', requireAuth, async (req, res) => {
   } catch (error) {
     console.error('Error searching codes:', error);
     res.status(500).json({ success: false, message: 'Error searching codes' });
+  }
+});
+
+// Diagnostic endpoint to check database status
+app.get('/api/admin/db-status', requireAuth, async (req, res) => {
+  try {
+    console.log('🔍 [DIAGNOSTIC] Checking database status...');
+    
+    const client = await nftDatabase.pool.connect();
+    try {
+      // Check if locations table exists
+      const tableCheck = await client.query(`
+        SELECT EXISTS (
+          SELECT FROM information_schema.tables 
+          WHERE table_schema = 'public' 
+          AND table_name = 'locations'
+        );
+      `);
+      
+      // Count locations
+      const countResult = await client.query('SELECT COUNT(*) as count FROM locations');
+      
+      // Get sample locations
+      const sampleResult = await client.query('SELECT * FROM locations LIMIT 5');
+      
+      res.json({
+        success: true,
+        database: {
+          tableExists: tableCheck.rows[0].exists,
+          locationCount: parseInt(countResult.rows[0].count),
+          sampleLocations: sampleResult.rows
+        }
+      });
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('❌ [DIAGNOSTIC ERROR]:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message,
+      stack: error.stack
+    });
   }
 });
 
