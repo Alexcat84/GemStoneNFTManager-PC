@@ -228,6 +228,26 @@ p {
     width: 100%;
 }
 
+.nav-link.admin-link {
+    background: linear-gradient(135deg, #8b5cf6, #a855f7);
+    color: white !important;
+    padding: 0.5rem 1rem;
+    border-radius: 25px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.nav-link.admin-link::after {
+    display: none;
+}
+
+.nav-link.admin-link:hover {
+    background: linear-gradient(135deg, #7c3aed, #9333ea);
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 5px 15px rgba(139, 92, 246, 0.4);
+}
+
 .nav-toggle {
     display: none;
     flex-direction: column;

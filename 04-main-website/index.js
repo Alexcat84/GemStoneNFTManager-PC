@@ -157,6 +157,24 @@ app.get('/api/admin/verify', requireAuth, (req, res) => {
   res.json({ success: true, user: req.user });
 });
 
+app.post('/api/admin/change-password', requireAuth, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const username = req.user.username;
+    
+    const success = await adminAuth.changePassword(username, currentPassword, newPassword);
+    
+    if (success) {
+      res.json({ success: true, message: 'Password changed successfully' });
+    } else {
+      res.status(400).json({ success: false, message: 'Current password is incorrect' });
+    }
+  } catch (error) {
+    console.error('Error changing password:', error);
+    res.status(500).json({ success: false, message: 'Error changing password' });
+  }
+});
+
 // Diagnostic endpoint
 app.get('/api/admin/diagnostic', async (req, res) => {
   try {

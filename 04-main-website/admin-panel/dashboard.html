@@ -275,9 +275,10 @@
 </head>
 <body>
     <div class="header">
-        <h1>💎 GemSpots Admin Dashboard</h1>
+        <h1>💎 GemSpots Admin Dashboard v1.3</h1>
         <div class="header-actions">
             <a href="/" class="btn btn-secondary">View Website</a>
+            <button class="btn btn-secondary" onclick="openChangePasswordModal()">Change Password</button>
             <button class="btn btn-secondary" onclick="logout()">Logout</button>
         </div>
     </div>
@@ -630,6 +631,88 @@
             const modal = document.querySelector('.modal-overlay');
             if (modal) {
                 modal.remove();
+            }
+        }
+
+        // Change Password Modal
+        function openChangePasswordModal() {
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>Change Password</h2>
+                        <button class="modal-close" onclick="closeModal()">&times;</button>
+                    </div>
+                    <form id="changePasswordForm">
+                        <div class="form-group">
+                            <label for="currentPassword">Current Password *</label>
+                            <input type="password" id="currentPassword" name="currentPassword" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="newPassword">New Password *</label>
+                            <input type="password" id="newPassword" name="newPassword" required minlength="8">
+                        </div>
+                        <div class="form-group">
+                            <label for="confirmPassword">Confirm New Password *</label>
+                            <input type="password" id="confirmPassword" name="confirmPassword" required minlength="8">
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Change Password</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Handle form submission
+            document.getElementById('changePasswordForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await changePassword();
+            });
+        }
+
+        async function changePassword() {
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (newPassword !== confirmPassword) {
+                showMessage('New passwords do not match', 'error');
+                return;
+            }
+            
+            if (newPassword.length < 8) {
+                showMessage('New password must be at least 8 characters long', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/admin/change-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        currentPassword,
+                        newPassword
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMessage('Password changed successfully!', 'success');
+                    closeModal();
+                } else {
+                    showMessage(result.message || 'Error changing password', 'error');
+                }
+            } catch (error) {
+                console.error('Error changing password:', error);
+                showMessage('Error changing password', 'error');
             }
         }
     </script>
