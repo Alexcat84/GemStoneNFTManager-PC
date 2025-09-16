@@ -318,18 +318,6 @@ app.get('/qr/:qrId', async (req, res) => {
   }
 });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ success: false, message: 'Error interno del servidor' });
-});
-
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({ success: false, message: 'Endpoint no encontrado' });
-});
-
-// Start server
 // Code Generator API Routes
 app.get('/api/locations', requireAuth, async (req, res) => {
   try {
@@ -415,6 +403,17 @@ app.get('/api/codes/search', requireAuth, async (req, res) => {
     console.error('Error searching codes:', error);
     res.status(500).json({ success: false, message: 'Error searching codes' });
   }
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ success: false, message: 'Error interno del servidor' });
+});
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ success: false, message: 'Endpoint no encontrado' });
 });
 
 app.listen(PORT, () => {
