@@ -4,7 +4,7 @@ const fs = require('fs');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
-const NFTDatabase = require('./database/nft-database');
+const PostgresDatabase = require('./database/postgres-database');
 const QRGenerator = require('./qr-generator/qr-generator');
 const AdminAuth = require('./admin-panel/admin-auth');
 
@@ -30,7 +30,7 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // Initialize database and services
-const nftDatabase = new NFTDatabase();
+const nftDatabase = new PostgresDatabase();
 const qrGenerator = new QRGenerator();
 const adminAuth = new AdminAuth();
 
