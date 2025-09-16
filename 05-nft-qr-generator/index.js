@@ -405,6 +405,104 @@ app.get('/api/codes/search', requireAuth, async (req, res) => {
   }
 });
 
+// Temporary endpoint to populate locations database
+app.post('/api/admin/populate-locations', requireAuth, async (req, res) => {
+  try {
+    console.log('🔄 Attempting to populate locations...');
+    const client = await nftDatabase.pool.connect();
+    try {
+      // Clear existing locations to ensure fresh insert
+      await client.query('TRUNCATE TABLE locations RESTART IDENTITY CASCADE;');
+      console.log('✅ Existing locations truncated.');
+
+      // Insert all locations
+      const locations = [
+        // Canada
+        ['Canada', 'Ontario'],
+        ['Canada', 'British Columbia'],
+        ['Canada', 'Quebec'],
+        ['Canada', 'Alberta'],
+        ['Canada', 'Manitoba'],
+        ['Canada', 'Saskatchewan'],
+        ['Canada', 'Nova Scotia'],
+        ['Canada', 'New Brunswick'],
+        ['Canada', 'Newfoundland and Labrador'],
+        ['Canada', 'Prince Edward Island'],
+        ['Canada', 'Northwest Territories'],
+        ['Canada', 'Yukon'],
+        ['Canada', 'Nunavut'],
+        
+        // United States
+        ['United States', 'California'],
+        ['United States', 'New York'],
+        ['United States', 'Texas'],
+        ['United States', 'Florida'],
+        ['United States', 'Illinois'],
+        ['United States', 'Pennsylvania'],
+        ['United States', 'Ohio'],
+        ['United States', 'Georgia'],
+        ['United States', 'North Carolina'],
+        ['United States', 'Michigan'],
+        ['United States', 'New Jersey'],
+        ['United States', 'Virginia'],
+        ['United States', 'Washington'],
+        ['United States', 'Arizona'],
+        ['United States', 'Massachusetts'],
+        ['United States', 'Tennessee'],
+        ['United States', 'Indiana'],
+        ['United States', 'Missouri'],
+        ['United States', 'Maryland'],
+        ['United States', 'Wisconsin'],
+        ['United States', 'Colorado'],
+        ['United States', 'Minnesota'],
+        ['United States', 'South Carolina'],
+        ['United States', 'Alabama'],
+        ['United States', 'Louisiana'],
+        ['United States', 'Kentucky'],
+        ['United States', 'Oregon'],
+        ['United States', 'Oklahoma'],
+        ['United States', 'Connecticut'],
+        ['United States', 'Utah'],
+        ['United States', 'Iowa'],
+        ['United States', 'Nevada'],
+        ['United States', 'Arkansas'],
+        ['United States', 'Mississippi'],
+        ['United States', 'Kansas'],
+        ['United States', 'New Mexico'],
+        ['United States', 'Nebraska'],
+        ['United States', 'West Virginia'],
+        ['United States', 'Idaho'],
+        ['United States', 'Hawaii'],
+        ['United States', 'New Hampshire'],
+        ['United States', 'Maine'],
+        ['United States', 'Montana'],
+        ['United States', 'Rhode Island'],
+        ['United States', 'Delaware'],
+        ['United States', 'South Dakota'],
+        ['United States', 'North Dakota'],
+        ['United States', 'Alaska'],
+        ['United States', 'Vermont'],
+        ['United States', 'Wyoming']
+      ];
+
+      for (const [country, region] of locations) {
+        await client.query(
+          'INSERT INTO locations (country, region) VALUES ($1, $2)',
+          [country, region]
+        );
+      }
+      
+      console.log(`✅ ${locations.length} locations inserted successfully!`);
+      res.json({ success: true, message: `${locations.length} locations populated successfully!` });
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('❌ Error populating locations:', error);
+    res.status(500).json({ success: false, message: 'Error populating locations' });
+  }
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
