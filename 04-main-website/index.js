@@ -157,6 +157,53 @@ app.get('/api/admin/verify', requireAuth, (req, res) => {
   res.json({ success: true, user: req.user });
 });
 
+// Diagnostic endpoint
+app.get('/api/admin/diagnostic', async (req, res) => {
+  try {
+    console.log('🔍 [DIAGNOSTIC] Starting database diagnostic...');
+    
+    // Test database connection
+    const client = await database.pool.connect();
+    console.log('🔍 [DIAGNOSTIC] Database connection successful');
+    
+    // Check if admin_users table exists
+    const tableCheck = await client.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'admin_users'
+      );
+    `);
+    
+    console.log('🔍 [DIAGNOSTIC] Admin users table exists:', tableCheck.rows[0].exists);
+    
+    if (tableCheck.rows[0].exists) {
+      // Check if admin user exists
+      const userCheck = await client.query('SELECT * FROM admin_users WHERE username = $1', ['admin']);
+      console.log('🔍 [DIAGNOSTIC] Admin user found:', userCheck.rows.length > 0);
+      console.log('🔍 [DIAGNOSTIC] Admin user data:', userCheck.rows[0]);
+    }
+    
+    client.release();
+    
+    res.json({
+      success: true,
+      database: {
+        connected: true,
+        adminUsersTableExists: tableCheck.rows[0].exists,
+        adminUserExists: tableCheck.rows[0].exists ? (await database.getAdminByUsername('admin')) ? true : false : false
+      }
+    });
+  } catch (error) {
+    console.error('❌ [DIAGNOSTIC ERROR]:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message,
+      stack: error.stack
+    });
+  }
+});
+
 app.get('/api/admin/products', requireAuth, async (req, res) => {
   try {
     const products = await database.getAllProducts();
