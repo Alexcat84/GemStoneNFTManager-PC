@@ -16,6 +16,22 @@
       "dest": "/index.js"
     },
     {
+      "src": "/",
+      "dest": "/index.js"
+    },
+    {
+      "src": "/dashboard",
+      "dest": "/index.js"
+    },
+    {
+      "src": "/qr/(.*)",
+      "dest": "/index.js"
+    },
+    {
+      "src": "/qr-codes/(.*)",
+      "dest": "/index.js"
+    },
+    {
       "src": "/(.*)",
       "dest": "/admin-panel/$1"
     }
