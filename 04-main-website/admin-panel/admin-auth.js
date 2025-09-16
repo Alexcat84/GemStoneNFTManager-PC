@@ -14,17 +14,26 @@ class AdminAuth {
 
     async login(username, password) {
         try {
-            console.log('Login attempt for user:', username);
+            console.log('🔐 Login attempt for user:', username);
+            console.log('🔐 Password provided:', password);
             
             const user = await this.database.getAdminByUsername(username);
+            console.log('🔐 User found:', user ? 'YES' : 'NO');
+            if (user) {
+                console.log('🔐 User details:', { id: user.id, username: user.username, role: user.role });
+                console.log('🔐 Stored hash:', user.password_hash);
+            }
+            
             if (!user) {
-                console.log('User not found:', username);
+                console.log('❌ User not found:', username);
                 return null;
             }
 
             const isValidPassword = await bcrypt.compare(password, user.password_hash);
+            console.log('🔐 Password validation result:', isValidPassword);
+            
             if (!isValidPassword) {
-                console.log('Invalid password for user:', username);
+                console.log('❌ Invalid password for user:', username);
                 return null;
             }
 
