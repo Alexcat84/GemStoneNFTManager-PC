@@ -4,15 +4,23 @@
     {
       "src": "index.js",
       "use": "@vercel/node"
-    },
-    {
-      "src": "public/**/*",
-      "use": "@vercel/static"
     }
   ],
   "routes": [
     {
+      "src": "/",
+      "dest": "/index.js"
+    },
+    {
+      "src": "/admin/(.*)",
+      "dest": "/index.js"
+    },
+    {
       "src": "/api/(.*)",
+      "dest": "/index.js"
+    },
+    {
+      "src": "/uploads/(.*)",
       "dest": "/index.js"
     },
     {
@@ -21,6 +29,9 @@
     }
   ],
   "env": {
-    "NODE_ENV": "production"
+    "DATABASE_URL": "@database_url",
+    "JWT_SECRET": "@jwt_secret",
+    "ADMIN_USERNAME": "@admin_username",
+    "ADMIN_PASSWORD_HASH": "@admin_password_hash"
   }
 }
