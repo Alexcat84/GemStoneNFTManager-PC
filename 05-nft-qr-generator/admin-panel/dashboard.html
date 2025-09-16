@@ -135,7 +135,13 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .code-title-section {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
         }
 
         .code-title {
@@ -145,6 +151,12 @@
             text-shadow: 0 2px 4px rgba(0,0,0,0.3);
             font-family: 'Courier New', monospace;
             letter-spacing: 1px;
+        }
+
+        .code-date-section {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
         }
 
         .code-date {
@@ -172,90 +184,52 @@
             font-weight: 600;
         }
 
-        .code-actions {
-            display: flex;
-            gap: 0.8rem;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .code-actions .btn-secondary {
-            flex: 1;
-            margin-right: auto;
-        }
-
-        .code-actions .btn-danger {
-            flex-shrink: 0;
-        }
-
-        .btn-small {
-            padding: 0.5rem 1rem;
-            font-size: 0.85rem;
-            border-radius: 20px;
-            font-weight: 600;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border: none;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn-small::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: left 0.5s;
-        }
-
-        .btn-small:hover::before {
-            left: 100%;
-        }
-
-        .btn-secondary {
+        /* Inline button styles */
+        .btn-copy-inline {
             background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
             color: #ffffff;
             border: none;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 4px 15px rgba(78, 205, 196, 0.3);
+            border-radius: 8px;
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 8px rgba(78, 205, 196, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
         }
 
-        .btn-secondary:hover {
+        .btn-copy-inline:hover {
             background: linear-gradient(135deg, #45b7aa 0%, #3d8b7a 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(78, 205, 196, 0.4);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(78, 205, 196, 0.4);
         }
 
-        .btn-danger {
+        .btn-delete-inline {
             background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
             color: #ffffff;
             border: none;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
-            width: 40px;
-            height: 40px;
             border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.1rem;
         }
 
-        .btn-danger:hover {
+        .btn-delete-inline:hover {
             background: linear-gradient(135deg, #ff5252 0%, #e53935 100%);
-            transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
-            animation: pulse 0.6s ease-in-out;
+            transform: translateY(-1px) scale(1.1);
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
         }
 
-        @keyframes pulse {
-            0% { transform: translateY(-2px) scale(1.05); }
-            50% { transform: translateY(-2px) scale(1.1); }
-            100% { transform: translateY(-2px) scale(1.05); }
-        }
+        /* Legacy button styles removed - using inline buttons now */
 
         /* Search area styling */
         .form-group label {
@@ -1572,8 +1546,18 @@
             codesList.innerHTML = generatedCodes.map(code => `
                 <div class="code-item">
                     <div class="code-header">
-                        <div class="code-title">${code.full_code}</div>
-                        <div class="code-date">${new Date(code.generation_date).toLocaleDateString()}</div>
+                        <div class="code-title-section">
+                            <div class="code-title">${code.full_code}</div>
+                            <button class="btn btn-copy-inline" onclick="copyCode('${code.full_code}')" title="Copy Code">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                        <div class="code-date-section">
+                            <div class="code-date">${new Date(code.generation_date).toLocaleDateString()}</div>
+                            <button class="btn btn-delete-inline" onclick="deleteCode(${code.id}, '${code.full_code}')" title="Delete Code">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="code-details">
                         <strong>Gemstones:</strong> ${JSON.parse(code.gemstone_names).join(', ')}<br>
@@ -1581,14 +1565,6 @@
                         <strong>Month/Year:</strong> ${code.month}/${code.year}<br>
                         <strong>Piece Number:</strong> ${code.piece_number}<br>
                         ${code.notes ? `<strong>Notes:</strong> ${code.notes}` : ''}
-                    </div>
-                    <div class="code-actions">
-                        <button class="btn btn-small btn-secondary" onclick="copyCode('${code.full_code}')">
-                            <i class="fas fa-copy"></i> Copy Code
-                        </button>
-                        <button class="btn btn-small btn-danger" onclick="deleteCode(${code.id}, '${code.full_code}')" title="Delete Code">
-                            <i class="fas fa-trash"></i>
-                        </button>
                     </div>
                 </div>
             `).join('');
