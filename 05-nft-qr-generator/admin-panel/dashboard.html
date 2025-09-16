@@ -1418,7 +1418,6 @@
                     </div>
                     <div class="code-actions">
                         <button class="btn btn-small btn-secondary" onclick="copyCode('${code.full_code}')">Copy Code</button>
-                        <button class="btn btn-small" onclick="generateQRForCode('${code.full_code}')">Generate QR</button>
                     </div>
                 </div>
             `).join('');
@@ -1439,17 +1438,7 @@
             });
         }
 
-        // Generate QR for a code
-        function generateQRForCode(code) {
-            // Switch to QR Generator tab and pre-fill the form
-            switchTab('qr-generator');
-            
-            // Pre-fill the URL with a placeholder that includes the code
-            document.getElementById('url').value = `https://gemspots.com/nft/${code}`;
-            document.getElementById('status').value = 'ready';
-            
-            showMessage(`Switched to QR Generator. Code ${code} ready for QR generation.`, 'success');
-        }
+        // This function was removed - QR generation should be done in QR Generator tab only
 
         // Filter codes
         function filterCodes() {

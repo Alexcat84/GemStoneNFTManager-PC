@@ -149,8 +149,8 @@ app.post('/api/qr/generate', async (req, res) => {
     // Generate simple QR code
     const qrId = await qrGenerator.generateSimpleQR(url, status, nft_url, estimated_ready_date, notes);
     
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       message: 'Código QR generado exitosamente',
       qrId
     });
@@ -442,18 +442,36 @@ app.get('/api/admin/db-status', requireAuth, async (req, res) => {
         );
       `);
       
+      // Check if generated_codes table exists
+      const codesTableCheck = await client.query(`
+        SELECT EXISTS (
+          SELECT FROM information_schema.tables 
+          WHERE table_schema = 'public' 
+          AND table_name = 'generated_codes'
+        );
+      `);
+      
       // Count locations
       const countResult = await client.query('SELECT COUNT(*) as count FROM locations');
+      
+      // Count generated codes
+      const codesCountResult = await client.query('SELECT COUNT(*) as count FROM generated_codes');
       
       // Get sample locations
       const sampleResult = await client.query('SELECT * FROM locations LIMIT 5');
       
+      // Get sample generated codes
+      const sampleCodesResult = await client.query('SELECT * FROM generated_codes LIMIT 5');
+      
       res.json({
         success: true,
         database: {
-          tableExists: tableCheck.rows[0].exists,
+          locationsTableExists: tableCheck.rows[0].exists,
+          codesTableExists: codesTableCheck.rows[0].exists,
           locationCount: parseInt(countResult.rows[0].count),
-          sampleLocations: sampleResult.rows
+          codesCount: parseInt(codesCountResult.rows[0].count),
+          sampleLocations: sampleResult.rows,
+          sampleCodes: sampleCodesResult.rows
         }
       });
     } finally {
