@@ -426,6 +426,22 @@ app.get('/api/codes/search', requireAuth, async (req, res) => {
   }
 });
 
+app.delete('/api/codes/:codeId', requireAuth, async (req, res) => {
+  try {
+    const { codeId } = req.params;
+    const result = await nftDatabase.deleteGeneratedCode(codeId);
+    
+    if (result.success) {
+      res.json({ success: true, message: 'Code deleted successfully' });
+    } else {
+      res.status(404).json({ success: false, message: 'Code not found' });
+    }
+  } catch (error) {
+    console.error('Error deleting code:', error);
+    res.status(500).json({ success: false, message: 'Error deleting code' });
+  }
+});
+
 // Diagnostic endpoint to check database status
 app.get('/api/admin/db-status', requireAuth, async (req, res) => {
   try {

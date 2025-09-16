@@ -576,6 +576,40 @@ class PostgresDatabase {
         }
     }
 
+    async deleteGeneratedCode(codeId) {
+        try {
+            const client = await this.pool.connect();
+            
+            // First check if the code exists
+            const checkResult = await client.query(
+                'SELECT id, full_code FROM generated_codes WHERE id = $1',
+                [codeId]
+            );
+            
+            if (checkResult.rows.length === 0) {
+                client.release();
+                return { success: false, message: 'Code not found' };
+            }
+            
+            // Delete the code
+            const deleteResult = await client.query(
+                'DELETE FROM generated_codes WHERE id = $1',
+                [codeId]
+            );
+            
+            client.release();
+            
+            return {
+                success: true,
+                message: 'Code deleted successfully',
+                deletedCode: checkResult.rows[0].full_code
+            };
+        } catch (error) {
+            console.error('Error deleting generated code:', error);
+            throw error;
+        }
+    }
+
     async addLocation(country, region) {
         try {
             const client = await this.pool.connect();
