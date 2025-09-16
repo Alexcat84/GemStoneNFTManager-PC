@@ -52,6 +52,99 @@
             background: rgba(255, 255, 255, 0.3);
         }
 
+        /* Tab Navigation */
+        .tab-navigation {
+            display: flex;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .tab-button {
+            background: none;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #666;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab-button:hover {
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .tab-button.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Code Generator Styles */
+        .codes-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .code-item {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .code-item:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .code-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 1.1rem;
+        }
+
+        .code-date {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .code-details {
+            color: #555;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .code-actions {
+            margin-top: 0.5rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-small {
+            padding: 0.25rem 0.75rem;
+            font-size: 0.8rem;
+        }
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
@@ -347,8 +440,16 @@
 
         <!-- Main Content -->
         <div class="main-content">
-            <!-- Generate QR Form -->
-            <div class="card">
+            <!-- Tab Navigation -->
+            <div class="tab-navigation">
+                <button class="tab-button active" onclick="switchTab('qr-generator')">QR Generator</button>
+                <button class="tab-button" onclick="switchTab('code-generator')">Code Generator</button>
+            </div>
+
+            <!-- QR Generator Tab -->
+            <div id="qr-generator-tab" class="tab-content active">
+                <!-- Generate QR Form -->
+                <div class="card">
                 <div class="card-header">
                     Generate QR Code
                 </div>
@@ -452,6 +553,85 @@
                                 <option value="50">50</option>
                                 <option value="100">100</option>
                             </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+
+            <!-- Code Generator Tab -->
+            <div id="code-generator-tab" class="tab-content">
+                <!-- Generate Code Form -->
+                <div class="card">
+                    <div class="card-header">
+                        Generate NFT Code
+                    </div>
+                    <div class="card-body">
+                        <form id="codeForm">
+                            <div class="form-group">
+                                <label for="gemstoneInput">Gemstones:</label>
+                                <input type="text" id="gemstoneInput" placeholder="Enter gemstone names (e.g., Amethyst, Quartz, Ruby)" class="form-input">
+                                <small class="form-help">Separate multiple gemstones with commas</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="locationSelect">Location:</label>
+                                <select id="locationSelect" required>
+                                    <option value="">Select Location...</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="monthSelect">Month:</label>
+                                    <select id="monthSelect" required>
+                                        <option value="">Select Month...</option>
+                                        <option value="1">January</option>
+                                        <option value="2">February</option>
+                                        <option value="3">March</option>
+                                        <option value="4">April</option>
+                                        <option value="5">May</option>
+                                        <option value="6">June</option>
+                                        <option value="7">July</option>
+                                        <option value="8">August</option>
+                                        <option value="9">September</option>
+                                        <option value="10">October</option>
+                                        <option value="11">November</option>
+                                        <option value="12">December</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="yearInput">Year:</label>
+                                    <input type="number" id="yearInput" min="2020" max="2030" value="2025" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="notesInput">Notes (optional):</label>
+                                <textarea id="notesInput" placeholder="Additional notes about this code..." rows="3"></textarea>
+                            </div>
+                            
+                            <button type="submit" class="btn">Generate Code</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Generated Codes List -->
+                <div class="card">
+                    <div class="card-header">
+                        Generated Codes
+                    </div>
+                    <div class="card-body">
+                        <!-- Search Filter -->
+                        <div class="form-group" style="margin-bottom: 1rem;">
+                            <label for="codeSearchFilter">Search Codes:</label>
+                            <input type="text" id="codeSearchFilter" placeholder="Search by code, gemstone, or notes..." onkeyup="filterCodes()">
+                        </div>
+                        
+                        <!-- Codes List -->
+                        <div id="codesList" class="codes-list">
+                            <!-- Generated codes will appear here -->
                         </div>
                     </div>
                 </div>
@@ -1048,6 +1228,31 @@
             window.location.href = '/';
         }
 
+        // Tab Functions
+        function switchTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active class from all tab buttons
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName + '-tab').classList.add('active');
+            
+            // Add active class to clicked button
+            event.target.classList.add('active');
+            
+            // Load data for the active tab
+            if (tabName === 'code-generator') {
+                loadLocations();
+                loadGeneratedCodes();
+            }
+        }
+
         // Change Password Functions
         function openChangePasswordModal() {
             document.getElementById('changePasswordModal').style.display = 'block';
@@ -1104,6 +1309,164 @@
             } finally {
                 changePasswordBtn.disabled = false;
                 changePasswordBtn.textContent = 'Change Password';
+            }
+        });
+
+        // Code Generator Functions
+        let generatedCodes = [];
+        let locations = [];
+
+        // Load locations for code generator
+        async function loadLocations() {
+            try {
+                const response = await fetch('/api/locations');
+                const data = await response.json();
+                locations = data;
+                
+                const locationSelect = document.getElementById('locationSelect');
+                locationSelect.innerHTML = '<option value="">Select Location...</option>';
+                
+                data.forEach(location => {
+                    const option = document.createElement('option');
+                    option.value = location.id;
+                    option.textContent = `${location.region}, ${location.country}`;
+                    locationSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading locations:', error);
+            }
+        }
+
+        // Load generated codes
+        async function loadGeneratedCodes() {
+            try {
+                const response = await fetch('/api/codes');
+                const data = await response.json();
+                generatedCodes = data;
+                renderCodes();
+            } catch (error) {
+                console.error('Error loading codes:', error);
+            }
+        }
+
+        // Render codes list
+        function renderCodes() {
+            const codesList = document.getElementById('codesList');
+            if (generatedCodes.length === 0) {
+                codesList.innerHTML = '<p style="text-align: center; color: #666; padding: 2rem;">No codes generated yet.</p>';
+                return;
+            }
+
+            codesList.innerHTML = generatedCodes.map(code => `
+                <div class="code-item">
+                    <div class="code-header">
+                        <div class="code-title">${code.full_code}</div>
+                        <div class="code-date">${new Date(code.generation_date).toLocaleDateString()}</div>
+                    </div>
+                    <div class="code-details">
+                        <strong>Gemstones:</strong> ${JSON.parse(code.gemstone_names).join(', ')}<br>
+                        <strong>Location:</strong> ${getLocationName(code.location_id)}<br>
+                        <strong>Month/Year:</strong> ${code.month}/${code.year}<br>
+                        <strong>Piece Number:</strong> ${code.piece_number}<br>
+                        ${code.notes ? `<strong>Notes:</strong> ${code.notes}` : ''}
+                    </div>
+                    <div class="code-actions">
+                        <button class="btn btn-small btn-secondary" onclick="copyCode('${code.full_code}')">Copy Code</button>
+                        <button class="btn btn-small" onclick="generateQRForCode('${code.full_code}')">Generate QR</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Get location name by ID
+        function getLocationName(locationId) {
+            const location = locations.find(loc => loc.id === locationId);
+            return location ? `${location.region}, ${location.country}` : 'Unknown';
+        }
+
+        // Copy code to clipboard
+        function copyCode(code) {
+            navigator.clipboard.writeText(code).then(() => {
+                showMessage('Code copied to clipboard!', 'success');
+            }).catch(() => {
+                showMessage('Failed to copy code', 'error');
+            });
+        }
+
+        // Generate QR for a code
+        function generateQRForCode(code) {
+            // Switch to QR Generator tab and pre-fill the form
+            switchTab('qr-generator');
+            
+            // Pre-fill the URL with a placeholder that includes the code
+            document.getElementById('url').value = `https://gemspots.com/nft/${code}`;
+            document.getElementById('status').value = 'ready';
+            
+            showMessage(`Switched to QR Generator. Code ${code} ready for QR generation.`, 'success');
+        }
+
+        // Filter codes
+        function filterCodes() {
+            const filter = document.getElementById('codeSearchFilter').value.toLowerCase();
+            const filteredCodes = generatedCodes.filter(code => 
+                code.full_code.toLowerCase().includes(filter) ||
+                code.gemstone_names.toLowerCase().includes(filter) ||
+                (code.notes && code.notes.toLowerCase().includes(filter))
+            );
+            
+            // Temporarily replace the codes list with filtered results
+            const originalCodes = generatedCodes;
+            generatedCodes = filteredCodes;
+            renderCodes();
+            generatedCodes = originalCodes;
+        }
+
+        // Handle code form submission
+        document.getElementById('codeForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const gemstoneInput = document.getElementById('gemstoneInput').value;
+            const locationId = document.getElementById('locationSelect').value;
+            const month = document.getElementById('monthSelect').value;
+            const year = document.getElementById('yearInput').value;
+            const notes = document.getElementById('notesInput').value;
+            
+            if (!gemstoneInput || !locationId || !month || !year) {
+                showMessage('Please fill in all required fields', 'error');
+                return;
+            }
+            
+            const gemstoneNames = gemstoneInput.split(',').map(name => name.trim()).filter(name => name);
+            
+            try {
+                const response = await fetch('/api/codes/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    },
+                    body: JSON.stringify({
+                        gemstoneNames,
+                        locationId: parseInt(locationId),
+                        month: parseInt(month),
+                        year: parseInt(year),
+                        notes
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMessage(`Code generated successfully: ${result.fullCode}`, 'success');
+                    document.getElementById('codeForm').reset();
+                    document.getElementById('yearInput').value = '2025'; // Reset year
+                    loadGeneratedCodes();
+                } else {
+                    showMessage(result.message || 'Error generating code', 'error');
+                }
+            } catch (error) {
+                console.error('Error generating code:', error);
+                showMessage('Error generating code. Please try again.', 'error');
             }
         });
     </script>

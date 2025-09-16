@@ -7,6 +7,7 @@ const rateLimit = require('express-rate-limit');
 const PostgresDatabase = require('./database/postgres-database');
 const QRGenerator = require('./qr-generator/qr-generator');
 const AdminAuth = require('./admin-panel/admin-auth');
+const CodeGenerator = require('./code-generator/code-generator');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -53,6 +54,7 @@ app.use(limiter);
 const nftDatabase = new PostgresDatabase();
 const qrGenerator = new QRGenerator();
 const adminAuth = new AdminAuth();
+const codeGenerator = new CodeGenerator();
 
 // Routes
 app.get('/', (req, res) => {
@@ -328,6 +330,93 @@ app.use((req, res) => {
 });
 
 // Start server
+// Code Generator API Routes
+app.get('/api/locations', requireAuth, async (req, res) => {
+  try {
+    const locations = await nftDatabase.getAllLocations();
+    res.json(locations);
+  } catch (error) {
+    console.error('Error getting locations:', error);
+    res.status(500).json({ success: false, message: 'Error getting locations' });
+  }
+});
+
+app.post('/api/locations', requireAuth, async (req, res) => {
+  try {
+    const { country, region } = req.body;
+    const result = await nftDatabase.addLocation(country, region);
+    res.json({ success: true, location: result });
+  } catch (error) {
+    console.error('Error adding location:', error);
+    res.status(500).json({ success: false, message: 'Error adding location' });
+  }
+});
+
+app.get('/api/codes', requireAuth, async (req, res) => {
+  try {
+    const codes = await nftDatabase.getAllGeneratedCodes();
+    res.json(codes);
+  } catch (error) {
+    console.error('Error getting codes:', error);
+    res.status(500).json({ success: false, message: 'Error getting codes' });
+  }
+});
+
+app.post('/api/codes/generate', requireAuth, async (req, res) => {
+  try {
+    const { gemstoneNames, locationId, month, year, notes } = req.body;
+    
+    // Get next correlative number
+    const pieceNumber = await nftDatabase.getNextCorrelative(gemstoneNames, month, year);
+    
+    // Generate the code
+    const fullCode = codeGenerator.generateCode(gemstoneNames, month, year, pieceNumber);
+    const checksum = codeGenerator.generateChecksum(gemstoneNames.join(','), month, year, pieceNumber);
+    
+    // Generate gemstone codes
+    const gemstoneCodes = gemstoneNames.map(name => codeGenerator.getGemstoneCode(name));
+    
+    // Prepare code data
+    const codeData = {
+      full_code: fullCode,
+      gemstone_names: JSON.stringify(gemstoneNames),
+      gemstone_codes: JSON.stringify(gemstoneCodes),
+      location_id: locationId,
+      piece_number: pieceNumber,
+      month: month,
+      year: year,
+      checksum: checksum,
+      notes: notes || ''
+    };
+    
+    // Save to database
+    const result = await nftDatabase.addGeneratedCode(codeData);
+    
+    res.json({
+      success: true,
+      message: 'Code generated successfully',
+      fullCode,
+      pieceNumber,
+      gemstoneNames,
+      ...result
+    });
+  } catch (error) {
+    console.error('Error generating code:', error);
+    res.status(500).json({ success: false, message: 'Error generating code' });
+  }
+});
+
+app.get('/api/codes/search', requireAuth, async (req, res) => {
+  try {
+    const { query } = req.query;
+    const codes = await nftDatabase.searchGeneratedCodes(query);
+    res.json(codes);
+  } catch (error) {
+    console.error('Error searching codes:', error);
+    res.status(500).json({ success: false, message: 'Error searching codes' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`🚀 NFT QR Generator running on port ${PORT}`);
   console.log(`📱 Admin panel: http://localhost:${PORT}`);

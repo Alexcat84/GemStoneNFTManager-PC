@@ -54,12 +54,32 @@ class PostgresDatabase {
                 )
             `);
 
+            await client.query(`
+                CREATE TABLE IF NOT EXISTS generated_codes (
+                    id SERIAL PRIMARY KEY,
+                    full_code VARCHAR(50) UNIQUE NOT NULL,
+                    gemstone_names TEXT NOT NULL,
+                    gemstone_codes TEXT NOT NULL,
+                    location_id INTEGER NOT NULL,
+                    piece_number INTEGER NOT NULL,
+                    generation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    month INTEGER NOT NULL,
+                    year INTEGER NOT NULL,
+                    checksum VARCHAR(10) NOT NULL,
+                    notes TEXT,
+                    FOREIGN KEY (location_id) REFERENCES locations(id)
+                )
+            `);
+
             // Create indexes
             await client.query(`CREATE INDEX IF NOT EXISTS idx_nfts_nft_code ON nfts(nft_code)`);
             await client.query(`CREATE INDEX IF NOT EXISTS idx_nfts_created_at ON nfts(created_at)`);
             await client.query(`CREATE INDEX IF NOT EXISTS idx_qr_codes_nft_id ON qr_codes(nft_id)`);
             await client.query(`CREATE INDEX IF NOT EXISTS idx_qr_codes_type ON qr_codes(type)`);
             await client.query(`CREATE INDEX IF NOT EXISTS idx_locations_country ON locations(country)`);
+            await client.query(`CREATE INDEX IF NOT EXISTS idx_generated_codes_full_code ON generated_codes(full_code)`);
+            await client.query(`CREATE INDEX IF NOT EXISTS idx_generated_codes_generation_date ON generated_codes(generation_date)`);
+            await client.query(`CREATE INDEX IF NOT EXISTS idx_generated_codes_month_year ON generated_codes(month, year)`);
 
             // Insert initial data
             await this.insertInitialData(client);
@@ -232,6 +252,128 @@ class PostgresDatabase {
             };
         } catch (error) {
             console.error('Error getting stats:', error);
+            throw error;
+        }
+    }
+
+    // Code Generator Methods
+    async getAllGeneratedCodes() {
+        try {
+            const client = await this.pool.connect();
+            
+            const result = await client.query(`
+                SELECT gc.*, l.country, l.region
+                FROM generated_codes gc
+                LEFT JOIN locations l ON gc.location_id = l.id
+                ORDER BY gc.generation_date DESC
+            `);
+            
+            client.release();
+            return result.rows;
+        } catch (error) {
+            console.error('Error getting generated codes:', error);
+            throw error;
+        }
+    }
+
+    async addGeneratedCode(codeData) {
+        try {
+            const client = await this.pool.connect();
+            
+            const result = await client.query(`
+                INSERT INTO generated_codes (
+                    full_code, gemstone_names, gemstone_codes, location_id, 
+                    piece_number, month, year, checksum, notes
+                )
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                RETURNING id, generation_date
+            `, [
+                codeData.full_code,
+                codeData.gemstone_names,
+                codeData.gemstone_codes,
+                codeData.location_id,
+                codeData.piece_number,
+                codeData.month,
+                codeData.year,
+                codeData.checksum,
+                codeData.notes || ''
+            ]);
+            
+            client.release();
+            
+            return {
+                id: result.rows[0].id,
+                generation_date: result.rows[0].generation_date,
+                ...codeData
+            };
+        } catch (error) {
+            console.error('Error adding generated code:', error);
+            throw error;
+        }
+    }
+
+    async getNextCorrelative(gemstoneNames, month, year) {
+        try {
+            const client = await this.pool.connect();
+            const gemstoneNamesStr = JSON.stringify(gemstoneNames);
+            
+            const result = await client.query(`
+                SELECT MAX(piece_number) as max_number
+                FROM generated_codes
+                WHERE gemstone_names = $1 AND month = $2 AND year = $3
+            `, [gemstoneNamesStr, month, year]);
+            
+            client.release();
+            
+            return (result.rows[0].max_number || 0) + 1;
+        } catch (error) {
+            console.error('Error getting next correlative:', error);
+            throw error;
+        }
+    }
+
+    async searchGeneratedCodes(query) {
+        try {
+            const client = await this.pool.connect();
+            
+            const result = await client.query(`
+                SELECT gc.*, l.country, l.region
+                FROM generated_codes gc
+                LEFT JOIN locations l ON gc.location_id = l.id
+                WHERE gc.full_code ILIKE $1 
+                   OR gc.gemstone_names ILIKE $1 
+                   OR gc.notes ILIKE $1
+                ORDER BY gc.generation_date DESC
+            `, [`%${query}%`]);
+            
+            client.release();
+            return result.rows;
+        } catch (error) {
+            console.error('Error searching generated codes:', error);
+            throw error;
+        }
+    }
+
+    async addLocation(country, region) {
+        try {
+            const client = await this.pool.connect();
+            
+            const result = await client.query(`
+                INSERT INTO locations (country, region)
+                VALUES ($1, $2)
+                RETURNING id, created_at
+            `, [country, region]);
+            
+            client.release();
+            
+            return {
+                id: result.rows[0].id,
+                country,
+                region,
+                created_at: result.rows[0].created_at
+            };
+        } catch (error) {
+            console.error('Error adding location:', error);
             throw error;
         }
     }
