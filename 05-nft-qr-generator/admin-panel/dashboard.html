@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GemStone NFT QR Generator - Dashboard v2.1</title>
+    <title>GemStone NFT QR Generator - Dashboard v2.2</title>
     <style>
         * {
             margin: 0;
@@ -138,12 +138,6 @@
             margin-bottom: 1rem;
         }
 
-        .code-title-section {
-            display: flex;
-            align-items: center;
-            gap: 0.8rem;
-        }
-
         .code-title {
             font-weight: bold;
             font-size: 1.3rem;
@@ -151,12 +145,6 @@
             text-shadow: 0 2px 4px rgba(0,0,0,0.3);
             font-family: 'Courier New', monospace;
             letter-spacing: 1px;
-        }
-
-        .code-date-section {
-            display: flex;
-            align-items: center;
-            gap: 0.8rem;
         }
 
         .code-date {
@@ -184,56 +172,47 @@
             font-weight: 600;
         }
 
-        /* Inline button styles */
-        .btn-copy-inline {
-            background: #ffffff;
-            color: #2d3748;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 0.4rem 0.8rem;
-            font-size: 0.8rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        .code-actions {
             display: flex;
-            align-items: center;
-            gap: 0.3rem;
-        }
-
-        .btn-copy-inline:hover {
-            background: #f7fafc;
-            border-color: #4ecdc4;
-            color: #2d3748;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-
-        .btn-delete-inline {
-            background: #ffffff;
-            color: #e53e3e;
-            border: 2px solid #fed7d7;
-            border-radius: 50%;
-            width: 32px;
-            height: 32px;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            display: flex;
-            align-items: center;
+            gap: 1rem;
+            margin-top: 1rem;
             justify-content: center;
         }
 
-        .btn-delete-inline:hover {
-            background: #fed7d7;
-            border-color: #e53e3e;
-            color: #c53030;
-            transform: translateY(-1px) scale(1.1);
-            box-shadow: 0 4px 12px rgba(229, 62, 62, 0.3);
+        .copy-btn, .delete-btn {
+            padding: 0.6rem 1.2rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
 
-        /* Legacy button styles removed - using inline buttons now */
+        .copy-btn {
+            background: #10b981;
+            color: white;
+        }
+
+        .copy-btn:hover {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .delete-btn {
+            background: #ef4444;
+            color: white;
+        }
+
+        .delete-btn:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        /* Clean design - simple action buttons */
 
         /* Search area styling */
         .form-group label {
@@ -1550,18 +1529,8 @@
             codesList.innerHTML = generatedCodes.map(code => `
                 <div class="code-item">
                     <div class="code-header">
-                        <div class="code-title-section">
-                            <div class="code-title">${code.full_code}</div>
-                            <button class="btn btn-copy-inline" onclick="copyCode('${code.full_code}')" title="Copy Code">
-                                <i class="fas fa-copy"></i>
-                            </button>
-                        </div>
-                        <div class="code-date-section">
-                            <div class="code-date">${new Date(code.generation_date).toLocaleDateString()}</div>
-                            <button class="btn btn-delete-inline" onclick="deleteCode(${code.id}, '${code.full_code}')" title="Delete Code">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
+                        <div class="code-title">${code.full_code}</div>
+                        <div class="code-date">${new Date(code.generation_date).toLocaleDateString()}</div>
                     </div>
                     <div class="code-details">
                         <strong>Gemstones:</strong> ${JSON.parse(code.gemstone_names).join(', ')}<br>
@@ -1569,6 +1538,14 @@
                         <strong>Month/Year:</strong> ${code.month}/${code.year}<br>
                         <strong>Piece Number:</strong> ${code.piece_number}<br>
                         ${code.notes ? `<strong>Notes:</strong> ${code.notes}` : ''}
+                    </div>
+                    <div class="code-actions">
+                        <button class="copy-btn" onclick="copyCode('${code.full_code}')">
+                            📋 Copy Code
+                        </button>
+                        <button class="delete-btn" onclick="deleteCode(${code.id}, '${code.full_code}')">
+                            🗑️ Delete
+                        </button>
                     </div>
                 </div>
             `).join('');
