@@ -29,7 +29,7 @@ const storage = multer.diskStorage({
 const upload = multer({ 
   storage: storage,
   limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB limit
+    fileSize: 5 * 1024 * 1024 // 5MB limit per file
   },
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) {
@@ -112,21 +112,27 @@ const requireAuth = (req, res, next) => {
 // API Routes for GemSpots data
 app.get('/api/gemspots', async (req, res) => {
   try {
-    const products = await database.getAllProducts();
+    const products = await database.getFeaturedProducts();
     const gemspots = products.map(product => ({
       id: product.id,
       name: product.name,
       description: product.description,
       price: parseFloat(product.price),
-      image: product.image_url || "/images/default-gemspot.jpg",
+      images: product.image_urls || ["/images/default-gemspot.jpg"],
       qrCode: product.qr_code,
       nftUrl: product.nft_url,
+      nftImage: product.nft_image_url,
+      crystal: product.crystal_type,
+      rarity: product.rarity,
+      energyProperties: product.energy_properties,
+      personalityTarget: product.personality_target,
       status: product.status,
       category: product.category,
       dimensions: product.dimensions,
       weight: product.weight,
-      crystal: product.crystal_type,
-      rarity: product.rarity
+      stock: product.stock_quantity,
+      isFeatured: product.is_featured,
+      createdAt: product.created_at
     }));
     
     res.json({ success: true, gemspots });
@@ -265,23 +271,44 @@ app.get('/api/admin/products', requireAuth, async (req, res) => {
   }
 });
 
-app.post('/api/admin/products', requireAuth, upload.single('image'), async (req, res) => {
+app.post('/api/admin/products', requireAuth, upload.fields([
+  { name: 'images', maxCount: 4 },
+  { name: 'nftImage', maxCount: 1 }
+]), async (req, res) => {
   try {
+    // Process multiple images
+    const imageUrls = [];
+    if (req.files.images) {
+      req.files.images.forEach(file => {
+        imageUrls.push(`/uploads/${file.filename}`);
+      });
+    }
+
+    // Process NFT image
+    let nftImageUrl = null;
+    if (req.files.nftImage && req.files.nftImage[0]) {
+      nftImageUrl = `/uploads/${req.files.nftImage[0].filename}`;
+    }
+
     const productData = {
       name: req.body.name,
       description: req.body.description,
       price: parseFloat(req.body.price),
-      image_url: req.file ? `/uploads/${req.file.filename}` : null,
+      image_urls: imageUrls,
       qr_code: req.body.qr_code,
       nft_url: req.body.nft_url,
+      nft_image_url: nftImageUrl,
       status: req.body.status || 'available',
       category: req.body.category,
       dimensions: req.body.dimensions,
       weight: req.body.weight,
       crystal_type: req.body.crystal_type,
       rarity: req.body.rarity,
+      energy_properties: req.body.energy_properties,
+      personality_target: req.body.personality_target,
       stock_quantity: parseInt(req.body.stock_quantity) || 1,
-      is_featured: req.body.is_featured === 'true'
+      is_featured: req.body.is_featured === 'true',
+      is_archived: req.body.is_archived === 'true'
     };
 
     const result = await database.addProduct(productData);
@@ -292,24 +319,49 @@ app.post('/api/admin/products', requireAuth, upload.single('image'), async (req,
   }
 });
 
-app.put('/api/admin/products/:id', requireAuth, upload.single('image'), async (req, res) => {
+app.put('/api/admin/products/:id', requireAuth, upload.fields([
+  { name: 'images', maxCount: 4 },
+  { name: 'nftImage', maxCount: 1 }
+]), async (req, res) => {
   try {
     const productId = req.params.id;
+    
+    // Process multiple images
+    const imageUrls = [];
+    if (req.files.images) {
+      req.files.images.forEach(file => {
+        imageUrls.push(`/uploads/${file.filename}`);
+      });
+    } else if (req.body.existing_images) {
+      // Keep existing images if no new ones uploaded
+      imageUrls.push(...JSON.parse(req.body.existing_images));
+    }
+
+    // Process NFT image
+    let nftImageUrl = req.body.existing_nft_image;
+    if (req.files.nftImage && req.files.nftImage[0]) {
+      nftImageUrl = `/uploads/${req.files.nftImage[0].filename}`;
+    }
+
     const productData = {
       name: req.body.name,
       description: req.body.description,
       price: parseFloat(req.body.price),
-      image_url: req.file ? `/uploads/${req.file.filename}` : req.body.existing_image,
+      image_urls: imageUrls,
       qr_code: req.body.qr_code,
       nft_url: req.body.nft_url,
+      nft_image_url: nftImageUrl,
       status: req.body.status,
       category: req.body.category,
       dimensions: req.body.dimensions,
       weight: req.body.weight,
       crystal_type: req.body.crystal_type,
       rarity: req.body.rarity,
+      energy_properties: req.body.energy_properties,
+      personality_target: req.body.personality_target,
       stock_quantity: parseInt(req.body.stock_quantity),
-      is_featured: req.body.is_featured === 'true'
+      is_featured: req.body.is_featured === 'true',
+      is_archived: req.body.is_archived === 'true'
     };
 
     const result = await database.updateProduct(productId, productData);

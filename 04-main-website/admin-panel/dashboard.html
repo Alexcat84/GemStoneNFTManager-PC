@@ -275,7 +275,7 @@
 </head>
 <body>
     <div class="header">
-        <h1>💎 GemSpots Admin Dashboard v1.3</h1>
+        <h1>💎 GemSpots Admin Dashboard v2.0</h1>
         <div class="header-actions">
             <a href="/" class="btn btn-secondary">View Website</a>
             <button class="btn btn-secondary" onclick="openChangePasswordModal()">Change Password</button>
@@ -499,19 +499,8 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="crystal_type">Crystal Type *</label>
-                                <select id="crystal_type" name="crystal_type" required>
-                                    <option value="">Select Crystal</option>
-                                    <option value="Amethyst" ${product?.crystal_type === 'Amethyst' ? 'selected' : ''}>Amethyst</option>
-                                    <option value="Rose Quartz" ${product?.crystal_type === 'Rose Quartz' ? 'selected' : ''}>Rose Quartz</option>
-                                    <option value="Citrine" ${product?.crystal_type === 'Citrine' ? 'selected' : ''}>Citrine</option>
-                                    <option value="Smoky Quartz" ${product?.crystal_type === 'Smoky Quartz' ? 'selected' : ''}>Smoky Quartz</option>
-                                    <option value="Clear Quartz" ${product?.crystal_type === 'Clear Quartz' ? 'selected' : ''}>Clear Quartz</option>
-                                    <option value="Black Tourmaline" ${product?.crystal_type === 'Black Tourmaline' ? 'selected' : ''}>Black Tourmaline</option>
-                                    <option value="Selenite" ${product?.crystal_type === 'Selenite' ? 'selected' : ''}>Selenite</option>
-                                    <option value="Labradorite" ${product?.crystal_type === 'Labradorite' ? 'selected' : ''}>Labradorite</option>
-                                    <option value="Moonstone" ${product?.crystal_type === 'Moonstone' ? 'selected' : ''}>Moonstone</option>
-                                    <option value="Tiger's Eye" ${product?.crystal_type === 'Tiger\'s Eye' ? 'selected' : ''}>Tiger's Eye</option>
-                                </select>
+                                <input type="text" id="crystal_type" name="crystal_type" placeholder="e.g., Pink Calcite, Amethyst, Rose Quartz..." value="${product?.crystal_type || ''}" required>
+                                <small class="form-help">Enter the crystal type (custom names allowed)</small>
                             </div>
                             <div class="form-group">
                                 <label for="rarity">Rarity *</label>
@@ -537,6 +526,18 @@
                             </div>
                         </div>
                         
+                        <div class="form-group">
+                            <label for="energy_properties">Energy Properties</label>
+                            <textarea id="energy_properties" name="energy_properties" rows="3" placeholder="e.g., Promotes love and compassion, enhances intuition, brings peace and tranquility...">${product?.energy_properties || ''}</textarea>
+                            <small class="form-help">Describe the energetic benefits and properties of this crystal</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="personality_target">Target Personality</label>
+                            <textarea id="personality_target" name="personality_target" rows="2" placeholder="e.g., Perfect for empaths, ideal for meditation practitioners, great for beginners...">${product?.personality_target || ''}</textarea>
+                            <small class="form-help">Describe who this crystal is perfect for</small>
+                        </div>
+                        
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="category">Category</label>
@@ -558,6 +559,23 @@
                             </div>
                         </div>
                         
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="is_featured">Featured Product</label>
+                                <select id="is_featured" name="is_featured">
+                                    <option value="false" ${!product?.is_featured ? 'selected' : ''}>No</option>
+                                    <option value="true" ${product?.is_featured ? 'selected' : ''}>Yes</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="is_archived">Archive Status</label>
+                                <select id="is_archived" name="is_archived">
+                                    <option value="false" ${!product?.is_archived ? 'selected' : ''}>Active</option>
+                                    <option value="true" ${product?.is_archived ? 'selected' : ''}>Archived</option>
+                                </select>
+                            </div>
+                        </div>
+                        
                         <div class="form-group">
                             <label for="qr_code">QR Code URL</label>
                             <input type="url" id="qr_code" name="qr_code" placeholder="http://192.168.18.19:3000/qr/..." value="${product?.qr_code || ''}">
@@ -569,9 +587,16 @@
                         </div>
                         
                         <div class="form-group">
-                            <label for="image">Product Image</label>
-                            <input type="file" id="image" name="image" accept="image/*">
-                            ${product?.image_url ? `<p class="current-image">Current: ${product.image_url}</p>` : ''}
+                            <label for="images">Product Images * (Select multiple images)</label>
+                            <input type="file" id="images" name="images" accept="image/*" multiple required>
+                            <small class="form-help">Select 3-4 high-quality images of your GemSpot</small>
+                            ${product?.image_urls ? `<p class="current-images">Current: ${product.image_urls.length} images</p>` : ''}
+                        </div>
+                        <div class="form-group">
+                            <label for="nftImage">NFT Image</label>
+                            <input type="file" id="nftImage" name="nftImage" accept="image/*">
+                            <small class="form-help">Upload the NFT image for this product</small>
+                            ${product?.nft_image_url ? `<p class="current-image">Current NFT: ${product.nft_image_url}</p>` : ''}
                         </div>
                         
                         <div class="form-actions">
