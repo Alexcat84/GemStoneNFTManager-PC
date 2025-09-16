@@ -5,13 +5,18 @@ const { Pool } = require('pg');
 
 class QRGenerator {
     constructor() {
-        this.qrCodesDir = path.join(__dirname, '..', 'qr-codes');
-        this.ensureDirectoryExists();
+        // In Vercel, we can't create local directories, so we'll skip this
+        if (process.env.VERCEL) {
+            this.qrCodesDir = '/tmp/qr-codes';
+        } else {
+            this.qrCodesDir = path.join(__dirname, '..', 'qr-codes');
+            this.ensureDirectoryExists();
+        }
         this.initializeDatabase();
     }
 
     async ensureDirectoryExists() {
-        if (!fs.existsSync(this.qrCodesDir)) {
+        if (!process.env.VERCEL && !fs.existsSync(this.qrCodesDir)) {
             fs.mkdirSync(this.qrCodesDir, { recursive: true });
         }
     }
@@ -38,11 +43,20 @@ class QRGenerator {
                     nft_url TEXT,
                     estimated_ready_date TIMESTAMP WITH TIME ZONE,
                     notes TEXT,
+                    qr_data TEXT,
                     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
                 )
             `;
 
             await client.query(createTableQuery);
+            
+            // Add qr_data column if it doesn't exist (for existing tables)
+            try {
+                await client.query('ALTER TABLE qr_codes ADD COLUMN IF NOT EXISTS qr_data TEXT');
+            } catch (err) {
+                // Column might already exist, ignore error
+            }
+            
             console.log('QR codes table ready');
         } catch (err) {
             console.error('Error creating qr_codes table:', err);
@@ -55,32 +69,47 @@ class QRGenerator {
         try {
             const qrId = Date.now().toString();
             const fileName = `qr-${qrId}.png`;
-            const filePath = path.join(this.qrCodesDir, fileName);
             
+            // In Vercel, we'll generate QR as base64 and store in database
             // Generate QR code that points to our smart redirect endpoint
             const qrUrl = `https://qr-generator-nine-delta.vercel.app/qr/${qrId}`;
             
-            // Generate QR code in HD
-            await QRCode.toFile(filePath, qrUrl, {
-                width: 1024,
-                margin: 4,
-                color: {
-                    dark: '#000000',
-                    light: '#FFFFFF'
-                },
-                errorCorrectionLevel: 'H'
-            });
+            let qrCodeData;
+            if (process.env.VERCEL) {
+                // Generate QR as base64 for Vercel
+                qrCodeData = await QRCode.toDataURL(qrUrl, {
+                    width: 1024,
+                    margin: 4,
+                    color: {
+                        dark: '#000000',
+                        light: '#FFFFFF'
+                    },
+                    errorCorrectionLevel: 'H'
+                });
+            } else {
+                // Generate QR as file for local development
+                const filePath = path.join(this.qrCodesDir, fileName);
+                await QRCode.toFile(filePath, qrUrl, {
+                    width: 1024,
+                    margin: 4,
+                    color: {
+                        dark: '#000000',
+                        light: '#FFFFFF'
+                    },
+                    errorCorrectionLevel: 'H'
+                });
+            }
 
             // Store QR info in database
             const client = await this.pool.connect();
             try {
                 const sql = `
-                    INSERT INTO qr_codes (qr_id, url, status, nft_url, estimated_ready_date, notes)
-                    VALUES ($1, $2, $3, $4, $5, $6)
+                    INSERT INTO qr_codes (qr_id, url, status, nft_url, estimated_ready_date, notes, qr_data)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7)
                     RETURNING qr_id
                 `;
                 
-                const result = await client.query(sql, [qrId, url, status, nft_url, estimated_ready_date, notes]);
+                const result = await client.query(sql, [qrId, url, status, nft_url, estimated_ready_date, notes, qrCodeData]);
                 return result.rows[0].qr_id;
             } finally {
                 client.release();
@@ -95,7 +124,7 @@ class QRGenerator {
         const client = await this.pool.connect();
         try {
             const result = await client.query(`
-                SELECT qr_id as id, url, status, nft_url, estimated_ready_date, notes, created_at,
+                SELECT qr_id as id, url, status, nft_url, estimated_ready_date, notes, qr_data, created_at,
                        to_char(created_at, 'YYYY-MM-DD HH24:MI:SS') as timestamp
                 FROM qr_codes 
                 ORDER BY created_at DESC
@@ -110,7 +139,7 @@ class QRGenerator {
         const client = await this.pool.connect();
         try {
             const result = await client.query(`
-                SELECT qr_id as id, url, status, nft_url, estimated_ready_date, notes, created_at,
+                SELECT qr_id as id, url, status, nft_url, estimated_ready_date, notes, qr_data, created_at,
                        to_char(created_at, 'YYYY-MM-DD HH24:MI:SS') as timestamp
                 FROM qr_codes 
                 WHERE qr_id = $1

@@ -242,3 +242,4 @@ class PostgresDatabase {
 }
 
 module.exports = PostgresDatabase;
+

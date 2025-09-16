@@ -20,7 +20,27 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'assets')));
 app.use(express.static(path.join(__dirname, 'admin-panel')));
-app.use('/qr-codes', express.static(path.join(__dirname, 'qr-codes')));
+// Serve QR codes from database in Vercel, from files locally
+if (process.env.VERCEL) {
+  app.get('/qr-codes/:filename', async (req, res) => {
+    try {
+      const qrId = req.params.filename.replace('qr-', '').replace('.png', '');
+      const qr = await qrGenerator.getQRById(qrId);
+      
+      if (qr && qr.qr_data) {
+        res.setHeader('Content-Type', 'image/png');
+        res.send(Buffer.from(qr.qr_data.split(',')[1], 'base64'));
+      } else {
+        res.status(404).send('QR code not found');
+      }
+    } catch (error) {
+      console.error('Error serving QR code:', error);
+      res.status(500).send('Error serving QR code');
+    }
+  });
+} else {
+  app.use('/qr-codes', express.static(path.join(__dirname, 'qr-codes')));
+}
 
 // Rate limiting
 const limiter = rateLimit({
