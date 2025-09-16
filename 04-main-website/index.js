@@ -204,6 +204,39 @@ app.get('/api/admin/diagnostic', async (req, res) => {
   }
 });
 
+// Fix password endpoint
+app.post('/api/admin/fix-password', async (req, res) => {
+  try {
+    console.log('🔧 [FIX PASSWORD] Starting password fix...');
+    
+    const bcrypt = require('bcryptjs');
+    const correctHash = '$2a$10$KtGWhWtpuuskGKVkj9Lq6eJEVKcNLtCop11ofxZSi.3PVyHnv3i4u';
+    
+    // Update admin password in database
+    const client = await database.pool.connect();
+    const result = await client.query(
+      'UPDATE admin_users SET password_hash = $1 WHERE username = $2 RETURNING *',
+      [correctHash, 'admin']
+    );
+    
+    client.release();
+    
+    console.log('🔧 [FIX PASSWORD] Password updated successfully');
+    
+    res.json({
+      success: true,
+      message: 'Password updated successfully',
+      user: result.rows[0]
+    });
+  } catch (error) {
+    console.error('❌ [FIX PASSWORD ERROR]:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message
+    });
+  }
+});
+
 app.get('/api/admin/products', requireAuth, async (req, res) => {
   try {
     const products = await database.getAllProducts();
