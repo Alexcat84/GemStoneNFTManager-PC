@@ -112,6 +112,7 @@ The system will automatically create the required tables:
 ### Local Development:
 ```bash
 npm install
+# Set up environment variables first
 npm start
 ```
 

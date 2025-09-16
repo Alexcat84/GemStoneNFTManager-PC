@@ -6,14 +6,13 @@ const rateLimit = require('express-rate-limit');
 const compression = require('compression');
 const multer = require('multer');
 const PostgresDatabase = require('./database/postgres-database');
-const MockDatabase = require('./database/mock-database');
 const AdminAuth = require('./admin-panel/admin-auth');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// Initialize services - use mock database for local testing if no DATABASE_URL
-const database = process.env.DATABASE_URL ? new PostgresDatabase() : new MockDatabase();
+// Initialize services
+const database = new PostgresDatabase();
 const adminAuth = new AdminAuth();
 
 // Configure multer for file uploads

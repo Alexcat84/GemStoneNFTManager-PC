@@ -1,17 +1,15 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const PostgresDatabase = require('../database/postgres-database');
-const MockDatabase = require('../database/mock-database');
 
 class AdminAuth {
     constructor() {
         this.secretKey = process.env.JWT_SECRET || 'GemSpots2025!@#MainWebsite$%^&()+{}|:<>?[]\\;\',./~-=_+{}|:<>?[]\\;\',./~-=_';
         this.sessionTimeout = 30 * 60 * 1000; // 30 minutes
         this.sessions = new Map();
-        this.database = process.env.DATABASE_URL ? new PostgresDatabase() : new MockDatabase();
+        this.database = new PostgresDatabase();
         
         console.log('AdminAuth initialized with JWT_SECRET:', this.secretKey ? 'SET' : 'NOT SET');
-        console.log('AdminAuth using database:', process.env.DATABASE_URL ? 'PostgreSQL' : 'Mock');
     }
 
     async login(username, password) {
