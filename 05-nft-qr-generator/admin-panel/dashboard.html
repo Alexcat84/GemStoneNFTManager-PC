@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GemStone NFT QR Generator - Dashboard</title>
+    <title>GemStone NFT QR Generator - Dashboard v2.0</title>
     <style>
         * {
             margin: 0;
@@ -1326,24 +1326,35 @@
         let generatedCodes = [];
         let locations = [];
 
-        // Load locations for code generator
+        // Load locations for code generator - DEBUG VERSION
         async function loadLocations() {
+            console.log('🔄 Loading locations...');
             try {
                 const token = localStorage.getItem('adminToken');
+                console.log('🔑 Token found:', token ? 'YES' : 'NO');
+                
                 const response = await fetch('/api/locations', {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
                 });
                 
+                console.log('📡 Response status:', response.status);
+                
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 
                 const data = await response.json();
+                console.log('📊 Data received:', data);
                 locations = data;
                 
                 const locationSelect = document.getElementById('locationSelect');
+                if (!locationSelect) {
+                    console.error('❌ Location select element not found!');
+                    return;
+                }
+                
                 locationSelect.innerHTML = '<option value="">Select Location...</option>';
                 
                 data.forEach(location => {
@@ -1353,10 +1364,11 @@
                     locationSelect.appendChild(option);
                 });
                 
-                console.log('Locations loaded:', data.length);
+                console.log('✅ Locations loaded successfully:', data.length);
+                showMessage(`✅ ${data.length} locations loaded successfully!`, 'success');
             } catch (error) {
-                console.error('Error loading locations:', error);
-                showMessage('Error loading locations. Please refresh the page.', 'error');
+                console.error('❌ Error loading locations:', error);
+                showMessage(`❌ Error loading locations: ${error.message}`, 'error');
             }
         }
 
