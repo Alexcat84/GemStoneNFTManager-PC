@@ -767,6 +767,8 @@
             setupSearchFilter();
             setupDateFilters();
             setupFormHandlers();
+            // Load locations for code generator
+            loadLocations();
         });
 
         async function loadQRs() {
@@ -1327,7 +1329,17 @@
         // Load locations for code generator
         async function loadLocations() {
             try {
-                const response = await fetch('/api/locations');
+                const token = localStorage.getItem('adminToken');
+                const response = await fetch('/api/locations', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const data = await response.json();
                 locations = data;
                 
@@ -1340,8 +1352,11 @@
                     option.textContent = `${location.region}, ${location.country}`;
                     locationSelect.appendChild(option);
                 });
+                
+                console.log('Locations loaded:', data.length);
             } catch (error) {
                 console.error('Error loading locations:', error);
+                showMessage('Error loading locations. Please refresh the page.', 'error');
             }
         }
 
