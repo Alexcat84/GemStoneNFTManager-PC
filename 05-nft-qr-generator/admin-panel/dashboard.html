@@ -186,47 +186,51 @@
 
         /* Inline button styles */
         .btn-copy-inline {
-            background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
-            color: #ffffff;
-            border: none;
+            background: #ffffff;
+            color: #2d3748;
+            border: 2px solid #e2e8f0;
             border-radius: 8px;
             padding: 0.4rem 0.8rem;
             font-size: 0.8rem;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 2px 8px rgba(78, 205, 196, 0.3);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             display: flex;
             align-items: center;
             gap: 0.3rem;
         }
 
         .btn-copy-inline:hover {
-            background: linear-gradient(135deg, #45b7aa 0%, #3d8b7a 100%);
+            background: #f7fafc;
+            border-color: #4ecdc4;
+            color: #2d3748;
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(78, 205, 196, 0.4);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
         .btn-delete-inline {
-            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
-            color: #ffffff;
-            border: none;
+            background: #ffffff;
+            color: #e53e3e;
+            border: 2px solid #fed7d7;
             border-radius: 50%;
             width: 32px;
             height: 32px;
             font-size: 0.9rem;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
         .btn-delete-inline:hover {
-            background: linear-gradient(135deg, #ff5252 0%, #e53935 100%);
+            background: #fed7d7;
+            border-color: #e53e3e;
+            color: #c53030;
             transform: translateY(-1px) scale(1.1);
-            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+            box-shadow: 0 4px 12px rgba(229, 62, 62, 0.3);
         }
 
         /* Legacy button styles removed - using inline buttons now */
