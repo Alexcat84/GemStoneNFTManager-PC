@@ -1374,19 +1374,31 @@
         // Load generated codes
         async function loadGeneratedCodes() {
             try {
-                const response = await fetch('/api/codes');
+                const token = localStorage.getItem('adminToken');
+                const response = await fetch('/api/codes', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const data = await response.json();
-                generatedCodes = data;
+                generatedCodes = Array.isArray(data) ? data : [];
                 renderCodes();
             } catch (error) {
                 console.error('Error loading codes:', error);
+                generatedCodes = []; // Ensure it's always an array
+                renderCodes();
             }
         }
 
         // Render codes list
         function renderCodes() {
             const codesList = document.getElementById('codesList');
-            if (generatedCodes.length === 0) {
+            if (!Array.isArray(generatedCodes) || generatedCodes.length === 0) {
                 codesList.innerHTML = '<p style="text-align: center; color: #666; padding: 2rem;">No codes generated yet.</p>';
                 return;
             }
