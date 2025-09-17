@@ -92,9 +92,29 @@ class ShoppingCart {
         }
     }
 
-    // Get cart total
-    getTotal() {
+    // Get cart subtotal
+    getSubtotal() {
         return this.items.reduce((total, item) => total + (item.price * item.quantity), 0);
+    }
+
+    // Get tax amount
+    getTax() {
+        const taxRate = this.config.taxRate || 0.13; // 13% HST for Ontario
+        return this.getSubtotal() * taxRate;
+    }
+
+    // Get shipping cost
+    getShipping() {
+        const subtotal = this.getSubtotal();
+        const freeShippingThreshold = this.config.freeShippingThreshold || 100;
+        const defaultShippingCost = this.config.defaultShippingCost || 15;
+        
+        return subtotal >= freeShippingThreshold ? 0 : defaultShippingCost;
+    }
+
+    // Get cart total (subtotal + tax + shipping)
+    getTotal() {
+        return this.getSubtotal() + this.getTax() + this.getShipping();
     }
 
     // Get cart item count
@@ -125,6 +145,15 @@ class ShoppingCart {
             const count = this.getItemCount();
             cartCount.textContent = count;
             cartCount.style.display = count > 0 ? 'block' : 'none';
+            
+            // Add total amount as title attribute for hover
+            if (count > 0) {
+                const total = this.getTotal();
+                const currencySymbol = this.config.currencySymbol || '$';
+                cartIcon.title = `Cart Total: ${currencySymbol}${total.toFixed(2)} CAD`;
+            } else {
+                cartIcon.title = 'Shopping Cart';
+            }
         }
     }
 
@@ -167,20 +196,38 @@ class ShoppingCart {
                 </div>
             `).join('');
 
+            const subtotal = this.getSubtotal();
+            const tax = this.getTax();
+            const shipping = this.getShipping();
             const total = this.getTotal();
+            const currencySymbol = this.config.currencySymbol || '$';
+            
+            const freeShippingThreshold = this.config.freeShippingThreshold || 100;
+            const remainingForFreeShipping = freeShippingThreshold - subtotal;
+            
             cartTotal.innerHTML = `
+                ${remainingForFreeShipping > 0 && remainingForFreeShipping <= freeShippingThreshold ? `
+                <div class="free-shipping-indicator">
+                    <i class="fas fa-truck"></i>
+                    Add ${currencySymbol}${remainingForFreeShipping.toFixed(2)} more for FREE shipping!
+                </div>
+                ` : ''}
                 <div class="cart-summary">
                     <div class="summary-row">
                         <span>Subtotal:</span>
-                        <span>$${total.toFixed(2)} CAD</span>
+                        <span>${currencySymbol}${subtotal.toFixed(2)} CAD</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Tax (HST 13%):</span>
+                        <span>${currencySymbol}${tax.toFixed(2)} CAD</span>
                     </div>
                     <div class="summary-row">
                         <span>Shipping:</span>
-                        <span>Calculated at checkout</span>
+                        <span>${shipping === 0 ? 'FREE' : `${currencySymbol}${shipping.toFixed(2)} CAD`}</span>
                     </div>
                     <div class="summary-row total">
                         <span>Total:</span>
-                        <span>$${total.toFixed(2)} CAD</span>
+                        <span>${currencySymbol}${total.toFixed(2)} CAD</span>
                     </div>
                 </div>
                 <button class="btn btn-primary checkout-btn" onclick="cart.proceedToCheckout()">
@@ -277,10 +324,11 @@ class ShoppingCart {
         setTimeout(() => notification.classList.add('show'), 100);
 
         // Remove notification
+        const duration = this.config.notificationDuration || 3000;
         setTimeout(() => {
             notification.classList.remove('show');
             setTimeout(() => notification.remove(), 300);
-        }, 3000);
+        }, duration);
     }
 }
 
