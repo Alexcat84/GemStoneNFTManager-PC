@@ -212,6 +212,28 @@ app.get('/api/gemspots/:id', async (req, res) => {
 });
 
 // Admin API Routes
+app.get('/api/admin/table-structure', async (req, res) => {
+    try {
+        const client = await database.pool.connect();
+        const result = await client.query(`
+            SELECT column_name, data_type, is_nullable, column_default
+            FROM information_schema.columns 
+            WHERE table_name = 'products' 
+            ORDER BY ordinal_position
+        `);
+        client.release();
+        
+        res.json({
+            success: true,
+            columns: result.rows,
+            count: result.rows.length
+        });
+    } catch (error) {
+        console.error('Error getting table structure:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 app.post('/api/admin/login', async (req, res) => {
   try {
     const { username, password } = req.body;
