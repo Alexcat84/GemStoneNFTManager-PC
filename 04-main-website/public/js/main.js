@@ -161,6 +161,9 @@ async function loadGallery() {
 
 // Display gallery items
 function displayGallery(gemspots) {
+    // Store products data globally for cart access
+    window.productsData = gemspots;
+    
     const galleryGrid = document.getElementById('gallery-grid');
     if (!galleryGrid) return;
 
@@ -200,6 +203,10 @@ function displayGallery(gemspots) {
                                 </span>
                                 ` : ''}
                             </div>
+                            <button class="add-to-cart-btn" data-product-id="${gemspot.id}">
+                                <i class="fas fa-shopping-cart"></i>
+                                Add to Cart
+                            </button>
                         </div>
             </div>
         </div>
@@ -335,6 +342,12 @@ function showProductModal(product) {
                         </div>
                     </div>
                 </div>
+                <div class="product-actions">
+                    <button class="add-to-cart-btn" data-product-id="${product.id}">
+                        <i class="fas fa-shopping-cart"></i>
+                        Add to Cart
+                    </button>
+                </div>
             </div>
         </div>
     `;
@@ -441,6 +454,29 @@ function showProductModal(product) {
         
         .product-actions {
             margin-top: auto;
+        }
+        
+        .product-actions .add-to-cart-btn {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .product-actions .add-to-cart-btn:hover {
+            background: linear-gradient(135deg, #20c997, #17a2b8);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
         }
         
         .nft-section {
