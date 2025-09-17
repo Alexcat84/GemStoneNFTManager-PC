@@ -296,7 +296,6 @@ function showProductModal(product) {
                             </div>
                             ` : ''}
                         </div>
-                        ${product.qrCode || product.nftUrl || product.nftImage ? `
                         <div class="nft-section">
                             <h3 class="nft-title">
                                 <i class="fas fa-certificate"></i>
@@ -307,24 +306,42 @@ function showProductModal(product) {
                                 <div class="nft-image">
                                     <img src="${product.nftImage}" alt="NFT Certificate" loading="lazy">
                                 </div>
-                                ` : ''}
+                                ` : `
+                                <div class="nft-image">
+                                    <div class="nft-placeholder">
+                                        <i class="fas fa-image"></i>
+                                        <p>No NFT image available</p>
+                                    </div>
+                                </div>
+                                `}
                                 ${product.qrCode ? `
                                 <div class="nft-qr">
                                     <img src="${product.qrCode}" alt="QR Code" loading="lazy">
                                     <p class="qr-label">Scan to verify authenticity</p>
                                 </div>
-                                ` : ''}
-                                ${product.nftUrl ? `
+                                ` : `
+                                <div class="nft-qr">
+                                    <div class="qr-placeholder">
+                                        <i class="fas fa-qrcode"></i>
+                                        <p>No QR code available</p>
+                                    </div>
+                                </div>
+                                `}
                                 <div class="nft-link">
+                                    ${product.nftUrl ? `
                                     <a href="${product.nftUrl}" target="_blank" class="btn btn-secondary">
                                         <i class="fas fa-external-link-alt"></i>
                                         View NFT on Blockchain
                                     </a>
+                                    ` : `
+                                    <div class="nft-link-placeholder">
+                                        <i class="fas fa-link"></i>
+                                        <p>No blockchain link available</p>
+                                    </div>
+                                    `}
                                 </div>
-                                ` : ''}
                             </div>
                         </div>
-                        ` : ''}
                         <div class="product-actions">
                             <button class="btn btn-primary" onclick="contactAboutProduct(${product.id})">
                                 <i class="fas fa-envelope"></i>
@@ -495,6 +512,37 @@ function showProductModal(product) {
         }
         
         .nft-link {
+            text-align: center;
+        }
+        
+        .nft-placeholder,
+        .qr-placeholder,
+        .nft-link-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            color: #6c757d;
+            min-height: 120px;
+        }
+        
+        .nft-placeholder i,
+        .qr-placeholder i,
+        .nft-link-placeholder i {
+            font-size: 2rem;
+            margin-bottom: 8px;
+            opacity: 0.5;
+        }
+        
+        .nft-placeholder p,
+        .qr-placeholder p,
+        .nft-link-placeholder p {
+            margin: 0;
+            font-size: 0.9rem;
             text-align: center;
         }
         
