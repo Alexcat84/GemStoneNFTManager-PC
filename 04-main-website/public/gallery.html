@@ -180,9 +180,17 @@
                                 <i class="fas fa-gem"></i>
                                 ${gemspot.crystal || 'Crystal'}
                             </span>
-                            <span class="rarity ${(gemspot.rarity || 'Common').toLowerCase().replace(' ', '-')}">
-                                ${gemspot.rarity || 'Common'}
-                            </span>
+                            <div class="gallery-badges">
+                                <span class="rarity ${(gemspot.rarity || 'Common').toLowerCase().replace(' ', '-')}">
+                                    ${gemspot.rarity || 'Common'}
+                                </span>
+                                ${gemspot.qrCode || gemspot.nftUrl || gemspot.nftImage ? `
+                                <span class="nft-badge">
+                                    <i class="fas fa-certificate"></i>
+                                    NFT
+                                </span>
+                                ` : ''}
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -184,15 +184,23 @@ function displayGallery(gemspots) {
                 <h3 class="gallery-title">${gemspot.name}</h3>
                 <div class="gallery-price">$${gemspot.price} CAD</div>
                 <p class="gallery-description">${gemspot.description}</p>
-                <div class="gallery-meta">
-                    <span class="crystal-type">
-                        <i class="fas fa-gem"></i>
-                        ${gemspot.crystal_type || 'Crystal'}
-                    </span>
-                    <span class="rarity ${(gemspot.rarity || 'Common').toLowerCase().replace(' ', '-')}">
-                        ${gemspot.rarity || 'Common'}
-                    </span>
-                </div>
+                        <div class="gallery-meta">
+                            <span class="crystal-type">
+                                <i class="fas fa-gem"></i>
+                                ${gemspot.crystal_type || 'Crystal'}
+                            </span>
+                            <div class="gallery-badges">
+                                <span class="rarity ${(gemspot.rarity || 'Common').toLowerCase().replace(' ', '-')}">
+                                    ${gemspot.rarity || 'Common'}
+                                </span>
+                                ${gemspot.qrCode || gemspot.nftUrl || gemspot.nftImage ? `
+                                <span class="nft-badge">
+                                    <i class="fas fa-certificate"></i>
+                                    NFT
+                                </span>
+                                ` : ''}
+                            </div>
+                        </div>
             </div>
         </div>
         `;
@@ -288,6 +296,35 @@ function showProductModal(product) {
                             </div>
                             ` : ''}
                         </div>
+                        ${product.qrCode || product.nftUrl || product.nftImage ? `
+                        <div class="nft-section">
+                            <h3 class="nft-title">
+                                <i class="fas fa-certificate"></i>
+                                NFT Certificate
+                            </h3>
+                            <div class="nft-content">
+                                ${product.nftImage ? `
+                                <div class="nft-image">
+                                    <img src="${product.nftImage}" alt="NFT Certificate" loading="lazy">
+                                </div>
+                                ` : ''}
+                                ${product.qrCode ? `
+                                <div class="nft-qr">
+                                    <img src="${product.qrCode}" alt="QR Code" loading="lazy">
+                                    <p class="qr-label">Scan to verify authenticity</p>
+                                </div>
+                                ` : ''}
+                                ${product.nftUrl ? `
+                                <div class="nft-link">
+                                    <a href="${product.nftUrl}" target="_blank" class="btn btn-secondary">
+                                        <i class="fas fa-external-link-alt"></i>
+                                        View NFT on Blockchain
+                                    </a>
+                                </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                        ` : ''}
                         <div class="product-actions">
                             <button class="btn btn-primary" onclick="contactAboutProduct(${product.id})">
                                 <i class="fas fa-envelope"></i>
@@ -404,9 +441,70 @@ function showProductModal(product) {
             margin-top: auto;
         }
         
+        .nft-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+        }
+        
+        .nft-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            color: #495057;
+            font-size: 1.2rem;
+        }
+        
+        .nft-title i {
+            color: #6f42c1;
+        }
+        
+        .nft-content {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .nft-image img {
+            width: 100%;
+            max-width: 200px;
+            height: auto;
+            border-radius: 8px;
+            border: 2px solid #dee2e6;
+        }
+        
+        .nft-qr {
+            text-align: center;
+        }
+        
+        .nft-qr img {
+            width: 120px;
+            height: 120px;
+            border-radius: 8px;
+            border: 2px solid #dee2e6;
+        }
+        
+        .qr-label {
+            margin-top: 8px;
+            font-size: 0.9rem;
+            color: #6c757d;
+            font-weight: 500;
+        }
+        
+        .nft-link {
+            text-align: center;
+        }
+        
         @media (max-width: 768px) {
             .product-modal-content {
                 grid-template-columns: 1fr;
+            }
+            
+            .nft-content {
+                align-items: center;
             }
         }
         </style>

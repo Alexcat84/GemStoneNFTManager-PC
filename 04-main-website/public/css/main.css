@@ -1204,6 +1204,12 @@ p {
     gap: var(--spacing-sm);
 }
 
+.gallery-badges {
+    display: flex;
+    gap: var(--spacing-xs);
+    flex-wrap: wrap;
+}
+
 .crystal-type {
     display: flex;
     align-items: center;
@@ -1243,4 +1249,18 @@ p {
 .rarity.legendary {
     background: #fecaca;
     color: #dc2626;
+}
+
+.nft-badge {
+    background: linear-gradient(135deg, #6f42c1, #e83e8c);
+    color: white;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-md);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 2px 4px rgba(111, 66, 193, 0.3);
 }
