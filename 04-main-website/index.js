@@ -281,6 +281,68 @@ app.post('/api/admin/fix-password', async (req, res) => {
   }
 });
 
+// Database migration endpoint
+app.post('/api/admin/migrate-database', async (req, res) => {
+  try {
+    console.log('🔄 [MIGRATION] Starting database migration...');
+    
+    const client = await database.pool.connect();
+    
+    // Check if new columns exist
+    const columnCheck = await client.query(`
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'products' 
+      AND column_name IN ('image_urls', 'nft_image_url', 'energy_properties', 'personality_target', 'is_archived')
+    `);
+    
+    console.log('🔄 [MIGRATION] Existing columns:', columnCheck.rows.map(r => r.column_name));
+    
+    // Add missing columns
+    const migrations = [
+      "ALTER TABLE products ADD COLUMN IF NOT EXISTS image_urls TEXT[]",
+      "ALTER TABLE products ADD COLUMN IF NOT EXISTS nft_image_url VARCHAR(500)",
+      "ALTER TABLE products ADD COLUMN IF NOT EXISTS energy_properties TEXT",
+      "ALTER TABLE products ADD COLUMN IF NOT EXISTS personality_target TEXT",
+      "ALTER TABLE products ADD COLUMN IF NOT EXISTS is_archived BOOLEAN DEFAULT false"
+    ];
+    
+    for (const migration of migrations) {
+      try {
+        await client.query(migration);
+        console.log('✅ [MIGRATION] Executed:', migration);
+      } catch (migrationError) {
+        console.log('⚠️ [MIGRATION] Skipped (already exists):', migration);
+      }
+    }
+    
+    // Migrate existing image_url to image_urls array
+    await client.query(`
+      UPDATE products 
+      SET image_urls = ARRAY[image_url] 
+      WHERE image_url IS NOT NULL 
+      AND (image_urls IS NULL OR array_length(image_urls, 1) IS NULL)
+    `);
+    
+    client.release();
+    
+    console.log('🔄 [MIGRATION] Database migration completed successfully');
+    
+    res.json({
+      success: true,
+      message: 'Database migration completed successfully',
+      migratedColumns: columnCheck.rows.map(r => r.column_name)
+    });
+  } catch (error) {
+    console.error('❌ [MIGRATION ERROR]:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message,
+      stack: error.stack
+    });
+  }
+});
+
 app.get('/api/admin/products', requireAuth, async (req, res) => {
   try {
     const products = await database.getAllProducts();
@@ -296,9 +358,14 @@ app.post('/api/admin/products', requireAuth, upload.fields([
   { name: 'nftImage', maxCount: 1 }
 ]), async (req, res) => {
   try {
+    console.log('📦 [ADD PRODUCT] Starting product creation...');
+    console.log('📦 [ADD PRODUCT] Files received:', req.files ? Object.keys(req.files) : 'No files');
+    console.log('📦 [ADD PRODUCT] Body data:', req.body);
+    
     // Process multiple images
     const imageUrls = [];
-    if (req.files.images) {
+    if (req.files && req.files.images) {
+      console.log('📦 [ADD PRODUCT] Processing images:', req.files.images.length);
       req.files.images.forEach(file => {
         imageUrls.push(`/uploads/${file.filename}`);
       });
@@ -306,7 +373,8 @@ app.post('/api/admin/products', requireAuth, upload.fields([
 
     // Process NFT image
     let nftImageUrl = null;
-    if (req.files.nftImage && req.files.nftImage[0]) {
+    if (req.files && req.files.nftImage && req.files.nftImage[0]) {
+      console.log('📦 [ADD PRODUCT] Processing NFT image');
       nftImageUrl = `/uploads/${req.files.nftImage[0].filename}`;
     }
 
@@ -331,11 +399,20 @@ app.post('/api/admin/products', requireAuth, upload.fields([
       is_archived: req.body.is_archived === 'true'
     };
 
+    console.log('📦 [ADD PRODUCT] Product data prepared:', productData);
+    
     const result = await database.addProduct(productData);
+    console.log('📦 [ADD PRODUCT] Product created successfully:', result);
+    
     res.json({ success: true, product: result });
   } catch (error) {
-    console.error('Error adding product:', error);
-    res.status(500).json({ success: false, message: 'Error adding product' });
+    console.error('❌ [ADD PRODUCT ERROR]:', error);
+    console.error('❌ [ADD PRODUCT ERROR STACK]:', error.stack);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error adding product',
+      error: error.message 
+    });
   }
 });
 
