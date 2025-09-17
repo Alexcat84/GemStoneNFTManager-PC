@@ -252,6 +252,10 @@ async function viewGemspot(id) {
 
 // Show product details modal
 function showProductModal(product) {
+    // Debug: Log product data
+    console.log('🔍 Product data for modal:', product);
+    console.log('🔍 NFT URL:', product.nftUrl);
+    
     // Create modal HTML
     const modalHTML = `
         <div class="product-modal-overlay" onclick="closeProductModal()">
@@ -473,11 +477,12 @@ function showProductModal(product) {
         }
         
         .nft-image img {
-            width: 100%;
-            max-width: 200px;
+            max-width: 150px;
             height: auto;
             border-radius: 8px;
             border: 2px solid #dee2e6;
+            display: block;
+            margin: 0 auto;
         }
         
         
