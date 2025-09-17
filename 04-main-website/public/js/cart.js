@@ -107,8 +107,14 @@ class ShoppingCart {
     getShipping() {
         const subtotal = this.getSubtotal();
         const freeShippingThreshold = this.config.freeShippingThreshold || 100;
-        const defaultShippingCost = this.config.defaultShippingCost || 15;
         
+        // Check if shipping calculator has a selected option
+        if (window.shippingCalculator && window.shippingCalculator.selectedOption) {
+            return subtotal >= freeShippingThreshold ? 0 : window.shippingCalculator.selectedOption.cost;
+        }
+        
+        // Fallback to default shipping cost
+        const defaultShippingCost = this.config.defaultShippingCost || 15;
         return subtotal >= freeShippingThreshold ? 0 : defaultShippingCost;
     }
 
@@ -225,6 +231,19 @@ class ShoppingCart {
                         <span>Shipping:</span>
                         <span>${shipping === 0 ? 'FREE' : `${currencySymbol}${shipping.toFixed(2)} CAD`}</span>
                     </div>
+                    <div class="shipping-display">
+                        ${shipping === 0 ? `
+                            <div class="free-shipping-badge">
+                                <i class="fas fa-truck"></i>
+                                FREE Shipping
+                            </div>
+                        ` : `
+                            <button class="select-shipping-btn" onclick="shippingCalculator.showShippingOptions()">
+                                <i class="fas fa-shipping-fast"></i>
+                                Select Shipping Option
+                            </button>
+                        `}
+                    </div>
                     <div class="summary-row total">
                         <span>Total:</span>
                         <span>${currencySymbol}${total.toFixed(2)} CAD</span>
@@ -257,10 +276,21 @@ class ShoppingCart {
     }
 
     // Proceed to checkout
-    proceedToCheckout() {
+    async proceedToCheckout() {
         if (this.items.length === 0) {
             this.showNotification('Your cart is empty', 'error');
             return;
+        }
+        
+        // Calculate shipping options if not already done
+        if (window.shippingCalculator && !window.shippingCalculator.selectedOption) {
+            try {
+                await window.shippingCalculator.calculateShipping(this.items, 'CA');
+                window.shippingCalculator.showShippingOptions();
+                return;
+            } catch (error) {
+                console.error('Error calculating shipping:', error);
+            }
         }
         
         // For now, show a message. Later we'll integrate with Stripe
