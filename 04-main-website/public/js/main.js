@@ -333,12 +333,6 @@ function showProductModal(product) {
                                 </div>
                             </div>
                         </div>
-                        <div class="product-actions">
-                            <button class="btn btn-primary" onclick="contactAboutProduct(${product.id})">
-                                <i class="fas fa-envelope"></i>
-                                Contact About This Product
-                            </button>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -567,17 +561,6 @@ function closeProductModal() {
     if (modal) {
         modal.remove();
     }
-}
-
-// Contact about product
-function contactAboutProduct(productId) {
-    closeProductModal();
-    // Scroll to contact section
-    const contactSection = document.querySelector('#contact');
-    if (contactSection) {
-        contactSection.scrollIntoView({ behavior: 'smooth' });
-    }
-    showNotification('Please use the contact form below to inquire about this product', 'info');
 }
 
 // Contact form functionality
