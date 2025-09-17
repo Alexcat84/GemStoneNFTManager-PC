@@ -328,7 +328,6 @@ function showProductModal(product) {
                                     <div class="nft-link-placeholder">
                                         <i class="fas fa-link"></i>
                                         <p>No blockchain link available</p>
-                                        <small>Debug: nftUrl = ${product.nftUrl}</small>
                                     </div>
                                     `}
                                 </div>
@@ -494,6 +493,23 @@ function showProductModal(product) {
         
         .nft-link {
             text-align: center;
+        }
+        
+        .nft-link .btn {
+            background: #6f42c1 !important;
+            color: white !important;
+            border: none !important;
+            padding: 10px 20px !important;
+            border-radius: 6px !important;
+            text-decoration: none !important;
+            display: inline-block !important;
+            font-weight: 500 !important;
+            transition: background-color 0.3s ease !important;
+        }
+        
+        .nft-link .btn:hover {
+            background: #5a32a3 !important;
+            color: white !important;
         }
         
         .nft-placeholder,
