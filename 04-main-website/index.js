@@ -284,7 +284,7 @@ app.post('/api/admin/fix-password', async (req, res) => {
 // Database migration endpoint
 app.post('/api/admin/migrate-database', async (req, res) => {
   try {
-    console.log('🔄 [MIGRATION] Starting database migration...');
+    console.log('🔄 [MIGRATION v2.0] Starting database migration...');
     
     const client = await database.pool.connect();
     
@@ -296,7 +296,7 @@ app.post('/api/admin/migrate-database', async (req, res) => {
       AND column_name IN ('image_urls', 'nft_image_url', 'energy_properties', 'personality_target', 'is_archived')
     `);
     
-    console.log('🔄 [MIGRATION] Existing columns:', columnCheck.rows.map(r => r.column_name));
+    console.log('🔄 [MIGRATION v2.0] Existing columns:', columnCheck.rows.map(r => r.column_name));
     
     // Add missing columns
     const migrations = [
@@ -310,9 +310,9 @@ app.post('/api/admin/migrate-database', async (req, res) => {
     for (const migration of migrations) {
       try {
         await client.query(migration);
-        console.log('✅ [MIGRATION] Executed:', migration);
+        console.log('✅ [MIGRATION v2.0] Executed:', migration);
       } catch (migrationError) {
-        console.log('⚠️ [MIGRATION] Skipped (already exists):', migration);
+        console.log('⚠️ [MIGRATION v2.0] Skipped (already exists):', migration);
       }
     }
     
@@ -326,15 +326,16 @@ app.post('/api/admin/migrate-database', async (req, res) => {
     
     client.release();
     
-    console.log('🔄 [MIGRATION] Database migration completed successfully');
+    console.log('🔄 [MIGRATION v2.0] Database migration completed successfully');
     
     res.json({
       success: true,
-      message: 'Database migration completed successfully',
-      migratedColumns: columnCheck.rows.map(r => r.column_name)
+      message: 'Database migration v2.0 completed successfully',
+      migratedColumns: columnCheck.rows.map(r => r.column_name),
+      timestamp: new Date().toISOString()
     });
   } catch (error) {
-    console.error('❌ [MIGRATION ERROR]:', error);
+    console.error('❌ [MIGRATION v2.0 ERROR]:', error);
     res.status(500).json({ 
       success: false, 
       error: error.message,
