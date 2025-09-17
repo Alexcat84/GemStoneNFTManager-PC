@@ -193,7 +193,7 @@ function displayGallery(gemspots) {
                                 <span class="rarity ${(gemspot.rarity || 'Common').toLowerCase().replace(' ', '-')}">
                                     ${gemspot.rarity || 'Common'}
                                 </span>
-                                ${gemspot.qrCode || gemspot.nftUrl || gemspot.nftImage ? `
+                                ${gemspot.nftUrl || gemspot.nftImage ? `
                                 <span class="nft-badge">
                                     <i class="fas fa-certificate"></i>
                                     NFT
@@ -311,19 +311,6 @@ function showProductModal(product) {
                                     <div class="nft-placeholder">
                                         <i class="fas fa-image"></i>
                                         <p>No NFT image available</p>
-                                    </div>
-                                </div>
-                                `}
-                                ${product.qrCode ? `
-                                <div class="nft-qr">
-                                    <img src="${product.qrCode}" alt="QR Code" loading="lazy">
-                                    <p class="qr-label">Scan to verify authenticity</p>
-                                </div>
-                                ` : `
-                                <div class="nft-qr">
-                                    <div class="qr-placeholder">
-                                        <i class="fas fa-qrcode"></i>
-                                        <p>No QR code available</p>
                                     </div>
                                 </div>
                                 `}
@@ -493,30 +480,12 @@ function showProductModal(product) {
             border: 2px solid #dee2e6;
         }
         
-        .nft-qr {
-            text-align: center;
-        }
-        
-        .nft-qr img {
-            width: 120px;
-            height: 120px;
-            border-radius: 8px;
-            border: 2px solid #dee2e6;
-        }
-        
-        .qr-label {
-            margin-top: 8px;
-            font-size: 0.9rem;
-            color: #6c757d;
-            font-weight: 500;
-        }
         
         .nft-link {
             text-align: center;
         }
         
         .nft-placeholder,
-        .qr-placeholder,
         .nft-link-placeholder {
             display: flex;
             flex-direction: column;
@@ -531,7 +500,6 @@ function showProductModal(product) {
         }
         
         .nft-placeholder i,
-        .qr-placeholder i,
         .nft-link-placeholder i {
             font-size: 2rem;
             margin-bottom: 8px;
@@ -539,7 +507,6 @@ function showProductModal(product) {
         }
         
         .nft-placeholder p,
-        .qr-placeholder p,
         .nft-link-placeholder p {
             margin: 0;
             font-size: 0.9rem;
