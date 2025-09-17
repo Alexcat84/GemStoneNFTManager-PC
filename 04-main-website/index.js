@@ -141,7 +141,6 @@ app.get('/api/gemspots', async (req, res) => {
       description: product.description,
       price: parseFloat(product.price),
       images: product.image_urls || ["/images/default-gemspot.jpg"],
-      qrCode: product.qr_code,
       nftUrl: product.nft_url,
       nftImage: product.nft_image_url,
       crystal: product.crystal_type,
@@ -184,7 +183,6 @@ app.get('/api/gemspots/:id', async (req, res) => {
       description: product.description,
       price: parseFloat(product.price),
       images: product.image_urls || ["/images/default-gemspot.jpg"],
-      qrCode: product.qr_code,
       nftUrl: product.nft_url,
       nftImage: product.nft_image_url,
       crystal_type: product.crystal_type,
@@ -370,7 +368,7 @@ app.post('/api/admin/migrate-database', async (req, res) => {
     // Fix existing column types for base64 images
     const typeMigrations = [
       "ALTER TABLE products ALTER COLUMN nft_image_url TYPE TEXT",
-      "ALTER TABLE products ALTER COLUMN qr_code TYPE TEXT",
+      "ALTER TABLE products DROP COLUMN IF EXISTS qr_code",
       "ALTER TABLE products ALTER COLUMN nft_url TYPE TEXT"
     ];
     
@@ -466,7 +464,6 @@ app.post('/api/admin/products', requireAuth, upload.fields([
       description: req.body.description,
       price: parseFloat(req.body.price),
       image_urls: imageUrls,
-      qr_code: req.body.qr_code,
       nft_url: req.body.nft_url,
       nft_image_url: nftImageUrl,
       status: req.body.status || 'available',
@@ -543,7 +540,6 @@ app.put('/api/admin/products/:id', requireAuth, upload.fields([
       description: req.body.description,
       price: parseFloat(req.body.price),
       image_urls: imageUrls,
-      qr_code: req.body.qr_code,
       nft_url: req.body.nft_url,
       nft_image_url: nftImageUrl,
       status: req.body.status,

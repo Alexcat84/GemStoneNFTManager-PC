@@ -22,7 +22,6 @@ class PostgresDatabase {
                     description TEXT,
                     price DECIMAL(10,2) NOT NULL,
                     image_urls TEXT[], -- Array of image URLs
-                    qr_code TEXT,
                     nft_url TEXT,
                     nft_image_url TEXT, -- NFT image
                     status VARCHAR(50) DEFAULT 'available',
@@ -137,20 +136,20 @@ class PostgresDatabase {
         try {
             const client = await this.pool.connect();
             const {
-                name, description, price, image_urls, qr_code, nft_url, nft_image_url,
+                name, description, price, image_urls, nft_url, nft_image_url,
                 status, category, dimensions, weight, crystal_type, rarity,
                 energy_properties, personality_target, stock_quantity, is_featured, is_archived
             } = productData;
 
             const result = await client.query(`
                 INSERT INTO products (
-                    name, description, price, image_urls, qr_code, nft_url, nft_image_url,
+                    name, description, price, image_urls, nft_url, nft_image_url,
                     status, category, dimensions, weight, crystal_type, rarity,
                     energy_properties, personality_target, stock_quantity, is_featured, is_archived
                 ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
                 RETURNING id, created_at
             `, [
-                name, description, price, image_urls || [], qr_code, nft_url, nft_image_url,
+                name, description, price, image_urls || [], nft_url, nft_image_url,
                 status || 'available', category, dimensions, weight, crystal_type, rarity,
                 energy_properties, personality_target, stock_quantity || 1, is_featured || false, is_archived || false
             ]);
@@ -167,7 +166,7 @@ class PostgresDatabase {
         try {
             const client = await this.pool.connect();
             const {
-                name, description, price, image_urls, qr_code, nft_url, nft_image_url,
+                name, description, price, image_urls, nft_url, nft_image_url,
                 status, category, dimensions, weight, crystal_type, rarity,
                 energy_properties, personality_target, stock_quantity, is_featured, is_archived
             } = productData;
@@ -175,14 +174,14 @@ class PostgresDatabase {
             const result = await client.query(`
                 UPDATE products SET
                     name = $1, description = $2, price = $3, image_urls = $4,
-                    qr_code = $5, nft_url = $6, nft_image_url = $7, status = $8, category = $9,
+                    nft_url = $5, nft_image_url = $6, status = $7, category = $8,
                     dimensions = $10, weight = $11, crystal_type = $12, rarity = $13,
                     energy_properties = $14, personality_target = $15, stock_quantity = $16, 
                     is_featured = $17, is_archived = $18, updated_at = CURRENT_TIMESTAMP
                 WHERE id = $19
                 RETURNING *
             `, [
-                name, description, price, image_urls, qr_code, nft_url, nft_image_url,
+                name, description, price, image_urls, nft_url, nft_image_url,
                 status, category, dimensions, weight, crystal_type, rarity,
                 energy_properties, personality_target, stock_quantity, is_featured, is_archived, id
             ]);
