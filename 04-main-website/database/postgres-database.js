@@ -22,9 +22,9 @@ class PostgresDatabase {
                     description TEXT,
                     price DECIMAL(10,2) NOT NULL,
                     image_urls TEXT[], -- Array of image URLs
-                    qr_code VARCHAR(500),
-                    nft_url VARCHAR(500),
-                    nft_image_url VARCHAR(500), -- NFT image
+                    qr_code TEXT,
+                    nft_url TEXT,
+                    nft_image_url TEXT, -- NFT image
                     status VARCHAR(50) DEFAULT 'available',
                     category VARCHAR(100),
                     dimensions VARCHAR(100),

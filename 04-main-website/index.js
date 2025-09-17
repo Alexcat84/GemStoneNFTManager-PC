@@ -303,7 +303,7 @@ app.post('/api/admin/migrate-database', async (req, res) => {
     // Add missing columns
     const migrations = [
       "ALTER TABLE products ADD COLUMN IF NOT EXISTS image_urls TEXT[]",
-      "ALTER TABLE products ADD COLUMN IF NOT EXISTS nft_image_url VARCHAR(500)",
+      "ALTER TABLE products ADD COLUMN IF NOT EXISTS nft_image_url TEXT",
       "ALTER TABLE products ADD COLUMN IF NOT EXISTS energy_properties TEXT",
       "ALTER TABLE products ADD COLUMN IF NOT EXISTS personality_target TEXT",
       "ALTER TABLE products ADD COLUMN IF NOT EXISTS is_archived BOOLEAN DEFAULT false"
@@ -315,6 +315,22 @@ app.post('/api/admin/migrate-database', async (req, res) => {
         console.log('✅ [MIGRATION v2.0] Executed:', migration);
       } catch (migrationError) {
         console.log('⚠️ [MIGRATION v2.0] Skipped (already exists):', migration);
+      }
+    }
+    
+    // Fix existing column types for base64 images
+    const typeMigrations = [
+      "ALTER TABLE products ALTER COLUMN nft_image_url TYPE TEXT",
+      "ALTER TABLE products ALTER COLUMN qr_code TYPE TEXT",
+      "ALTER TABLE products ALTER COLUMN nft_url TYPE TEXT"
+    ];
+    
+    for (const migration of typeMigrations) {
+      try {
+        await client.query(migration);
+        console.log('✅ [MIGRATION v2.0] Type fixed:', migration);
+      } catch (migrationError) {
+        console.log('⚠️ [MIGRATION v2.0] Type migration skipped:', migration);
       }
     }
     
