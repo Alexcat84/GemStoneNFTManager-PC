@@ -275,7 +275,7 @@
 </head>
 <body>
     <div class="header">
-        <h1>💎 GemSpots Admin Dashboard v2.0</h1>
+        <h1>💎 GemSpots Admin Dashboard v2.1</h1>
         <div class="header-actions">
             <a href="/" class="btn btn-secondary">View Website</a>
             <button class="btn btn-secondary" onclick="openChangePasswordModal()">Change Password</button>
@@ -621,8 +621,15 @@
             const formData = new FormData(form);
             
             if (product) {
-                formData.append('existing_image', product.image_url);
+                formData.append('existing_images', JSON.stringify(product.image_urls || []));
+                formData.append('existing_nft_image', product.nft_image_url || '');
             }
+            
+            // Show loading state
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            submitBtn.disabled = true;
             
             try {
                 const url = product ? `/api/admin/products/${product.id}` : '/api/admin/products';
@@ -636,7 +643,14 @@
                     body: formData
                 });
                 
-                const result = await response.json();
+                let result;
+                try {
+                    result = await response.json();
+                } catch (jsonError) {
+                    console.error('JSON parse error:', jsonError);
+                    showMessage('Server error: Invalid response format', 'error');
+                    return;
+                }
                 
                 if (result.success) {
                     showMessage(product ? 'Product updated successfully!' : 'Product added successfully!', 'success');
@@ -648,7 +662,15 @@
                 }
             } catch (error) {
                 console.error('Error saving product:', error);
-                showMessage('Error saving product', 'error');
+                if (error.message.includes('413') || error.message.includes('Payload Too Large')) {
+                    showMessage('Files too large. Please reduce image sizes or upload fewer images (max 10MB per file).', 'error');
+                } else {
+                    showMessage('Error saving product. Please check your connection and try again.', 'error');
+                }
+            } finally {
+                // Reset button
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
             }
         }
 
