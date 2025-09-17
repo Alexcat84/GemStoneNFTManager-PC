@@ -73,14 +73,33 @@ class PostgresDatabase {
 
     // Product management methods
     async getAllProducts() {
-        try {
-            const client = await this.pool.connect();
-            const result = await client.query('SELECT * FROM products ORDER BY created_at DESC');
-            client.release();
-            return result.rows;
-        } catch (error) {
-            console.error('Error getting all products:', error);
-            throw error;
+        let client;
+        let retries = 3;
+        
+        while (retries > 0) {
+            try {
+                client = await this.pool.connect();
+                const result = await client.query('SELECT * FROM products ORDER BY created_at DESC');
+                client.release();
+                return result.rows;
+            } catch (error) {
+                if (client) {
+                    try {
+                        client.release();
+                    } catch (releaseError) {
+                        console.error('Error releasing client:', releaseError);
+                    }
+                }
+                
+                console.error(`Get all products attempt ${4 - retries} failed:`, error.message);
+                
+                if (retries === 1) {
+                    throw new Error(`Failed to get all products after 3 attempts: ${error.message}`);
+                }
+                
+                retries--;
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
+            }
         }
     }
 
@@ -121,88 +140,164 @@ class PostgresDatabase {
     }
 
     async getProductById(id) {
-        try {
-            const client = await this.pool.connect();
-            const result = await client.query('SELECT * FROM products WHERE id = $1', [id]);
-            client.release();
-            return result.rows[0];
-        } catch (error) {
-            console.error('Error getting product by ID:', error);
-            throw error;
+        let client;
+        let retries = 3;
+        
+        while (retries > 0) {
+            try {
+                client = await this.pool.connect();
+                const result = await client.query('SELECT * FROM products WHERE id = $1', [id]);
+                client.release();
+                return result.rows[0];
+            } catch (error) {
+                if (client) {
+                    try {
+                        client.release();
+                    } catch (releaseError) {
+                        console.error('Error releasing client:', releaseError);
+                    }
+                }
+                
+                console.error(`Get product by ID attempt ${4 - retries} failed:`, error.message);
+                
+                if (retries === 1) {
+                    throw new Error(`Failed to get product by ID after 3 attempts: ${error.message}`);
+                }
+                
+                retries--;
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
+            }
         }
     }
 
     async addProduct(productData) {
-        try {
-            const client = await this.pool.connect();
-            const {
-                name, description, price, image_urls, nft_url, nft_image_url,
-                status, category, dimensions, weight, crystal_type, rarity,
-                energy_properties, personality_target, stock_quantity, is_featured, is_archived
-            } = productData;
-
-            const result = await client.query(`
-                INSERT INTO products (
+        let client;
+        let retries = 3;
+        
+        while (retries > 0) {
+            try {
+                client = await this.pool.connect();
+                const {
                     name, description, price, image_urls, nft_url, nft_image_url,
                     status, category, dimensions, weight, crystal_type, rarity,
                     energy_properties, personality_target, stock_quantity, is_featured, is_archived
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
-                RETURNING id, created_at
-            `, [
-                name, description, price, image_urls || [], nft_url, nft_image_url,
-                status || 'available', category, dimensions, weight, crystal_type, rarity,
-                energy_properties, personality_target, stock_quantity || 1, is_featured || false, is_archived || false
-            ]);
+                } = productData;
 
-            client.release();
-            return result.rows[0];
-        } catch (error) {
-            console.error('Error adding product:', error);
-            throw error;
+                const result = await client.query(`
+                    INSERT INTO products (
+                        name, description, price, image_urls, nft_url, nft_image_url,
+                        status, category, dimensions, weight, crystal_type, rarity,
+                        energy_properties, personality_target, stock_quantity, is_featured, is_archived
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+                    RETURNING id, created_at
+                `, [
+                    name, description, price, image_urls || [], nft_url, nft_image_url,
+                    status || 'available', category, dimensions, weight, crystal_type, rarity,
+                    energy_properties, personality_target, stock_quantity || 1, is_featured || false, is_archived || false
+                ]);
+
+                client.release();
+                return result.rows[0];
+            } catch (error) {
+                if (client) {
+                    try {
+                        client.release();
+                    } catch (releaseError) {
+                        console.error('Error releasing client:', releaseError);
+                    }
+                }
+                
+                console.error(`Add product attempt ${4 - retries} failed:`, error.message);
+                
+                if (retries === 1) {
+                    throw new Error(`Failed to add product after 3 attempts: ${error.message}`);
+                }
+                
+                retries--;
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
+            }
         }
     }
 
     async updateProduct(id, productData) {
-        try {
-            const client = await this.pool.connect();
-            const {
-                name, description, price, image_urls, nft_url, nft_image_url,
-                status, category, dimensions, weight, crystal_type, rarity,
-                energy_properties, personality_target, stock_quantity, is_featured, is_archived
-            } = productData;
+        let client;
+        let retries = 3;
+        
+        while (retries > 0) {
+            try {
+                client = await this.pool.connect();
+                const {
+                    name, description, price, image_urls, nft_url, nft_image_url,
+                    status, category, dimensions, weight, crystal_type, rarity,
+                    energy_properties, personality_target, stock_quantity, is_featured, is_archived
+                } = productData;
 
-            const result = await client.query(`
-                UPDATE products SET
-                    name = $1, description = $2, price = $3, image_urls = $4,
-                    nft_url = $5, nft_image_url = $6, status = $7, category = $8,
-                    dimensions = $10, weight = $11, crystal_type = $12, rarity = $13,
-                    energy_properties = $14, personality_target = $15, stock_quantity = $16, 
-                    is_featured = $17, is_archived = $18, updated_at = CURRENT_TIMESTAMP
-                WHERE id = $19
-                RETURNING *
-            `, [
-                name, description, price, image_urls, nft_url, nft_image_url,
-                status, category, dimensions, weight, crystal_type, rarity,
-                energy_properties, personality_target, stock_quantity, is_featured, is_archived, id
-            ]);
+                const result = await client.query(`
+                    UPDATE products SET
+                        name = $1, description = $2, price = $3, image_urls = $4,
+                        nft_url = $5, nft_image_url = $6, status = $7, category = $8,
+                        dimensions = $10, weight = $11, crystal_type = $12, rarity = $13,
+                        energy_properties = $14, personality_target = $15, stock_quantity = $16, 
+                        is_featured = $17, is_archived = $18, updated_at = CURRENT_TIMESTAMP
+                    WHERE id = $19
+                    RETURNING *
+                `, [
+                    name, description, price, image_urls, nft_url, nft_image_url,
+                    status, category, dimensions, weight, crystal_type, rarity,
+                    energy_properties, personality_target, stock_quantity, is_featured, is_archived, id
+                ]);
 
-            client.release();
-            return result.rows[0];
-        } catch (error) {
-            console.error('Error updating product:', error);
-            throw error;
+                client.release();
+                return result.rows[0];
+            } catch (error) {
+                if (client) {
+                    try {
+                        client.release();
+                    } catch (releaseError) {
+                        console.error('Error releasing client:', releaseError);
+                    }
+                }
+                
+                console.error(`Update product attempt ${4 - retries} failed:`, error.message);
+                
+                if (retries === 1) {
+                    throw new Error(`Failed to update product after 3 attempts: ${error.message}`);
+                }
+                
+                retries--;
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
+            }
         }
     }
 
     async deleteProduct(id) {
-        try {
-            const client = await this.pool.connect();
-            const result = await client.query('DELETE FROM products WHERE id = $1 RETURNING *', [id]);
-            client.release();
-            return result.rows[0];
-        } catch (error) {
-            console.error('Error deleting product:', error);
-            throw error;
+        let client;
+        let retries = 3;
+        
+        while (retries > 0) {
+            try {
+                client = await this.pool.connect();
+                const result = await client.query('DELETE FROM products WHERE id = $1 RETURNING *', [id]);
+                client.release();
+                return result.rows[0];
+            } catch (error) {
+                if (client) {
+                    try {
+                        client.release();
+                    } catch (releaseError) {
+                        console.error('Error releasing client:', releaseError);
+                    }
+                }
+                
+                console.error(`Delete product attempt ${4 - retries} failed:`, error.message);
+                
+                if (retries === 1) {
+                    throw new Error(`Failed to delete product after 3 attempts: ${error.message}`);
+                }
+                
+                retries--;
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
+            }
         }
     }
 
