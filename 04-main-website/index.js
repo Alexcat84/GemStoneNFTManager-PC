@@ -143,7 +143,7 @@ app.get('/api/gemspots', async (req, res) => {
       images: product.image_urls || ["/images/default-gemspot.jpg"],
       nftUrl: product.nft_url,
       nftImage: product.nft_image_url,
-      crystal: product.crystal_type,
+      crystal_type: product.crystal_type,
       rarity: product.rarity,
       energyProperties: product.energy_properties,
       personalityTarget: product.personality_target,
