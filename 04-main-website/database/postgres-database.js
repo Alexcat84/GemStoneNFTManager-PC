@@ -188,7 +188,7 @@ class PostgresDatabase {
                         name, description, price, image_urls, nft_url, nft_image_url,
                         status, category, dimensions, weight, crystal_type, rarity,
                         energy_properties, personality_target, stock_quantity, is_featured, is_archived
-                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
                     RETURNING id, created_at
                 `, [
                     name, description, price, image_urls || [], nft_url, nft_image_url,
@@ -236,10 +236,10 @@ class PostgresDatabase {
                     UPDATE products SET
                         name = $1, description = $2, price = $3, image_urls = $4,
                         nft_url = $5, nft_image_url = $6, status = $7, category = $8,
-                        dimensions = $10, weight = $11, crystal_type = $12, rarity = $13,
-                        energy_properties = $14, personality_target = $15, stock_quantity = $16, 
-                        is_featured = $17, is_archived = $18, updated_at = CURRENT_TIMESTAMP
-                    WHERE id = $19
+                        dimensions = $9, weight = $10, crystal_type = $11, rarity = $12,
+                        energy_properties = $13, personality_target = $14, stock_quantity = $15, 
+                        is_featured = $16, is_archived = $17, updated_at = CURRENT_TIMESTAMP
+                    WHERE id = $18
                     RETURNING *
                 `, [
                     name, description, price, image_urls, nft_url, nft_image_url,
