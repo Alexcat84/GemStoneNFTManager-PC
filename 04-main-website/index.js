@@ -164,6 +164,55 @@ app.get('/api/gemspots', async (req, res) => {
   }
 });
 
+// API endpoint to get a specific product by ID
+app.get('/api/gemspots/:id', async (req, res) => {
+  try {
+    const productId = parseInt(req.params.id);
+    const products = await database.getAllProducts();
+    const product = products.find(p => p.id === productId);
+    
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        error: 'Product not found'
+      });
+    }
+    
+    const productData = {
+      id: product.id,
+      name: product.name,
+      description: product.description,
+      price: parseFloat(product.price),
+      images: product.image_urls || ["/images/default-gemspot.jpg"],
+      qrCode: product.qr_code,
+      nftUrl: product.nft_url,
+      nftImage: product.nft_image_url,
+      crystal_type: product.crystal_type,
+      rarity: product.rarity,
+      energy_properties: product.energy_properties,
+      personality_target: product.personality_target,
+      status: product.status,
+      category: product.category,
+      dimensions: product.dimensions,
+      weight: product.weight,
+      stock: product.stock_quantity,
+      isFeatured: product.is_featured,
+      createdAt: product.created_at
+    };
+    
+    res.json({
+      success: true,
+      product: productData
+    });
+  } catch (error) {
+    console.error('Error fetching product:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch product'
+    });
+  }
+});
+
 // Admin API Routes
 app.post('/api/admin/login', async (req, res) => {
   try {

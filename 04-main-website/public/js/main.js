@@ -45,14 +45,18 @@ function initNavigation() {
         link.addEventListener('click', (e) => {
             e.preventDefault();
             const targetId = link.getAttribute('href');
-            const targetSection = document.querySelector(targetId);
             
-            if (targetSection) {
-                const offsetTop = targetSection.offsetTop - 70; // Account for fixed navbar
-                window.scrollTo({
-                    top: offsetTop,
-                    behavior: 'smooth'
-                });
+            // Only handle anchor links (starting with #)
+            if (targetId && targetId.startsWith('#')) {
+                const targetSection = document.querySelector(targetId);
+                
+                if (targetSection) {
+                    const offsetTop = targetSection.offsetTop - 70; // Account for fixed navbar
+                    window.scrollTo({
+                        top: offsetTop,
+                        behavior: 'smooth'
+                    });
+                }
             }
         });
     });
@@ -160,10 +164,15 @@ function displayGallery(gemspots) {
     const galleryGrid = document.getElementById('gallery-grid');
     if (!galleryGrid) return;
 
-    galleryGrid.innerHTML = gemspots.map(gemspot => `
+    galleryGrid.innerHTML = gemspots.map(gemspot => {
+        // Get the first image or use a placeholder
+        const firstImage = gemspot.images && gemspot.images.length > 0 ? gemspot.images[0] : null;
+        const imageUrl = firstImage || '/images/placeholder-gem.jpg';
+        
+        return `
         <div class="gallery-item hover-lift" data-aos="fade-up" data-aos-delay="${Math.random() * 200}">
             <div class="gallery-image">
-                <i class="fas fa-gem"></i>
+                <img src="${imageUrl}" alt="${gemspot.name}" loading="lazy">
                 <div class="gallery-overlay">
                     <button class="btn btn-primary" onclick="viewGemspot(${gemspot.id})">
                         <span>View Details</span>
@@ -178,15 +187,16 @@ function displayGallery(gemspots) {
                 <div class="gallery-meta">
                     <span class="crystal-type">
                         <i class="fas fa-gem"></i>
-                        ${gemspot.crystal}
+                        ${gemspot.crystal_type || 'Crystal'}
                     </span>
-                    <span class="rarity ${gemspot.rarity.toLowerCase().replace(' ', '-')}">
-                        ${gemspot.rarity}
+                    <span class="rarity ${(gemspot.rarity || 'Common').toLowerCase().replace(' ', '-')}">
+                        ${gemspot.rarity || 'Common'}
                     </span>
                 </div>
             </div>
         </div>
-    `).join('');
+        `;
+    }).join('');
 
     // Add hover effects
     const galleryItems = document.querySelectorAll('.gallery-item');
@@ -215,11 +225,219 @@ function displayGalleryError() {
 }
 
 // View gemspot details
-function viewGemspot(id) {
-    // This would typically open a modal or navigate to a detail page
-    console.log(`Viewing gemspot ${id}`);
-    // For now, we'll just show an alert
-    alert(`Viewing details for GemSpot #${id}`);
+async function viewGemspot(id) {
+    try {
+        // Fetch product details from API
+        const response = await fetch(`/api/gemspots/${id}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            showProductModal(data.product);
+        } else {
+            showNotification('Product not found', 'error');
+        }
+    } catch (error) {
+        console.error('Error fetching product details:', error);
+        showNotification('Error loading product details', 'error');
+    }
+}
+
+// Show product details modal
+function showProductModal(product) {
+    // Create modal HTML
+    const modalHTML = `
+        <div class="product-modal-overlay" onclick="closeProductModal()">
+            <div class="product-modal" onclick="event.stopPropagation()">
+                <div class="product-modal-header">
+                    <h2>${product.name}</h2>
+                    <button class="modal-close" onclick="closeProductModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="product-modal-content">
+                    <div class="product-modal-images">
+                        ${product.images && product.images.length > 0 ? 
+                            product.images.map(img => `<img src="${img}" alt="${product.name}" loading="lazy">`).join('') :
+                            '<img src="/images/placeholder-gem.jpg" alt="No image available">'
+                        }
+                    </div>
+                    <div class="product-modal-details">
+                        <div class="product-price">$${product.price} CAD</div>
+                        <p class="product-description">${product.description}</p>
+                        <div class="product-specs">
+                            <div class="spec-item">
+                                <strong>Crystal Type:</strong> ${product.crystal_type || 'N/A'}
+                            </div>
+                            <div class="spec-item">
+                                <strong>Rarity:</strong> ${product.rarity || 'Common'}
+                            </div>
+                            <div class="spec-item">
+                                <strong>Dimensions:</strong> ${product.dimensions || 'N/A'}
+                            </div>
+                            <div class="spec-item">
+                                <strong>Weight:</strong> ${product.weight || 'N/A'}
+                            </div>
+                            ${product.energy_properties ? `
+                            <div class="spec-item">
+                                <strong>Energy Properties:</strong> ${product.energy_properties}
+                            </div>
+                            ` : ''}
+                            ${product.personality_target ? `
+                            <div class="spec-item">
+                                <strong>Target Personality:</strong> ${product.personality_target}
+                            </div>
+                            ` : ''}
+                        </div>
+                        <div class="product-actions">
+                            <button class="btn btn-primary" onclick="contactAboutProduct(${product.id})">
+                                <i class="fas fa-envelope"></i>
+                                Contact About This Product
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Add modal to page
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Add modal styles
+    const modalStyles = `
+        <style>
+        .product-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .product-modal {
+            background: white;
+            border-radius: 12px;
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        .product-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .product-modal-header h2 {
+            margin: 0;
+            color: #333;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+            padding: 5px;
+        }
+        
+        .modal-close:hover {
+            color: #333;
+        }
+        
+        .product-modal-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 20px;
+        }
+        
+        .product-modal-images {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .product-modal-images img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        
+        .product-modal-details {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .product-price {
+            font-size: 24px;
+            font-weight: bold;
+            color: #10b981;
+        }
+        
+        .product-specs {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .spec-item {
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+        
+        .product-actions {
+            margin-top: auto;
+        }
+        
+        @media (max-width: 768px) {
+            .product-modal-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        </style>
+    `;
+    
+    // Add styles if not already added
+    if (!document.querySelector('#product-modal-styles')) {
+        const styleElement = document.createElement('div');
+        styleElement.id = 'product-modal-styles';
+        styleElement.innerHTML = modalStyles;
+        document.head.appendChild(styleElement);
+    }
+}
+
+// Close product modal
+function closeProductModal() {
+    const modal = document.querySelector('.product-modal-overlay');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+// Contact about product
+function contactAboutProduct(productId) {
+    closeProductModal();
+    // Scroll to contact section
+    const contactSection = document.querySelector('#contact');
+    if (contactSection) {
+        contactSection.scrollIntoView({ behavior: 'smooth' });
+    }
+    showNotification('Please use the contact form below to inquire about this product', 'info');
 }
 
 // Contact form functionality
