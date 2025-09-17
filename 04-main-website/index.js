@@ -18,7 +18,9 @@ const adminAuth = new AdminAuth();
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/');
+    // Use /tmp for Vercel, uploads/ for local development
+    const uploadDir = process.env.VERCEL ? '/tmp' : 'uploads/';
+    cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -368,7 +370,15 @@ app.post('/api/admin/products', requireAuth, upload.fields([
     if (req.files && req.files.images) {
       console.log('📦 [ADD PRODUCT] Processing images:', req.files.images.length);
       req.files.images.forEach(file => {
-        imageUrls.push(`/uploads/${file.filename}`);
+        // Store as base64 for Vercel, or file path for local
+        if (process.env.VERCEL) {
+          const fs = require('fs');
+          const imageBuffer = fs.readFileSync(file.path);
+          const base64Image = imageBuffer.toString('base64');
+          imageUrls.push(`data:${file.mimetype};base64,${base64Image}`);
+        } else {
+          imageUrls.push(`/uploads/${file.filename}`);
+        }
       });
     }
 
@@ -376,7 +386,14 @@ app.post('/api/admin/products', requireAuth, upload.fields([
     let nftImageUrl = null;
     if (req.files && req.files.nftImage && req.files.nftImage[0]) {
       console.log('📦 [ADD PRODUCT] Processing NFT image');
-      nftImageUrl = `/uploads/${req.files.nftImage[0].filename}`;
+      if (process.env.VERCEL) {
+        const fs = require('fs');
+        const imageBuffer = fs.readFileSync(req.files.nftImage[0].path);
+        const base64Image = imageBuffer.toString('base64');
+        nftImageUrl = `data:${req.files.nftImage[0].mimetype};base64,${base64Image}`;
+      } else {
+        nftImageUrl = `/uploads/${req.files.nftImage[0].filename}`;
+      }
     }
 
     const productData = {
@@ -426,9 +443,17 @@ app.put('/api/admin/products/:id', requireAuth, upload.fields([
     
     // Process multiple images
     const imageUrls = [];
-    if (req.files.images) {
+    if (req.files && req.files.images) {
       req.files.images.forEach(file => {
-        imageUrls.push(`/uploads/${file.filename}`);
+        // Store as base64 for Vercel, or file path for local
+        if (process.env.VERCEL) {
+          const fs = require('fs');
+          const imageBuffer = fs.readFileSync(file.path);
+          const base64Image = imageBuffer.toString('base64');
+          imageUrls.push(`data:${file.mimetype};base64,${base64Image}`);
+        } else {
+          imageUrls.push(`/uploads/${file.filename}`);
+        }
       });
     } else if (req.body.existing_images) {
       // Keep existing images if no new ones uploaded
@@ -437,8 +462,15 @@ app.put('/api/admin/products/:id', requireAuth, upload.fields([
 
     // Process NFT image
     let nftImageUrl = req.body.existing_nft_image;
-    if (req.files.nftImage && req.files.nftImage[0]) {
-      nftImageUrl = `/uploads/${req.files.nftImage[0].filename}`;
+    if (req.files && req.files.nftImage && req.files.nftImage[0]) {
+      if (process.env.VERCEL) {
+        const fs = require('fs');
+        const imageBuffer = fs.readFileSync(req.files.nftImage[0].path);
+        const base64Image = imageBuffer.toString('base64');
+        nftImageUrl = `data:${req.files.nftImage[0].mimetype};base64,${base64Image}`;
+      } else {
+        nftImageUrl = `/uploads/${req.files.nftImage[0].filename}`;
+      }
     }
 
     const productData = {
