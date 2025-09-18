@@ -328,9 +328,53 @@ class ShoppingCart {
             }
         }
         
-        // For now, show a message. Later we'll integrate with Stripe
-        this.showNotification('Checkout functionality coming soon!', 'info');
-        this.hideCart();
+        try {
+            // Prepare checkout data
+            const checkoutData = {
+                items: this.items,
+                shippingInfo: {
+                    selectedOption: window.shippingCalculator.selectedOption,
+                    cost: window.shippingCalculator.getSelectedShippingCost()
+                },
+                paymentInfo: {
+                    // This would be filled by payment form
+                    method: 'credit_card'
+                }
+            };
+            
+            console.log('🛒 Proceeding to checkout with data:', checkoutData);
+            this.showNotification('Processing your order...', 'info');
+            
+            // Send checkout request
+            const response = await fetch('/api/checkout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(checkoutData)
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                // Clear cart after successful checkout
+                this.items = [];
+                this.saveCart();
+                this.updateCartDisplay();
+                this.hideCart();
+                
+                this.showNotification(`Order ${result.orderId} processed successfully!`, 'success');
+                
+                // Here you would typically redirect to a success page
+                console.log('✅ Checkout successful:', result);
+            } else {
+                this.showNotification(result.message || 'Checkout failed', 'error');
+            }
+            
+        } catch (error) {
+            console.error('Error during checkout:', error);
+            this.showNotification('Error processing checkout', 'error');
+        }
     }
 
     // Bind events

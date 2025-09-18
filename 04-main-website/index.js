@@ -424,6 +424,81 @@ app.delete('/api/admin/variants/:variantId', requireAuth, async (req, res) => {
     }
 });
 
+// Checkout API endpoint
+app.post('/api/checkout', async (req, res) => {
+    try {
+        const { items, shippingInfo, paymentInfo } = req.body;
+        
+        if (!items || !Array.isArray(items) || items.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'No items in cart'
+            });
+        }
+        
+        // Process each item and update stock
+        const processedItems = [];
+        const variantIds = [];
+        
+        for (const item of items) {
+            // Extract variant ID if present
+            if (item.variantId) {
+                variantIds.push(item.variantId);
+            }
+            
+            processedItems.push({
+                id: item.id,
+                name: item.name,
+                variant_code: item.variant_code,
+                price: item.price,
+                quantity: item.quantity
+            });
+        }
+        
+        // Update stock for variants
+        if (variantIds.length > 0) {
+            const stockUpdate = await stockManager.updateStockAfterPurchase(
+                items[0].productId, 
+                items.length, 
+                variantIds
+            );
+            
+            if (!stockUpdate.success) {
+                return res.status(500).json({
+                    success: false,
+                    message: 'Error updating stock'
+                });
+            }
+        }
+        
+        // Here you would typically:
+        // 1. Process payment with Stripe/PayPal
+        // 2. Send confirmation email
+        // 3. Create order record in database
+        // 4. Send shipping notification
+        
+        console.log('✅ Checkout processed successfully:', {
+            items: processedItems,
+            variantIds: variantIds,
+            shippingInfo: shippingInfo
+        });
+        
+        res.json({
+            success: true,
+            message: 'Order processed successfully',
+            orderId: 'ORD-' + Date.now(),
+            items: processedItems
+        });
+        
+    } catch (error) {
+        console.error('Error processing checkout:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error processing checkout'
+        });
+    }
+});
+
 app.post('/api/admin/login', async (req, res) => {
   try {
     const { username, password } = req.body;

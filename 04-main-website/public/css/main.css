@@ -1264,3 +1264,17 @@ p {
     gap: 4px;
     box-shadow: 0 2px 4px rgba(111, 66, 193, 0.3);
 }
+
+.variants-badge {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-md);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
+}

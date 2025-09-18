@@ -131,24 +131,37 @@ class StockManager {
         return totalReserved;
     }
 
-    // Update stock after successful purchase
-    async updateStockAfterPurchase(productId, quantity) {
+    // Update stock after successful purchase (variant-aware)
+    async updateStockAfterPurchase(productId, quantity, variantIds = []) {
         try {
             const client = await this.pool.connect();
-            const result = await client.query(
-                'UPDATE products SET stock_quantity = stock_quantity - $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING stock_quantity',
-                [quantity, productId]
-            );
-            client.release();
-
-            if (result.rows.length === 0) {
-                throw new Error('Product not found');
-            }
-
-            const newStock = result.rows[0].stock_quantity;
-            console.log(`📦 Stock updated: Product ${productId} now has ${newStock} units remaining`);
             
-            return { success: true, newStock };
+            if (variantIds.length > 0) {
+                // Update variant status to 'sold'
+                for (const variantId of variantIds) {
+                    await client.query(
+                        'UPDATE product_variants SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+                        ['sold', variantId]
+                    );
+                }
+                console.log(`📦 Variants marked as sold: ${variantIds.join(', ')}`);
+            } else {
+                // Fallback to old stock system for products without variants
+                const result = await client.query(
+                    'UPDATE products SET stock_quantity = stock_quantity - $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING stock_quantity',
+                    [quantity, productId]
+                );
+
+                if (result.rows.length === 0) {
+                    throw new Error('Product not found');
+                }
+
+                const newStock = result.rows[0].stock_quantity;
+                console.log(`📦 Stock updated: Product ${productId} now has ${newStock} units remaining`);
+            }
+            
+            client.release();
+            return { success: true };
         } catch (error) {
             console.error('Error updating stock:', error);
             return { success: false, error: error.message };

@@ -203,6 +203,12 @@ function displayGallery(gemspots) {
                                     NFT
                                 </span>
                                 ` : ''}
+                                ${gemspot.hasVariants ? `
+                                <span class="variants-badge">
+                                    <i class="fas fa-layer-group"></i>
+                                    ${gemspot.availableVariants} Available
+                                </span>
+                                ` : ''}
                             </div>
                             <button class="add-to-cart-btn" data-product-id="${gemspot.id}">
                                 <i class="fas fa-shopping-cart"></i>
@@ -297,6 +303,11 @@ function showProductModal(product) {
                             <div class="spec-item">
                                 <strong>Weight:</strong> ${product.weight || 'N/A'}
                             </div>
+                            ${product.hasVariants ? `
+                            <div class="spec-item">
+                                <strong>Available Variants:</strong> ${product.availableVariants} unique pots
+                            </div>
+                            ` : ''}
                             ${product.energy_properties ? `
                             <div class="spec-item">
                                 <strong>Energy Properties:</strong> ${product.energy_properties}
