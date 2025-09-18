@@ -317,8 +317,12 @@ class ShoppingCart {
 
         // Add to cart buttons
         document.addEventListener('click', (e) => {
+            console.log('🛒 Click detected on:', e.target);
+            console.log('🛒 Closest add-to-cart-btn:', e.target.closest('.add-to-cart-btn'));
+            
             if (e.target.closest('.add-to-cart-btn')) {
                 e.preventDefault();
+                e.stopPropagation();
                 console.log('🛒 Add to Cart button clicked!');
                 const button = e.target.closest('.add-to-cart-btn');
                 const productId = parseInt(button.dataset.productId);
