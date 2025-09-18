@@ -159,11 +159,27 @@ class ShippingCalculator {
 
     // Show shipping options modal
     showShippingOptions() {
-        this.createShippingModal();
+        console.log('📦 showShippingOptions called');
+        console.log('📦 Shipping options available:', this.shippingOptions);
+        
+        if (this.shippingOptions.length === 0) {
+            console.log('📦 No shipping options available, calculating...');
+            this.calculateShipping(window.cart.items, 'CA').then(() => {
+                this.createShippingModal();
+            }).catch(error => {
+                console.error('📦 Error calculating shipping:', error);
+                this.createShippingModal(); // Show modal with default options
+            });
+        } else {
+            this.createShippingModal();
+        }
     }
 
     // Create shipping options modal
     createShippingModal() {
+        console.log('📦 createShippingModal called');
+        console.log('📦 Available shipping options:', this.shippingOptions);
+        
         // Remove existing modal
         const existingModal = document.querySelector('.shipping-modal');
         if (existingModal) {
@@ -246,5 +262,7 @@ class ShippingCalculator {
 
 // Initialize shipping calculator
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('📦 Initializing shipping calculator...');
     window.shippingCalculator = new ShippingCalculator();
+    console.log('📦 Shipping calculator initialized:', window.shippingCalculator);
 });

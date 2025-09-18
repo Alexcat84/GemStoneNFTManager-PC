@@ -238,7 +238,7 @@ class ShoppingCart {
                                 FREE Shipping
                             </div>
                         ` : `
-                            <button class="select-shipping-btn" onclick="shippingCalculator.showShippingOptions()">
+                            <button class="select-shipping-btn" onclick="window.shippingCalculator.showShippingOptions()">
                                 <i class="fas fa-shipping-fast"></i>
                                 Select Shipping Option
                             </button>
