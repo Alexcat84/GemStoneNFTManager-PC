@@ -143,25 +143,42 @@ const requireAuth = (req, res, next) => {
 app.get('/api/gemspots', async (req, res) => {
   try {
     const products = await database.getFeaturedProducts();
-    const gemspots = products.map(product => ({
-      id: product.id,
-      name: product.name,
-      description: product.description,
-      price: parseFloat(product.price),
-      images: product.image_urls || ["/images/default-gemspot.jpg"],
-      nftUrl: product.nft_url,
-      nftImage: product.nft_image_url,
-      crystal_type: product.crystal_type,
-      rarity: product.rarity,
-      energyProperties: product.energy_properties,
-      personalityTarget: product.personality_target,
-      status: product.status,
-      category: product.category,
-      dimensions: product.dimensions,
-      weight: product.weight,
-      stock: product.stock_quantity,
-      isFeatured: product.is_featured,
-      createdAt: product.created_at
+    
+    const gemspots = await Promise.all(products.map(async (product) => {
+      // Get available variants for this product
+      const variants = await database.getAvailableVariants(product.id);
+      
+      return {
+        id: product.id,
+        name: product.name,
+        description: product.description,
+        price: parseFloat(product.price),
+        images: product.image_urls || ["/images/default-gemspot.jpg"],
+        nftUrl: product.nft_url,
+        nftImage: product.nft_image_url,
+        crystal_type: product.crystal_type,
+        rarity: product.rarity,
+        energyProperties: product.energy_properties,
+        personalityTarget: product.personality_target,
+        status: product.status,
+        category: product.category,
+        dimensions: product.dimensions,
+        weight: product.weight,
+        stock: product.stock_quantity,
+        isFeatured: product.is_featured,
+        createdAt: product.created_at,
+        availableVariants: variants.length,
+        hasVariants: variants.length > 0,
+        variants: variants.map(variant => ({
+          id: variant.id,
+          variant_code: variant.variant_code,
+          nft_url: variant.nft_url,
+          nft_image_url: variant.nft_image_url,
+          qr_code_url: variant.qr_code_url,
+          price: variant.price ? parseFloat(variant.price) : parseFloat(product.price),
+          status: variant.status
+        }))
+      };
     }));
     
     res.json({ success: true, gemspots });
