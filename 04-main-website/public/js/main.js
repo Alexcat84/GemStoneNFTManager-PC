@@ -359,6 +359,14 @@ function showProductModal(product) {
     // Debug: Log the modal HTML to check data-product-id
     console.log('🛒 Modal HTML added with product ID:', product.id);
     
+    // Add event listener to prevent modal from closing when clicking inside
+    const modal = document.querySelector('.product-modal');
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+    }
+    
     // Add modal styles
     const modalStyles = `
         <style>
@@ -786,7 +794,9 @@ document.addEventListener('DOMContentLoaded', initLazyLoading);
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
         e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
+        const href = this.getAttribute('href');
+        if (href === '#') return; // Skip if href is just '#'
+        const target = document.querySelector(href);
         if (target) {
             target.scrollIntoView({
                 behavior: 'smooth',
