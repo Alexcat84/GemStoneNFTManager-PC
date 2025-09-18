@@ -163,6 +163,7 @@ async function loadGallery() {
 function displayGallery(gemspots) {
     // Store products data globally for cart access
     window.productsData = gemspots;
+    console.log('🛒 Products data stored globally:', window.productsData);
     
     const galleryGrid = document.getElementById('gallery-grid');
     if (!galleryGrid) return;
@@ -354,6 +355,9 @@ function showProductModal(product) {
     
     // Add modal to page
     document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Debug: Log the modal HTML to check data-product-id
+    console.log('🛒 Modal HTML added with product ID:', product.id);
     
     // Add modal styles
     const modalStyles = `

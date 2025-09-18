@@ -319,11 +319,17 @@ class ShoppingCart {
         document.addEventListener('click', (e) => {
             if (e.target.closest('.add-to-cart-btn')) {
                 e.preventDefault();
+                console.log('🛒 Add to Cart button clicked!');
                 const button = e.target.closest('.add-to-cart-btn');
                 const productId = parseInt(button.dataset.productId);
+                console.log('🛒 Product ID:', productId);
                 const product = this.getProductById(productId);
+                console.log('🛒 Product found:', product);
                 if (product) {
                     this.addItem(product);
+                } else {
+                    console.error('🛒 Product not found for ID:', productId);
+                    this.showNotification('Product not found. Please try again.', 'error');
                 }
             }
         });
@@ -332,7 +338,17 @@ class ShoppingCart {
     // Get product by ID (this will be populated from the main products data)
     getProductById(id) {
         // This will be set by the main.js file
-        return window.productsData ? window.productsData.find(p => p.id === id) : null;
+        console.log('🛒 Looking for product ID:', id);
+        console.log('🛒 Available products:', window.productsData);
+        
+        if (!window.productsData) {
+            console.error('🛒 No products data available');
+            return null;
+        }
+        
+        const product = window.productsData.find(p => p.id === id);
+        console.log('🛒 Found product:', product);
+        return product;
     }
 
     // Show notification
@@ -364,5 +380,7 @@ class ShoppingCart {
 
 // Initialize cart when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('🛒 Initializing shopping cart...');
     window.cart = new ShoppingCart();
+    console.log('🛒 Shopping cart initialized:', window.cart);
 });
