@@ -204,7 +204,7 @@ function displayGallery(gemspots) {
                                 </span>
                                 ` : ''}
                             </div>
-                            <button class="add-to-cart-btn" data-product-id="${gemspot.id}" onclick="event.stopPropagation()">
+                            <button class="add-to-cart-btn" data-product-id="${gemspot.id}">
                                 <i class="fas fa-shopping-cart"></i>
                                 Add to Cart
                             </button>
@@ -344,7 +344,7 @@ function showProductModal(product) {
                     </div>
                 </div>
                 <div class="product-actions">
-                    <button class="add-to-cart-btn" data-product-id="${product.id}" onclick="event.stopPropagation()">
+                    <button class="add-to-cart-btn" data-product-id="${product.id}">
                         <i class="fas fa-shopping-cart"></i>
                         Add to Cart
                     </button>
