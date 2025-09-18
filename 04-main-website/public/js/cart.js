@@ -30,7 +30,7 @@ class ShoppingCart {
     }
 
     // Add item to cart
-    async addItem(product) {
+    async addItem(product, selectedVariant = null) {
         const maxItems = this.config.maxItems || 50;
         const maxQuantityPerItem = this.config.maxQuantityPerItem || 10;
         
@@ -38,6 +38,14 @@ class ShoppingCart {
         if (this.items.length >= maxItems) {
             this.showNotification(`Cart is full! Maximum ${maxItems} items allowed.`, 'error');
             return;
+        }
+        
+        // If product has variants, show variant selection modal
+        if (product.hasVariants && product.variants && product.variants.length > 0) {
+            if (!selectedVariant) {
+                this.showVariantSelectionModal(product);
+                return;
+            }
         }
         
         // Check stock availability
@@ -53,7 +61,9 @@ class ShoppingCart {
             return;
         }
         
-        const existingItem = this.items.find(item => item.id === product.id);
+        // Create unique item ID based on variant or product
+        const itemId = selectedVariant ? `${product.id}_${selectedVariant.id}` : product.id;
+        const existingItem = this.items.find(item => item.id === itemId);
         
         if (existingItem) {
             // Check if quantity limit reached
@@ -63,15 +73,22 @@ class ShoppingCart {
             }
             existingItem.quantity += 1;
         } else {
-            this.items.push({
-                id: product.id,
+            const itemData = {
+                id: itemId,
+                productId: product.id,
+                variantId: selectedVariant ? selectedVariant.id : null,
                 name: product.name,
-                price: parseFloat(product.price),
+                price: selectedVariant ? parseFloat(selectedVariant.price) : parseFloat(product.price),
                 image: product.images && product.images[0] ? product.images[0] : '/images/default-gemspot.jpg',
                 crystal_type: product.crystal_type || 'Crystal',
                 rarity: product.rarity || 'Common',
-                quantity: 1
-            });
+                quantity: 1,
+                variant_code: selectedVariant ? selectedVariant.variant_code : null,
+                nft_url: selectedVariant ? selectedVariant.nft_url : product.nftUrl,
+                nft_image_url: selectedVariant ? selectedVariant.nft_image_url : product.nftImage
+            };
+            
+            this.items.push(itemData);
         }
         
         // Reserve stock
@@ -79,7 +96,8 @@ class ShoppingCart {
         
         this.saveCart();
         this.updateCartDisplay();
-        this.showNotification(`${product.name} added to cart!`, 'success');
+        const itemName = selectedVariant ? `${product.name} (${selectedVariant.variant_code})` : product.name;
+        this.showNotification(`${itemName} added to cart!`, 'success');
     }
 
     // Remove item from cart
@@ -203,6 +221,7 @@ class ShoppingCart {
                     </div>
                     <div class="cart-item-details">
                         <h4>${item.name}</h4>
+                        ${item.variant_code ? `<div class="variant-code">${item.variant_code}</div>` : ''}
                         <p class="crystal-type">${item.crystal_type}</p>
                         <p class="rarity">${item.rarity}</p>
                         <p class="price">$${item.price.toFixed(2)} CAD</p>
@@ -494,6 +513,62 @@ class ShoppingCart {
             localStorage.setItem('cart_session_id', sessionId);
         }
         return sessionId;
+    }
+
+    // Show variant selection modal
+    showVariantSelectionModal(product) {
+        const modal = document.createElement('div');
+        modal.className = 'variant-selection-modal';
+        modal.innerHTML = `
+            <div class="variant-modal-overlay">
+                <div class="variant-modal-content">
+                    <div class="variant-modal-header">
+                        <h3>Select Variant - ${product.name}</h3>
+                        <button class="variant-modal-close" onclick="this.closest('.variant-selection-modal').remove()">&times;</button>
+                    </div>
+                    <div class="variant-modal-body">
+                        <p class="variant-description">This product has multiple unique variants. Please select the specific variant you want to add to your cart:</p>
+                        <div class="variants-list">
+                            ${product.variants.map(variant => `
+                                <div class="variant-option" data-variant='${JSON.stringify(variant)}'>
+                                    <div class="variant-info">
+                                        <div class="variant-code"><strong>${variant.variant_code}</strong></div>
+                                        <div class="variant-price">$${variant.price.toFixed(2)} CAD</div>
+                                        ${variant.nft_url ? `<div class="variant-nft">NFT Available</div>` : ''}
+                                    </div>
+                                    <div class="variant-actions">
+                                        <button class="btn btn-primary btn-select-variant">Select</button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Add event listeners for variant selection
+        modal.querySelectorAll('.btn-select-variant').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const variantOption = e.target.closest('.variant-option');
+                const variantData = JSON.parse(variantOption.dataset.variant);
+                
+                // Close modal
+                modal.remove();
+                
+                // Add item with selected variant
+                this.addItem(product, variantData);
+            });
+        });
+        
+        // Close modal when clicking overlay
+        modal.querySelector('.variant-modal-overlay').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) {
+                modal.remove();
+            }
+        });
     }
 }
 
