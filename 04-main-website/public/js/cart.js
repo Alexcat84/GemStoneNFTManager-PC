@@ -315,8 +315,12 @@ class ShoppingCart {
             }
         });
 
-        // Add to cart buttons
+        // Add to cart buttons (using event delegation for dynamic content)
         document.addEventListener('click', (e) => {
+            console.log('🛒 Click detected on:', e.target);
+            console.log('🛒 Target class:', e.target.className);
+            console.log('🛒 Closest add-to-cart-btn:', e.target.closest('.add-to-cart-btn'));
+            
             const addToCartBtn = e.target.closest('.add-to-cart-btn');
             
             if (addToCartBtn) {
@@ -324,6 +328,7 @@ class ShoppingCart {
                 e.stopPropagation();
                 console.log('🛒 Add to Cart button clicked!');
                 console.log('🛒 Button element:', addToCartBtn);
+                console.log('🛒 Button dataset:', addToCartBtn.dataset);
                 
                 const productId = parseInt(addToCartBtn.dataset.productId);
                 console.log('🛒 Product ID:', productId);

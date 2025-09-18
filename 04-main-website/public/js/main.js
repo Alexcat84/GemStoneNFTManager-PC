@@ -367,6 +367,34 @@ function showProductModal(product) {
         });
     }
     
+    // Add specific event listener for Add to Cart button in modal
+    const modalAddToCartBtn = document.querySelector('.product-modal .add-to-cart-btn');
+    if (modalAddToCartBtn) {
+        console.log('🛒 Modal Add to Cart button found:', modalAddToCartBtn);
+        modalAddToCartBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('🛒 Modal Add to Cart button clicked directly!');
+            
+            const productId = parseInt(this.dataset.productId);
+            console.log('🛒 Modal Product ID:', productId);
+            
+            if (window.cart) {
+                const product = window.cart.getProductById(productId);
+                console.log('🛒 Modal Product found:', product);
+                
+                if (product) {
+                    window.cart.addItem(product);
+                } else {
+                    console.error('🛒 Modal Product not found for ID:', productId);
+                    window.cart.showNotification('Product not found. Please try again.', 'error');
+                }
+            }
+        });
+    } else {
+        console.log('🛒 Modal Add to Cart button NOT found');
+    }
+    
     // Add modal styles
     const modalStyles = `
         <style>
