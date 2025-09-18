@@ -130,30 +130,68 @@ class ShippingCalculator {
 
     // Select shipping option
     selectShippingOption(option) {
+        console.log('📦 Selecting shipping option:', option);
+        
+        // Update visual selection first
+        const modal = document.querySelector('.shipping-modal');
+        if (modal) {
+            // Remove all previous selections
+            modal.querySelectorAll('.shipping-option-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // Add selection to clicked option
+            const selectedCard = modal.querySelector(`[data-option="${option.service}"]`);
+            if (selectedCard) {
+                selectedCard.classList.add('selected');
+                console.log('📦 Visual selection updated for:', option.service);
+            }
+        }
+        
+        // Update selected option and cart
         this.selectedOption = option;
         this.updateShippingDisplay();
         this.updateCartTotal();
+        
+        // Close modal automatically after selection
+        setTimeout(() => {
+            this.hideShippingOptions();
+        }, 500); // Small delay to show selection feedback
     }
 
     // Update shipping display in cart
     updateShippingDisplay() {
         const shippingDisplay = document.querySelector('.shipping-display');
-        if (shippingDisplay && this.selectedOption) {
-            shippingDisplay.innerHTML = `
-                <div class="selected-shipping">
-                    <div class="shipping-option">
-                        <i class="${this.selectedOption.icon}" style="color: ${this.selectedOption.color}"></i>
-                        <span class="shipping-service">${this.selectedOption.service}</span>
-                        <span class="shipping-cost">$${this.selectedOption.cost.toFixed(2)} CAD</span>
+        const selectShippingBtn = document.querySelector('.select-shipping-btn');
+        
+        if (this.selectedOption) {
+            // Update shipping display
+            if (shippingDisplay) {
+                shippingDisplay.innerHTML = `
+                    <div class="selected-shipping">
+                        <div class="shipping-option">
+                            <i class="${this.selectedOption.icon}" style="color: ${this.selectedOption.color}"></i>
+                            <span class="shipping-service">${this.selectedOption.service}</span>
+                            <span class="shipping-cost">$${this.selectedOption.cost.toFixed(2)} CAD</span>
+                        </div>
+                        <div class="shipping-details">
+                            <small>${this.selectedOption.days}</small>
+                            <button class="change-shipping-btn" onclick="shippingCalculator.showShippingOptions()">
+                                Change
+                            </button>
+                        </div>
                     </div>
-                    <div class="shipping-details">
-                        <small>${this.selectedOption.days}</small>
-                        <button class="change-shipping-btn" onclick="shippingCalculator.showShippingOptions()">
-                            Change
-                        </button>
-                    </div>
-                </div>
-            `;
+                `;
+            }
+            
+            // Update select shipping button
+            if (selectShippingBtn) {
+                selectShippingBtn.innerHTML = `
+                    <i class="${this.selectedOption.icon}" style="color: ${this.selectedOption.color}"></i>
+                    ${this.selectedOption.service} - $${this.selectedOption.cost.toFixed(2)} CAD
+                `;
+                selectShippingBtn.onclick = () => this.showShippingOptions();
+            }
         }
     }
 
@@ -198,7 +236,8 @@ class ShippingCalculator {
                     <div class="shipping-modal-body">
                         <div class="shipping-options">
                             ${this.shippingOptions.map(option => `
-                                <div class="shipping-option-card ${this.selectedOption && this.selectedOption.service === option.service ? 'selected' : ''}" 
+                                <div class="shipping-option-card" 
+                                     data-option="${option.service}"
                                      onclick="shippingCalculator.selectShippingOption(${JSON.stringify(option).replace(/"/g, '&quot;')})">
                                     <div class="shipping-option-header">
                                         <i class="${option.icon}" style="color: ${option.color}"></i>
