@@ -13,31 +13,59 @@ class StockManager {
         this.reservationTimeout = 15 * 60 * 1000; // 15 minutes
     }
 
-    // Check if product has enough stock
+    // Check if product has enough stock (variant-based)
     async checkStock(productId, quantity) {
         try {
             const client = await this.pool.connect();
-            const result = await client.query(
-                'SELECT stock_quantity FROM products WHERE id = $1',
-                [productId]
+            
+            // Check if product has variants
+            const variantResult = await client.query(
+                'SELECT COUNT(*) as variant_count FROM product_variants WHERE product_id = $1 AND status = $2',
+                [productId, 'available']
             );
-            client.release();
+            
+            const variantCount = parseInt(variantResult.rows[0].variant_count);
+            
+            if (variantCount > 0) {
+                // Product has variants - check available variants
+                const reservedVariants = this.getReservedVariants(productId);
+                const actualAvailable = variantCount - reservedVariants;
+                
+                client.release();
+                
+                return {
+                    available: actualAvailable >= quantity,
+                    availableStock: actualAvailable,
+                    totalStock: variantCount,
+                    reservedStock: reservedVariants,
+                    requestedQuantity: quantity,
+                    hasVariants: true
+                };
+            } else {
+                // Fallback to old stock system for products without variants
+                const result = await client.query(
+                    'SELECT stock_quantity FROM products WHERE id = $1',
+                    [productId]
+                );
+                client.release();
 
-            if (result.rows.length === 0) {
-                return { available: false, message: 'Product not found' };
+                if (result.rows.length === 0) {
+                    return { available: false, message: 'Product not found' };
+                }
+
+                const availableStock = result.rows[0].stock_quantity;
+                const reservedStock = this.getReservedStock(productId);
+                const actualAvailable = availableStock - reservedStock;
+
+                return {
+                    available: actualAvailable >= quantity,
+                    availableStock: actualAvailable,
+                    totalStock: availableStock,
+                    reservedStock: reservedStock,
+                    requestedQuantity: quantity,
+                    hasVariants: false
+                };
             }
-
-            const availableStock = result.rows[0].stock_quantity;
-            const reservedStock = this.getReservedStock(productId);
-            const actualAvailable = availableStock - reservedStock;
-
-            return {
-                available: actualAvailable >= quantity,
-                availableStock: actualAvailable,
-                totalStock: availableStock,
-                reservedStock: reservedStock,
-                requestedQuantity: quantity
-            };
         } catch (error) {
             console.error('Error checking stock:', error);
             return { available: false, message: 'Error checking stock' };
@@ -83,6 +111,17 @@ class StockManager {
 
     // Get reserved stock for a product
     getReservedStock(productId) {
+        let totalReserved = 0;
+        for (const [key, reservation] of this.reservations) {
+            if (reservation.productId === productId) {
+                totalReserved += reservation.quantity;
+            }
+        }
+        return totalReserved;
+    }
+
+    // Get reserved variants for a product
+    getReservedVariants(productId) {
         let totalReserved = 0;
         for (const [key, reservation] of this.reservations) {
             if (reservation.productId === productId) {

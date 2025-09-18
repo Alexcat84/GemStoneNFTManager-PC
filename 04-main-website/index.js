@@ -346,6 +346,67 @@ app.get('/api/stock/status', async (req, res) => {
     }
 });
 
+// Product Variants API routes
+app.get('/api/products/:id/variants', async (req, res) => {
+    try {
+        const productId = req.params.id;
+        const variants = await database.getProductVariants(productId);
+        res.json({ success: true, variants });
+    } catch (error) {
+        console.error('Error getting product variants:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+app.get('/api/products/:id/variants/available', async (req, res) => {
+    try {
+        const productId = req.params.id;
+        const variants = await database.getAvailableVariants(productId);
+        res.json({ success: true, variants });
+    } catch (error) {
+        console.error('Error getting available variants:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+app.post('/api/admin/products/:id/variants', requireAuth, async (req, res) => {
+    try {
+        const productId = req.params.id;
+        const variantData = req.body;
+        
+        const variant = await database.addProductVariant(productId, variantData);
+        res.json({ success: true, variant });
+    } catch (error) {
+        console.error('Error adding product variant:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+app.put('/api/admin/variants/:variantId/status', requireAuth, async (req, res) => {
+    try {
+        const variantId = req.params.variantId;
+        const { status } = req.body;
+        
+        const variant = await database.updateVariantStatus(variantId, status);
+        res.json({ success: true, variant });
+    } catch (error) {
+        console.error('Error updating variant status:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+app.delete('/api/admin/variants/:variantId', requireAuth, async (req, res) => {
+    try {
+        const variantId = req.params.variantId;
+        
+        const variant = await database.deleteProductVariant(variantId);
+        res.json({ success: true, variant });
+    } catch (error) {
+        console.error('Error deleting product variant:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 app.post('/api/admin/login', async (req, res) => {
   try {
     const { username, password } = req.body;

@@ -40,6 +40,23 @@ class PostgresDatabase {
                 )
             `);
 
+            // Create product variants table for individual NFT pots
+            await client.query(`
+                CREATE TABLE IF NOT EXISTS product_variants (
+                    id SERIAL PRIMARY KEY,
+                    product_id INTEGER REFERENCES products(id) ON DELETE CASCADE,
+                    variant_code VARCHAR(100) UNIQUE NOT NULL, -- Unique code for this specific pot
+                    nft_url TEXT,
+                    nft_image_url TEXT,
+                    qr_code_url TEXT,
+                    status VARCHAR(50) DEFAULT 'available', -- available, reserved, sold
+                    price DECIMAL(10,2), -- Override price if different from base product
+                    notes TEXT, -- Any specific notes about this variant
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                )
+            `);
+
             // Create admin users table
             await client.query(`
                 CREATE TABLE IF NOT EXISTS admin_users (
@@ -326,6 +343,124 @@ class PostgresDatabase {
         } catch (error) {
             console.error('Error updating admin password:', error);
             throw error;
+        }
+    }
+
+    // Product Variants Management
+    async addProductVariant(productId, variantData) {
+        try {
+            const client = await this.pool.connect();
+            const result = await client.query(`
+                INSERT INTO product_variants (
+                    product_id, variant_code, nft_url, nft_image_url, 
+                    qr_code_url, status, price, notes
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                RETURNING *
+            `, [
+                productId,
+                variantData.variant_code,
+                variantData.nft_url,
+                variantData.nft_image_url,
+                variantData.qr_code_url,
+                variantData.status || 'available',
+                variantData.price,
+                variantData.notes
+            ]);
+            client.release();
+            return result.rows[0];
+        } catch (error) {
+            console.error('Error adding product variant:', error);
+            throw error;
+        }
+    }
+
+    async getProductVariants(productId) {
+        try {
+            const client = await this.pool.connect();
+            const result = await client.query(`
+                SELECT * FROM product_variants 
+                WHERE product_id = $1 
+                ORDER BY created_at DESC
+            `, [productId]);
+            client.release();
+            return result.rows;
+        } catch (error) {
+            console.error('Error getting product variants:', error);
+            return [];
+        }
+    }
+
+    async getAvailableVariants(productId) {
+        try {
+            const client = await this.pool.connect();
+            const result = await client.query(`
+                SELECT * FROM product_variants 
+                WHERE product_id = $1 AND status = 'available'
+                ORDER BY created_at DESC
+            `, [productId]);
+            client.release();
+            return result.rows;
+        } catch (error) {
+            console.error('Error getting available variants:', error);
+            return [];
+        }
+    }
+
+    async updateVariantStatus(variantId, status) {
+        try {
+            const client = await this.pool.connect();
+            const result = await client.query(`
+                UPDATE product_variants 
+                SET status = $1, updated_at = CURRENT_TIMESTAMP
+                WHERE id = $2
+                RETURNING *
+            `, [status, variantId]);
+            client.release();
+            return result.rows[0];
+        } catch (error) {
+            console.error('Error updating variant status:', error);
+            throw error;
+        }
+    }
+
+    async deleteProductVariant(variantId) {
+        try {
+            const client = await this.pool.connect();
+            const result = await client.query(`
+                DELETE FROM product_variants 
+                WHERE id = $1
+                RETURNING *
+            `, [variantId]);
+            client.release();
+            return result.rows[0];
+        } catch (error) {
+            console.error('Error deleting product variant:', error);
+            throw error;
+        }
+    }
+
+    // Get products with variant counts
+    async getProductsWithVariantCounts() {
+        try {
+            const client = await this.pool.connect();
+            const result = await client.query(`
+                SELECT 
+                    p.*,
+                    COUNT(pv.id) as total_variants,
+                    COUNT(CASE WHEN pv.status = 'available' THEN 1 END) as available_variants,
+                    COUNT(CASE WHEN pv.status = 'reserved' THEN 1 END) as reserved_variants,
+                    COUNT(CASE WHEN pv.status = 'sold' THEN 1 END) as sold_variants
+                FROM products p
+                LEFT JOIN product_variants pv ON p.id = pv.product_id
+                WHERE p.is_archived = false
+                GROUP BY p.id
+                ORDER BY p.created_at DESC
+            `);
+            client.release();
+            return result.rows;
+        } catch (error) {
+            console.error('Error getting products with variant counts:', error);
+            return [];
         }
     }
 
