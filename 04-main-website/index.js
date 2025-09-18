@@ -11,6 +11,9 @@ const AdminAuth = require('./admin-panel/admin-auth');
 const app = express();
 const PORT = process.env.PORT || 4000;
 
+// Configure Express for Vercel (trust proxy)
+app.set('trust proxy', 1);
+
 // Initialize services
 const database = new PostgresDatabase();
 const adminAuth = new AdminAuth();
@@ -73,10 +76,13 @@ app.use((error, req, res, next) => {
   next(error);
 });
 
-// Rate limiting
+// Rate limiting (configured for Vercel)
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 1000 // limit each IP to 1000 requests per windowMs
+  max: 1000, // limit each IP to 1000 requests per windowMs
+  trustProxy: true, // Trust Vercel's proxy
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 });
 app.use(limiter);
 
