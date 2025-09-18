@@ -223,6 +223,16 @@ class ShippingCalculator {
 
         document.body.insertAdjacentHTML('beforeend', modalHTML);
         this.bindShippingModalEvents();
+        
+        // Show the modal
+        const modal = document.querySelector('.shipping-modal');
+        if (modal) {
+            console.log('📦 Modal created, showing...');
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        } else {
+            console.error('📦 Modal not found after creation');
+        }
     }
 
     // Bind shipping modal events
@@ -232,14 +242,20 @@ class ShippingCalculator {
 
         if (closeBtn) {
             closeBtn.addEventListener('click', () => {
-                modal.remove();
+                console.log('📦 Closing shipping modal');
+                modal.classList.remove('active');
+                document.body.style.overflow = 'auto';
+                setTimeout(() => modal.remove(), 300);
             });
         }
 
         if (modal) {
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) {
-                    modal.remove();
+                    console.log('📦 Closing shipping modal (clicked overlay)');
+                    modal.classList.remove('active');
+                    document.body.style.overflow = 'auto';
+                    setTimeout(() => modal.remove(), 300);
                 }
             });
         }
