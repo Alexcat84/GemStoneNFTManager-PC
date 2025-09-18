@@ -7,6 +7,7 @@ const compression = require('compression');
 const multer = require('multer');
 const PostgresDatabase = require('./database/postgres-database');
 const AdminAuth = require('./admin-panel/admin-auth');
+const StockManager = require('./database/stock-manager');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -17,6 +18,7 @@ app.set('trust proxy', 1);
 // Initialize services
 const database = new PostgresDatabase();
 const adminAuth = new AdminAuth();
+const stockManager = new StockManager();
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -237,6 +239,110 @@ app.get('/api/admin/table-structure', async (req, res) => {
     } catch (error) {
         console.error('Error getting table structure:', error);
         res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Stock management API routes
+app.post('/api/stock/check', async (req, res) => {
+    try {
+        const { productId, quantity } = req.body;
+        
+        if (!productId || !quantity) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Product ID and quantity are required' 
+            });
+        }
+
+        const stockCheck = await stockManager.checkStock(productId, quantity);
+        res.json(stockCheck);
+    } catch (error) {
+        console.error('Error checking stock:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error checking stock availability' 
+        });
+    }
+});
+
+app.post('/api/stock/reserve', async (req, res) => {
+    try {
+        const { sessionId, productId, quantity } = req.body;
+        
+        if (!sessionId || !productId || !quantity) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Session ID, product ID, and quantity are required' 
+            });
+        }
+
+        // Check stock availability first
+        const stockCheck = await stockManager.checkStock(productId, quantity);
+        if (!stockCheck.available) {
+            return res.status(400).json({
+                success: false,
+                message: `Only ${stockCheck.availableStock} units available`,
+                availableStock: stockCheck.availableStock
+            });
+        }
+
+        // Reserve stock
+        stockManager.reserveStock(sessionId, productId, quantity);
+        
+        res.json({ 
+            success: true, 
+            message: 'Stock reserved successfully',
+            reservedQuantity: quantity
+        });
+    } catch (error) {
+        console.error('Error reserving stock:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error reserving stock' 
+        });
+    }
+});
+
+app.post('/api/stock/release', async (req, res) => {
+    try {
+        const { sessionId, productId, quantity } = req.body;
+        
+        if (!sessionId || !productId) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Session ID and product ID are required' 
+            });
+        }
+
+        // Release stock reservation
+        stockManager.releaseReservation(sessionId, productId);
+        
+        res.json({ 
+            success: true, 
+            message: 'Stock reservation released successfully'
+        });
+    } catch (error) {
+        console.error('Error releasing stock:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error releasing stock reservation' 
+        });
+    }
+});
+
+app.get('/api/stock/status', async (req, res) => {
+    try {
+        const stockStatus = await stockManager.getStockStatus();
+        res.json({ 
+            success: true, 
+            stockStatus: stockStatus 
+        });
+    } catch (error) {
+        console.error('Error getting stock status:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error getting stock status' 
+        });
     }
 });
 

@@ -30,13 +30,26 @@ class ShoppingCart {
     }
 
     // Add item to cart
-    addItem(product) {
+    async addItem(product) {
         const maxItems = this.config.maxItems || 50;
         const maxQuantityPerItem = this.config.maxQuantityPerItem || 10;
         
         // Check if cart is full
         if (this.items.length >= maxItems) {
             this.showNotification(`Cart is full! Maximum ${maxItems} items allowed.`, 'error');
+            return;
+        }
+        
+        // Check stock availability
+        try {
+            const stockCheck = await this.checkStockAvailability(product.id, 1);
+            if (!stockCheck.available) {
+                this.showNotification(`Only ${stockCheck.availableStock} units available`, 'error');
+                return;
+            }
+        } catch (error) {
+            console.error('🛒 Error checking stock:', error);
+            this.showNotification('Error checking stock availability', 'error');
             return;
         }
         
@@ -60,6 +73,9 @@ class ShoppingCart {
                 quantity: 1
             });
         }
+        
+        // Reserve stock
+        await this.reserveStock(product.id, 1);
         
         this.saveCart();
         this.updateCartDisplay();
@@ -386,6 +402,98 @@ class ShoppingCart {
             notification.classList.remove('show');
             setTimeout(() => notification.remove(), 300);
         }, duration);
+    }
+
+    // Stock management functions
+    async checkStockAvailability(productId, quantity) {
+        try {
+            const response = await fetch(`/api/stock/check`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    productId: productId,
+                    quantity: quantity
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to check stock');
+            }
+
+            const result = await response.json();
+            return result;
+        } catch (error) {
+            console.error('Error checking stock:', error);
+            return { available: false, message: 'Error checking stock' };
+        }
+    }
+
+    async reserveStock(productId, quantity) {
+        try {
+            const sessionId = this.getSessionId();
+            const response = await fetch(`/api/stock/reserve`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    sessionId: sessionId,
+                    productId: productId,
+                    quantity: quantity
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to reserve stock');
+            }
+
+            const result = await response.json();
+            console.log('🛒 Stock reserved:', result);
+            return result;
+        } catch (error) {
+            console.error('Error reserving stock:', error);
+            return { success: false, message: 'Error reserving stock' };
+        }
+    }
+
+    async releaseStock(productId, quantity) {
+        try {
+            const sessionId = this.getSessionId();
+            const response = await fetch(`/api/stock/release`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    sessionId: sessionId,
+                    productId: productId,
+                    quantity: quantity
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to release stock');
+            }
+
+            const result = await response.json();
+            console.log('🛒 Stock released:', result);
+            return result;
+        } catch (error) {
+            console.error('Error releasing stock:', error);
+            return { success: false, message: 'Error releasing stock' };
+        }
+    }
+
+    getSessionId() {
+        // Generate a simple session ID based on browser fingerprint
+        let sessionId = localStorage.getItem('cart_session_id');
+        if (!sessionId) {
+            sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('cart_session_id', sessionId);
+        }
+        return sessionId;
     }
 }
 
