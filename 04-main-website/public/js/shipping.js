@@ -222,17 +222,34 @@ class ShippingCalculator {
         `;
 
         document.body.insertAdjacentHTML('beforeend', modalHTML);
-        this.bindShippingModalEvents();
+        console.log('📦 Modal HTML inserted into DOM');
         
-        // Show the modal
-        const modal = document.querySelector('.shipping-modal');
-        if (modal) {
-            console.log('📦 Modal created, showing...');
-            modal.classList.add('active');
-            document.body.style.overflow = 'hidden';
-        } else {
-            console.error('📦 Modal not found after creation');
-        }
+        // Wait a bit for DOM to update
+        setTimeout(() => {
+            const modal = document.querySelector('.shipping-modal');
+            if (modal) {
+                console.log('📦 Modal found in DOM, showing...');
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+                
+                // Force modal to be visible
+                modal.style.display = 'flex';
+                modal.style.opacity = '1';
+                modal.style.visibility = 'visible';
+                
+                console.log('📦 Modal should now be visible');
+                console.log('📦 Modal classes:', modal.className);
+                console.log('📦 Modal styles:', {
+                    display: modal.style.display,
+                    opacity: modal.style.opacity,
+                    visibility: modal.style.visibility
+                });
+            } else {
+                console.error('📦 Modal not found after creation');
+            }
+        }, 100);
+        
+        this.bindShippingModalEvents();
     }
 
     // Bind shipping modal events
