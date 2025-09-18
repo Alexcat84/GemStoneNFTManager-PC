@@ -155,7 +155,7 @@ class ShippingCalculator {
         
         // Close modal automatically after selection
         setTimeout(() => {
-            this.hideShippingOptions();
+            this.closeShippingModal();
         }, 500); // Small delay to show selection feedback
     }
 
@@ -329,6 +329,17 @@ class ShippingCalculator {
     // Get selected shipping cost
     getSelectedShippingCost() {
         return this.selectedOption ? this.selectedOption.cost : (this.config.defaultShippingCost || 15);
+    }
+
+    // Close shipping modal with animation
+    closeShippingModal() {
+        const modal = document.querySelector('.shipping-modal');
+        if (modal) {
+            console.log('📦 Closing shipping modal');
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+            setTimeout(() => modal.remove(), 300);
+        }
     }
 }
 
