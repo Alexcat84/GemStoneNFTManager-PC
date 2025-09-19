@@ -2,7 +2,7 @@
 const CART_CONFIG = {
     // Cart settings
     maxItems: 50,
-    maxQuantityPerItem: 10,
+    // maxQuantityPerItem removed - each pot is unique (quantity always 1)
     
     // Currency settings
     currency: 'CAD',

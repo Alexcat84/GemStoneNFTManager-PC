@@ -66,12 +66,9 @@ class ShoppingCart {
         const existingItem = this.items.find(item => item.id === itemId);
         
         if (existingItem) {
-            // Check if quantity limit reached
-            if (existingItem.quantity >= maxQuantityPerItem) {
-                this.showNotification(`Maximum quantity of ${maxQuantityPerItem} reached for this item.`, 'error');
-                return;
-            }
-            existingItem.quantity += 1;
+            // Since each pot is unique, we can't add more than 1 of the same variant
+            this.showNotification('This unique pot is already in your cart!', 'error');
+            return;
         } else {
             const itemData = {
                 id: itemId,
@@ -108,27 +105,11 @@ class ShoppingCart {
         this.showNotification('Item removed from cart', 'info');
     }
 
-    // Update item quantity
-    updateQuantity(productId, quantity) {
-        const maxQuantityPerItem = this.config.maxQuantityPerItem || 10;
-        const item = this.items.find(item => item.id === productId);
-        
-        if (item) {
-            if (quantity <= 0) {
-                this.removeItem(productId);
-            } else if (quantity > maxQuantityPerItem) {
-                this.showNotification(`Maximum quantity of ${maxQuantityPerItem} allowed per item.`, 'error');
-            } else {
-                item.quantity = quantity;
-                this.saveCart();
-                this.updateCartDisplay();
-            }
-        }
-    }
+    // Note: updateQuantity removed since each pot is unique (quantity always 1)
 
-    // Get cart subtotal
+    // Get cart subtotal (each item is unique, so no quantity multiplication)
     getSubtotal() {
-        return this.items.reduce((total, item) => total + (item.price * item.quantity), 0);
+        return this.items.reduce((total, item) => total + item.price, 0);
     }
 
     // Get tax amount
@@ -157,9 +138,9 @@ class ShoppingCart {
         return this.getSubtotal() + this.getTax() + this.getShipping();
     }
 
-    // Get cart item count
+    // Get cart item count (each item is unique)
     getItemCount() {
-        return this.items.reduce((count, item) => count + item.quantity, 0);
+        return this.items.length; // Each item is unique, so just count items
     }
 
     // Clear cart
@@ -227,10 +208,9 @@ class ShoppingCart {
                         <p class="price">$${item.price.toFixed(2)} CAD</p>
                     </div>
                     <div class="cart-item-controls">
-                        <button class="quantity-btn" onclick="cart.updateQuantity(${item.id}, ${item.quantity - 1})">-</button>
-                        <span class="quantity">${item.quantity}</span>
-                        <button class="quantity-btn" onclick="cart.updateQuantity(${item.id}, ${item.quantity + 1})">+</button>
-                        <button class="remove-btn" onclick="cart.removeItem(${item.id})">
+                        <span class="quantity">1</span>
+                        <span class="unique-badge">Unique</span>
+                        <button class="remove-btn" onclick="cart.removeItem('${item.id}')">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>

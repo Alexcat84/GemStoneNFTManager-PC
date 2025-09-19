@@ -184,6 +184,21 @@
     font-weight: 600;
 }
 
+.unique-badge {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+}
+
 .cart-item-controls {
     display: flex;
     align-items: center;
