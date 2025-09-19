@@ -99,7 +99,14 @@ class ShoppingCart {
 
     // Remove item from cart
     removeItem(productId) {
-        this.items = this.items.filter(item => item.id !== productId);
+        console.log('🗑️ Removing item with ID:', productId, 'Type:', typeof productId);
+        console.log('🗑️ Current items before removal:', this.items.map(item => ({ id: item.id, type: typeof item.id })));
+        
+        // Convert both to string for comparison to handle type mismatches
+        this.items = this.items.filter(item => String(item.id) !== String(productId));
+        
+        console.log('🗑️ Items after removal:', this.items.length);
+        
         this.saveCart();
         this.updateCartDisplay();
         this.showNotification('Item removed from cart', 'info');
@@ -210,7 +217,7 @@ class ShoppingCart {
                     <div class="cart-item-controls">
                         <span class="quantity">1</span>
                         <span class="unique-badge">Unique</span>
-                        <button class="remove-btn" onclick="cart.removeItem('${item.id}')">
+                        <button class="remove-btn">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -400,6 +407,25 @@ class ShoppingCart {
                 } else {
                     console.error('🛒 Product not found for ID:', productId);
                     this.showNotification('Product not found. Please try again.', 'error');
+                }
+            }
+        });
+
+        // Remove item buttons (using event delegation for dynamic content)
+        document.addEventListener('click', (e) => {
+            const removeBtn = e.target.closest('.remove-btn');
+            
+            if (removeBtn) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('🗑️ Remove button clicked!');
+                
+                // Get the cart item container
+                const cartItem = removeBtn.closest('.cart-item');
+                if (cartItem) {
+                    const itemId = cartItem.dataset.id;
+                    console.log('🗑️ Removing item with ID:', itemId);
+                    this.removeItem(itemId);
                 }
             }
         });
