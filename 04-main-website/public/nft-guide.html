@@ -165,6 +165,25 @@
             color: white;
         }
         
+        .wallet-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .wallet-links .download-btn {
+            background: linear-gradient(135deg, #10b981, #059669);
+            font-size: 0.9rem;
+            padding: 10px 20px;
+            text-align: center;
+            justify-content: center;
+        }
+        
+        .wallet-links .download-btn:hover {
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+        }
+        
         .step-list {
             counter-reset: step-counter;
         }
@@ -376,6 +395,19 @@
                                 <i class="fas fa-download"></i> Download Coinbase Wallet
                             </a>
                         </div>
+                        
+                        <div class="wallet-card">
+                            <h4><div class="wallet-icon"><i class="fas fa-lock"></i></div> SafePal Wallet</h4>
+                            <ul>
+                                <li><i class="fas fa-check"></i> Software & hardware options</li>
+                                <li><i class="fas fa-check"></i> Built-in DApp browser</li>
+                                <li><i class="fas fa-check"></i> Multi-chain support</li>
+                                <li><i class="fas fa-check"></i> Air-gapped security</li>
+                            </ul>
+                            <a href="https://www.safepal.io/download" target="_blank" class="download-btn">
+                                <i class="fas fa-download"></i> Download SafePal
+                            </a>
+                        </div>
                     </div>
                 </div>
 
@@ -424,10 +456,25 @@
                     <div class="step-list">
                         <div class="step-item">
                             <h4>Add Polygon Network to Your Wallet</h4>
-                            <p>For detailed instructions on how to add Polygon network to your specific wallet, visit the official Polygon documentation:</p>
-                            <p><a href="https://polygon.technology/docs/develop/metamask/config-polygon-on-metamask" target="_blank" class="download-btn">
-                                <i class="fas fa-external-link-alt"></i> Official Polygon Network Setup Guide
-                            </a></p>
+                            <p>For detailed instructions on how to add Polygon network to your specific wallet, visit the official documentation:</p>
+                            
+                            <div class="wallet-links">
+                                <a href="https://support.metamask.io/hc/en-us/articles/360056386612-How-to-add-a-custom-network-RPC" target="_blank" class="download-btn">
+                                    <i class="fas fa-external-link-alt"></i> MetaMask Official Guide
+                                </a>
+                                
+                                <a href="https://community.trustwallet.com/t/how-to-add-a-custom-token/213" target="_blank" class="download-btn">
+                                    <i class="fas fa-external-link-alt"></i> Trust Wallet Official Guide
+                                </a>
+                                
+                                <a href="https://help.coinbase.com/en/wallet/getting-started/adding-custom-networks" target="_blank" class="download-btn">
+                                    <i class="fas fa-external-link-alt"></i> Coinbase Wallet Official Guide
+                                </a>
+                                
+                                <a href="https://safepalsupport.zendesk.com/hc/en-us/articles/7084919512219--Adding-custom-tokens-chains-in-the-SafePal-Extension-Wallet" target="_blank" class="download-btn">
+                                    <i class="fas fa-external-link-alt"></i> SafePal Official Guide
+                                </a>
+                            </div>
                         </div>
                         
                         <div class="step-item">
