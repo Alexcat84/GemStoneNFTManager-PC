@@ -715,7 +715,7 @@ p {
 }
 
 .nft-guide-btn {
-    background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+    background: linear-gradient(135deg, #10b981, #059669);
     border: none;
     padding: 15px 30px;
     font-size: 1.1rem;
@@ -731,7 +731,7 @@ p {
 
 .nft-guide-btn:hover {
     transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(255, 107, 107, 0.4);
+    box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
     color: white;
 }
 
