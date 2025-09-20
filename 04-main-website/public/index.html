@@ -286,10 +286,10 @@
                 <div class="contact-form">
                     <form id="contact-form">
                         <div class="form-group">
-                            <input type="text" id="name" name="name" placeholder="Your Name" required>
+                            <input type="text" id="name" name="name" placeholder="Your Name" autocomplete="name" required>
                         </div>
                         <div class="form-group">
-                            <input type="email" id="email" name="email" placeholder="Your Email" required>
+                            <input type="email" id="email" name="email" placeholder="Your Email" autocomplete="email" required>
                         </div>
                         <div class="form-group">
                             <textarea id="message" name="message" placeholder="Your Message" rows="5" required></textarea>
@@ -343,7 +343,7 @@
                     <h3>Newsletter</h3>
                     <p>Subscribe for updates on new collections and exclusive offers.</p>
                     <form class="newsletter-form">
-                        <input type="email" placeholder="Your email" required>
+                        <input type="email" id="newsletter-email" name="newsletter-email" placeholder="Your email" autocomplete="email" required>
                         <button type="submit"><i class="fas fa-arrow-right"></i></button>
                     </form>
                 </div>
