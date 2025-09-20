@@ -417,8 +417,39 @@
             return;
         }
 
+        // Verify token is valid before proceeding
+        async function verifyToken() {
+            try {
+                const response = await fetch('/api/admin/verify', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const result = await response.json();
+                if (!result.success) {
+                    console.log('Token invalid, redirecting to login...');
+                    localStorage.removeItem('adminToken');
+                    window.location.href = '/admin/login';
+                    return false;
+                }
+                return true;
+            } catch (error) {
+                console.log('Token verification failed, redirecting to login...');
+                localStorage.removeItem('adminToken');
+                window.location.href = '/admin/login';
+                return false;
+            }
+        }
+
         // Initialize dashboard
         document.addEventListener('DOMContentLoaded', async () => {
+            // Verify token before loading dashboard
+            const isValid = await verifyToken();
+            if (!isValid) {
+                return; // Will redirect to login
+            }
+            
             await loadProducts();
             updateStats();
         });

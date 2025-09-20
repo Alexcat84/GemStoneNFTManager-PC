@@ -217,26 +217,11 @@
             }
         });
 
-        // Check if already logged in
+        // Check if already logged in (only redirect if token exists, don't verify)
         const token = localStorage.getItem('adminToken');
         if (token) {
-            // Verify token is still valid
-            fetch('/api/admin/verify', {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            })
-            .then(response => response.json())
-            .then(result => {
-                if (result.success) {
-                    window.location.href = '/admin/dashboard';
-                } else {
-                    localStorage.removeItem('adminToken');
-                }
-            })
-            .catch(() => {
-                localStorage.removeItem('adminToken');
-            });
+            // Simply redirect to dashboard, let the dashboard handle token validation
+            window.location.href = '/admin/dashboard';
         }
     </script>
 </body>
