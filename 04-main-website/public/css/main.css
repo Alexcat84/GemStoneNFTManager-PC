@@ -562,9 +562,14 @@ p {
     background: var(--bg-secondary);
 }
 
+.about-text .section-title {
+    text-align: center;
+    margin-bottom: var(--spacing-lg);
+}
+
 .about-content {
     display: grid;
-    grid-template-columns: 1.2fr 0.8fr;
+    grid-template-columns: 1fr 1fr;
     gap: var(--spacing-2xl);
     align-items: start;
     min-height: 600px;
@@ -581,17 +586,18 @@ p {
 .about-image {
     width: 100%;
     height: 100%;
-    max-height: 600px;
+    max-height: 500px;
     border-radius: var(--radius-xl);
     overflow: hidden;
     box-shadow: var(--shadow-large);
     position: relative;
+    background: #f8fafc;
 }
 
 .about-img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
     border-radius: var(--radius-xl);
     transition: transform var(--transition-normal);
 }
