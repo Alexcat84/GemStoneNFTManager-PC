@@ -110,7 +110,7 @@ app.get('/admin/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'admin-panel', 'login.html'));
 });
 
-app.get('/admin/dashboard', (req, res) => {
+app.get('/admin/dashboard', requireAuth, (req, res) => {
   res.sendFile(path.join(__dirname, 'admin-panel', 'dashboard.html'));
 });
 
@@ -237,7 +237,7 @@ app.get('/api/gemspots/:id', async (req, res) => {
 });
 
 // Admin API Routes
-app.get('/api/admin/table-structure', async (req, res) => {
+app.get('/api/admin/table-structure', requireAuth, async (req, res) => {
     try {
         const client = await database.pool.connect();
         const result = await client.query(`
@@ -538,7 +538,7 @@ app.post('/api/admin/change-password', requireAuth, async (req, res) => {
 });
 
 // Diagnostic endpoint
-app.get('/api/admin/diagnostic', async (req, res) => {
+app.get('/api/admin/diagnostic', requireAuth, async (req, res) => {
   try {
     console.log('🔍 [DIAGNOSTIC] Starting database diagnostic...');
     
@@ -585,7 +585,7 @@ app.get('/api/admin/diagnostic', async (req, res) => {
 });
 
 // Fix password endpoint
-app.post('/api/admin/fix-password', async (req, res) => {
+app.post('/api/admin/fix-password', requireAuth, async (req, res) => {
   try {
     console.log('🔧 [FIX PASSWORD] Starting password fix...');
     
@@ -618,7 +618,7 @@ app.post('/api/admin/fix-password', async (req, res) => {
 });
 
 // Database migration endpoint
-app.post('/api/admin/migrate-database', async (req, res) => {
+app.post('/api/admin/migrate-database', requireAuth, async (req, res) => {
   try {
     console.log('🔄 [MIGRATION v2.0] Starting database migration...');
     
