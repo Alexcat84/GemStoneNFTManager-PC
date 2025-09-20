@@ -5,9 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js",
-    "build": "echo 'Build completed'",
-    "vercel-build": "echo 'Vercel build completed'"
+    "dev": "nodemon index.js"
   },
   "keywords": ["gemstones", "crystals", "nft", "planters", "ecommerce"],
   "author": "GemSpots",
