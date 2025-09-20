@@ -554,8 +554,8 @@ app.post('/api/admin/change-password', requireAuth, async (req, res) => {
   }
 });
 
-// Diagnostic endpoint
-app.get('/api/admin/diagnostic', requireAuth, async (req, res) => {
+// Diagnostic endpoint (NO AUTH for troubleshooting)
+app.get('/api/admin/diagnostic', async (req, res) => {
   try {
     console.log('🔍 [DIAGNOSTIC] Starting database diagnostic...');
     
@@ -597,6 +597,58 @@ app.get('/api/admin/diagnostic', requireAuth, async (req, res) => {
       success: false, 
       error: error.message,
       stack: error.stack
+    });
+  }
+});
+
+// Create admin user endpoint (NO AUTH for initial setup)
+app.post('/api/admin/create-admin', async (req, res) => {
+  try {
+    console.log('🔧 [CREATE ADMIN] Starting admin user creation...');
+    
+    const bcrypt = require('bcryptjs');
+    const { username, password } = req.body;
+    
+    if (!username || !password) {
+      return res.status(400).json({ success: false, message: 'Username and password required' });
+    }
+    
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    const client = await database.pool.connect();
+    try {
+      // Check if admin already exists
+      const existingAdmin = await client.query(
+        'SELECT id FROM admins WHERE username = $1',
+        [username]
+      );
+      
+      if (existingAdmin.rows.length > 0) {
+        return res.status(400).json({ success: false, message: 'Admin user already exists' });
+      }
+      
+      // Create new admin user
+      const result = await client.query(
+        'INSERT INTO admins (username, password_hash, role, created_at) VALUES ($1, $2, $3, NOW()) RETURNING id, username, role',
+        [username, hashedPassword, 'admin']
+      );
+      
+      console.log('✅ [CREATE ADMIN] Admin user created successfully:', result.rows[0]);
+      
+      res.json({
+        success: true,
+        message: 'Admin user created successfully',
+        user: result.rows[0]
+      });
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('❌ [CREATE ADMIN ERROR]:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error creating admin user',
+      error: error.message
     });
   }
 });
