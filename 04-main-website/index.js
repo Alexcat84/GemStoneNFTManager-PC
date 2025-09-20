@@ -56,7 +56,7 @@ app.use(helmet({
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-app.use(express.static(path.join(__dirname, 'public')));
+// Note: express.static moved after admin routes to avoid conflicts
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Error handling middleware for file uploads
@@ -108,6 +108,13 @@ app.get('/contact', (req, res) => {
 // Authentication middleware
 const requireAuth = (req, res, next) => {
   console.log('🔐 requireAuth middleware called for:', req.url);
+  
+  // Skip authentication for login page
+  if (req.url === '/admin/login') {
+    console.log('🔐 Skipping auth for login page');
+    return next();
+  }
+  
   const token = req.headers.authorization?.replace('Bearer ', '') || req.query.token;
   console.log('🔐 Token found:', token ? 'YES' : 'NO');
   
@@ -117,11 +124,6 @@ const requireAuth = (req, res, next) => {
       console.log('🔐 API request without token, returning 401');
       return res.status(401).json({ success: false, message: 'Token required' });
     } else {
-      // Don't redirect if already on login page to avoid infinite loop
-      if (req.url === '/admin/login') {
-        console.log('🔐 Already on login page, returning 401');
-        return res.status(401).send('Unauthorized');
-      }
       console.log('🔐 Redirecting to login...');
       return res.redirect('/admin/login');
     }
@@ -133,10 +135,6 @@ const requireAuth = (req, res, next) => {
     if (req.url.startsWith('/api/')) {
       return res.status(401).json({ success: false, message: 'Invalid token' });
     } else {
-      // Don't redirect if already on login page to avoid infinite loop
-      if (req.url === '/admin/login') {
-        return res.status(401).send('Unauthorized');
-      }
       return res.redirect('/admin/login');
     }
   }
@@ -147,12 +145,16 @@ const requireAuth = (req, res, next) => {
 
 // Admin routes
 app.get('/admin/login', (req, res) => {
+  console.log('🔐 /admin/login route accessed');
   res.sendFile(path.join(__dirname, 'admin-panel', 'login.html'));
 });
 
 app.get('/admin/dashboard', requireAuth, (req, res) => {
   res.sendFile(path.join(__dirname, 'admin-panel', 'dashboard.html'));
 });
+
+// Static files middleware (moved after admin routes to avoid conflicts)
+app.use(express.static(path.join(__dirname, 'public')));
 
 // API Routes for GemSpots data
 app.get('/api/gemspots', async (req, res) => {
@@ -884,6 +886,10 @@ app.use((err, req, res, next) => {
 
 // 404 handler
 app.use((req, res) => {
+  // Don't handle admin routes with 404
+  if (req.url.startsWith('/admin/')) {
+    return res.status(404).json({ success: false, message: 'Admin route not found' });
+  }
   res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
 });
 
