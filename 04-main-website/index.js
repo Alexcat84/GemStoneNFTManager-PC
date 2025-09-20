@@ -872,9 +872,14 @@ app.use((req, res) => {
   res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`🌟 GemSpots Website running on port ${PORT}`);
-  console.log(`🌐 Website: http://localhost:${PORT}`);
-  console.log(`📱 Mobile: http://192.168.18.19:${PORT}`);
-});
+// Start server (only in development)
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`🌟 GemSpots Website running on port ${PORT}`);
+    console.log(`🌐 Website: http://localhost:${PORT}`);
+    console.log(`📱 Mobile: http://192.168.18.19:${PORT}`);
+  });
+}
+
+// Export for Vercel
+module.exports = app;
