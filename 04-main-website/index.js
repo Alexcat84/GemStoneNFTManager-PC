@@ -105,15 +105,6 @@ app.get('/contact', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'contact.html'));
 });
 
-// Admin routes
-app.get('/admin/login', (req, res) => {
-  res.sendFile(path.join(__dirname, 'admin-panel', 'login.html'));
-});
-
-app.get('/admin/dashboard', requireAuth, (req, res) => {
-  res.sendFile(path.join(__dirname, 'admin-panel', 'dashboard.html'));
-});
-
 // Authentication middleware
 const requireAuth = (req, res, next) => {
   const token = req.headers.authorization?.replace('Bearer ', '') || req.query.token;
@@ -138,6 +129,15 @@ const requireAuth = (req, res, next) => {
   req.user = decoded;
   next();
 };
+
+// Admin routes
+app.get('/admin/login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'admin-panel', 'login.html'));
+});
+
+app.get('/admin/dashboard', requireAuth, (req, res) => {
+  res.sendFile(path.join(__dirname, 'admin-panel', 'dashboard.html'));
+});
 
 // API Routes for GemSpots data
 app.get('/api/gemspots', async (req, res) => {
