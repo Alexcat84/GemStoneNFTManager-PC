@@ -184,6 +184,40 @@
             box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
         }
         
+        .cost-info {
+            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+            border: 1px solid #0ea5e9;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 15px;
+        }
+        
+        .cost-info h5 {
+            color: #0369a1;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+        
+        .cost-info ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .cost-info li {
+            padding: 8px 0;
+            border-bottom: 1px solid #bae6fd;
+        }
+        
+        .cost-info li:last-child {
+            border-bottom: none;
+        }
+        
+        .cost-info p {
+            margin-top: 15px;
+            font-style: italic;
+            color: #0369a1;
+        }
+        
         .step-list {
             counter-reset: step-counter;
         }
@@ -479,7 +513,17 @@
                         
                         <div class="step-item">
                             <h4>Get POL Tokens</h4>
-                            <p>You'll need POL tokens to pay for transaction fees. You can buy POL on exchanges like Coinbase, Binance, or other cryptocurrency exchanges.</p>
+                            <p>You'll need POL tokens to pay for transaction fees when receiving your GemSpots NFT. You can buy POL on exchanges like Coinbase, Binance, or other cryptocurrency exchanges.</p>
+                            
+                            <div class="cost-info">
+                                <h5><i class="fas fa-info-circle"></i> Estimated Gas Costs:</h5>
+                                <ul>
+                                    <li><strong>NFT Transfer:</strong> ~$0.01 - $0.05 USD</li>
+                                    <li><strong>Recommended:</strong> $1-2 USD in POL tokens</li>
+                                    <li><strong>Gas fees are very low</strong> on Polygon network</li>
+                                </ul>
+                                <p><em>Note: Gas costs may vary based on network congestion. Having extra POL ensures smooth transactions.</em></p>
+                            </div>
                         </div>
                     </div>
                 </div>
