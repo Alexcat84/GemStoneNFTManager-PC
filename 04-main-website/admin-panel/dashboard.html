@@ -412,7 +412,9 @@
         // Check authentication
         const token = localStorage.getItem('adminToken');
         if (!token) {
+            console.log('No token found, redirecting to login...');
             window.location.href = '/admin/login';
+            return;
         }
 
         // Initialize dashboard

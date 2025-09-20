@@ -107,21 +107,36 @@ app.get('/contact', (req, res) => {
 
 // Authentication middleware
 const requireAuth = (req, res, next) => {
+  console.log('🔐 requireAuth middleware called for:', req.url);
   const token = req.headers.authorization?.replace('Bearer ', '') || req.query.token;
+  console.log('🔐 Token found:', token ? 'YES' : 'NO');
   
   if (!token) {
+    console.log('🔐 No token, checking if API or page...');
     if (req.url.startsWith('/api/')) {
+      console.log('🔐 API request without token, returning 401');
       return res.status(401).json({ success: false, message: 'Token required' });
     } else {
+      // Don't redirect if already on login page to avoid infinite loop
+      if (req.url === '/admin/login') {
+        console.log('🔐 Already on login page, returning 401');
+        return res.status(401).send('Unauthorized');
+      }
+      console.log('🔐 Redirecting to login...');
       return res.redirect('/admin/login');
     }
   }
   
   const decoded = adminAuth.verifyToken(token);
+  console.log('🔐 Token verification result:', decoded ? 'VALID' : 'INVALID');
   if (!decoded) {
     if (req.url.startsWith('/api/')) {
       return res.status(401).json({ success: false, message: 'Invalid token' });
     } else {
+      // Don't redirect if already on login page to avoid infinite loop
+      if (req.url === '/admin/login') {
+        return res.status(401).send('Unauthorized');
+      }
       return res.redirect('/admin/login');
     }
   }
