@@ -383,10 +383,6 @@ class ShoppingCart {
 
         // Add to cart buttons (using event delegation for dynamic content)
         document.addEventListener('click', (e) => {
-            console.log('🛒 Click detected on:', e.target);
-            console.log('🛒 Target class:', e.target.className);
-            console.log('🛒 Closest add-to-cart-btn:', e.target.closest('.add-to-cart-btn'));
-            
             const addToCartBtn = e.target.closest('.add-to-cart-btn');
             
             if (addToCartBtn) {
