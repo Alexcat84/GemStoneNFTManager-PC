@@ -57,9 +57,9 @@ class PostgresDatabase {
                 )
             `);
 
-            // Create admin users table
+            // Create website admin users table (separate from QR generator)
             await client.query(`
-                CREATE TABLE IF NOT EXISTS admin_users (
+                CREATE TABLE IF NOT EXISTS website_admins (
                     id SERIAL PRIMARY KEY,
                     username VARCHAR(50) UNIQUE NOT NULL,
                     password_hash TEXT NOT NULL,
@@ -70,12 +70,12 @@ class PostgresDatabase {
             `);
 
             // Insert default admin if not exists
-            const checkAdmin = await client.query('SELECT * FROM admin_users WHERE username = $1', ['admin']);
+            const checkAdmin = await client.query('SELECT * FROM website_admins WHERE username = $1', ['admin']);
             if (checkAdmin.rows.length === 0) {
                 const bcrypt = require('bcryptjs');
                 const defaultPassword = process.env.ADMIN_PASSWORD_HASH || '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi';
                 await client.query(
-                    'INSERT INTO admin_users (username, password_hash, role) VALUES ($1, $2, $3)',
+                    'INSERT INTO website_admins (username, password_hash, role) VALUES ($1, $2, $3)',
                     ['admin', defaultPassword, 'admin']
                 );
             }
@@ -322,7 +322,7 @@ class PostgresDatabase {
     async getAdminByUsername(username) {
         try {
             const client = await this.pool.connect();
-            const result = await client.query('SELECT * FROM admin_users WHERE username = $1', [username]);
+            const result = await client.query('SELECT * FROM website_admins WHERE username = $1', [username]);
             client.release();
             return result.rows[0];
         } catch (error) {
@@ -335,7 +335,7 @@ class PostgresDatabase {
         try {
             const client = await this.pool.connect();
             const result = await client.query(
-                'UPDATE admin_users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE username = $2 RETURNING *',
+                'UPDATE website_admins SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE username = $2 RETURNING *',
                 [newPasswordHash, username]
             );
             client.release();

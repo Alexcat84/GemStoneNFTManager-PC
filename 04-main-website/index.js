@@ -563,20 +563,20 @@ app.get('/api/admin/diagnostic', async (req, res) => {
     const client = await database.pool.connect();
     console.log('🔍 [DIAGNOSTIC] Database connection successful');
     
-    // Check if admin_users table exists
+    // Check if website_admins table exists
     const tableCheck = await client.query(`
       SELECT EXISTS (
         SELECT FROM information_schema.tables 
         WHERE table_schema = 'public' 
-        AND table_name = 'admin_users'
+        AND table_name = 'website_admins'
       );
     `);
     
-    console.log('🔍 [DIAGNOSTIC] Admin users table exists:', tableCheck.rows[0].exists);
+    console.log('🔍 [DIAGNOSTIC] Website admins table exists:', tableCheck.rows[0].exists);
     
     if (tableCheck.rows[0].exists) {
       // Check if admin user exists
-      const userCheck = await client.query('SELECT * FROM admin_users WHERE username = $1', ['admin']);
+      const userCheck = await client.query('SELECT * FROM website_admins WHERE username = $1', ['admin']);
       console.log('🔍 [DIAGNOSTIC] Admin user found:', userCheck.rows.length > 0);
       console.log('🔍 [DIAGNOSTIC] Admin user data:', userCheck.rows[0]);
     }
@@ -619,7 +619,7 @@ app.post('/api/admin/create-admin', async (req, res) => {
     try {
       // Check if admin already exists
       const existingAdmin = await client.query(
-        'SELECT id FROM admins WHERE username = $1',
+        'SELECT id FROM website_admins WHERE username = $1',
         [username]
       );
       
@@ -629,7 +629,7 @@ app.post('/api/admin/create-admin', async (req, res) => {
       
       // Create new admin user
       const result = await client.query(
-        'INSERT INTO admins (username, password_hash, role, created_at) VALUES ($1, $2, $3, NOW()) RETURNING id, username, role',
+        'INSERT INTO website_admins (username, password_hash, role, created_at) VALUES ($1, $2, $3, NOW()) RETURNING id, username, role',
         [username, hashedPassword, 'admin']
       );
       
@@ -664,7 +664,7 @@ app.post('/api/admin/fix-password', requireAuth, async (req, res) => {
     // Update admin password in database
     const client = await database.pool.connect();
     const result = await client.query(
-      'UPDATE admin_users SET password_hash = $1 WHERE username = $2 RETURNING *',
+      'UPDATE website_admins SET password_hash = $1 WHERE username = $2 RETURNING *',
       [correctHash, 'admin']
     );
     
