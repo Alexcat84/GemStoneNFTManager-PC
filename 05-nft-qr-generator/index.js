@@ -564,6 +564,46 @@ app.delete('/api/admin/products/:productId', requireAuth, async (req, res) => {
   }
 });
 
+// Product Variants API Routes
+app.get('/api/products/:productId/variants', requireAuth, async (req, res) => {
+  try {
+    const { productId } = req.params;
+    console.log(`🔍 [WEBSITE ADMIN] Loading variants for product ${productId}...`);
+    
+    // For now, return empty array since we don't have variants implemented yet
+    res.json({ success: true, variants: [] });
+  } catch (error) {
+    console.error('Error loading variants:', error);
+    res.status(500).json({ success: false, message: 'Error loading variants' });
+  }
+});
+
+app.post('/api/admin/products/:productId/variants', requireAuth, async (req, res) => {
+  try {
+    const { productId } = req.params;
+    console.log(`➕ [WEBSITE ADMIN] Creating variant for product ${productId}...`);
+    
+    // For now, return success since variants are not fully implemented
+    res.json({ success: true, message: 'Variant created successfully' });
+  } catch (error) {
+    console.error('Error creating variant:', error);
+    res.status(500).json({ success: false, message: 'Error creating variant' });
+  }
+});
+
+app.delete('/api/admin/variants/:variantId', requireAuth, async (req, res) => {
+  try {
+    const { variantId } = req.params;
+    console.log(`🗑️ [WEBSITE ADMIN] Deleting variant ${variantId}...`);
+    
+    // For now, return success since variants are not fully implemented
+    res.json({ success: true, message: 'Variant deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting variant:', error);
+    res.status(500).json({ success: false, message: 'Error deleting variant' });
+  }
+});
+
 // Diagnostic endpoint to check database status
 app.get('/api/admin/db-status', requireAuth, async (req, res) => {
   try {

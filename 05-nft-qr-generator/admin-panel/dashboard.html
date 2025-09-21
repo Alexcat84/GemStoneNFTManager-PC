@@ -2090,8 +2090,186 @@
                 }
             }
 
-            function manageVariants(id) {
-                showMessage('Manage Variants functionality will be implemented', 'success');
+            async function manageVariants(productId) {
+                try {
+                    const token = localStorage.getItem('adminToken');
+                    const response = await fetch(`/api/products/${productId}/variants`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    
+                    const result = await response.json();
+                    const variants = result.variants || [];
+                    
+                    showVariantsModal(productId, variants);
+                } catch (error) {
+                    console.error('Error loading variants:', error);
+                    showMessage('Error loading variants', 'error');
+                }
+            }
+
+            function showVariantsModal(productId, variants) {
+                const modal = document.createElement('div');
+                modal.className = 'modal-overlay';
+                modal.innerHTML = `
+                    <div class="modal-content" style="max-width: 800px;">
+                        <div class="modal-header">
+                            <h2>Manage Product Variants</h2>
+                            <button class="modal-close" onclick="closeModal()">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="variants-header">
+                                <button class="btn btn-primary" onclick="addVariant(${productId})">
+                                    Add New Variant
+                                </button>
+                            </div>
+                            <div class="variants-list">
+                                ${variants.length === 0 ? 
+                                    '<div class="empty-state">No variants found. Add your first variant!</div>' :
+                                    variants.map(variant => `
+                                        <div class="variant-item">
+                                            <div class="variant-info">
+                                                <div class="variant-code"><strong>${variant.variant_code}</strong></div>
+                                                <div class="variant-status status-${variant.status}">${variant.status}</div>
+                                                ${variant.nft_url ? `<div class="variant-nft">NFT: ${variant.nft_url.substring(0, 50)}...</div>` : ''}
+                                                ${variant.price ? `<div class="variant-price">$${variant.price} CAD</div>` : ''}
+                                            </div>
+                                            <div class="variant-actions">
+                                                <button class="btn btn-small btn-edit" onclick="editVariant(${variant.id})">
+                                                    Edit
+                                                </button>
+                                                <button class="btn btn-small btn-delete" onclick="deleteVariant(${variant.id})">
+                                                    Delete
+                                                </button>
+                                            </div>
+                                        </div>
+                                    `).join('')
+                                }
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(modal);
+            }
+
+            function addVariant(productId) {
+                const modal = document.createElement('div');
+                modal.className = 'modal-overlay';
+                modal.innerHTML = `
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2>Add New Variant</h2>
+                            <button class="modal-close" onclick="closeModal()">&times;</button>
+                        </div>
+                        <form id="variantForm">
+                            <div class="form-group">
+                                <label for="variant_code">Variant Code *</label>
+                                <input type="text" id="variant_code" name="variant_code" required placeholder="e.g., GM-2509-CAL-001-X7K9">
+                            </div>
+                            <div class="form-group">
+                                <label for="nft_url">NFT URL</label>
+                                <input type="url" id="nft_url" name="nft_url" placeholder="https://...">
+                            </div>
+                            <div class="form-group">
+                                <label for="nft_image_url">NFT Image URL</label>
+                                <input type="url" id="nft_image_url" name="nft_image_url" placeholder="https://...">
+                            </div>
+                            <div class="form-group">
+                                <label for="qr_code_url">QR Code URL</label>
+                                <input type="url" id="qr_code_url" name="qr_code_url" placeholder="https://...">
+                            </div>
+                            <div class="form-group">
+                                <label for="price">Price Override (CAD)</label>
+                                <input type="number" id="price" name="price" step="0.01" placeholder="Leave empty to use product price">
+                            </div>
+                            <div class="form-group">
+                                <label for="notes">Notes</label>
+                                <textarea id="notes" name="notes" rows="3" placeholder="Any specific notes about this variant..."></textarea>
+                            </div>
+                            <div class="form-actions">
+                                <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Add Variant</button>
+                            </div>
+                        </form>
+                    </div>
+                `;
+                
+                document.body.appendChild(modal);
+                
+                // Handle form submission
+                document.getElementById('variantForm').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    
+                    const formData = new FormData(e.target);
+                    const variantData = Object.fromEntries(formData.entries());
+                    
+                    try {
+                        const token = localStorage.getItem('adminToken');
+                        const response = await fetch(`/api/admin/products/${productId}/variants`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: JSON.stringify(variantData)
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (result.success) {
+                            showMessage('Variant added successfully!', 'success');
+                            closeModal();
+                            manageVariants(productId); // Refresh variants list
+                        } else {
+                            showMessage(result.error || 'Error adding variant', 'error');
+                        }
+                    } catch (error) {
+                        console.error('Error adding variant:', error);
+                        showMessage('Error adding variant', 'error');
+                    }
+                });
+            }
+
+            async function deleteVariant(variantId) {
+                if (!confirm('Are you sure you want to delete this variant?')) {
+                    return;
+                }
+                
+                try {
+                    const token = localStorage.getItem('adminToken');
+                    const response = await fetch(`/api/admin/variants/${variantId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        showMessage('Variant deleted successfully!', 'success');
+                        // Refresh the variants list
+                        const modal = document.querySelector('.modal-overlay');
+                        if (modal) {
+                            const productId = modal.querySelector('.variants-header button').onclick.toString().match(/\d+/)[0];
+                            manageVariants(parseInt(productId));
+                        }
+                    } else {
+                        showMessage(result.error || 'Error deleting variant', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error deleting variant:', error);
+                    showMessage('Error deleting variant', 'error');
+                }
+            }
+
+            function closeModal() {
+                const modal = document.querySelector('.modal-overlay');
+                if (modal) {
+                    modal.remove();
+                }
             }
 
             async function deleteProduct(id) {
@@ -2285,5 +2463,272 @@
                 }
             }
     </script>
+
+    <style>
+        /* Modal Styles for Website Admin */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 2rem;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e1e5e9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            color: #333;
+            font-size: 1.5rem;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            color: #333;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e1e5e9;
+            border-radius: 6px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e1e5e9;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a67d8;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+
+        .btn-small {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+        }
+
+        .btn-edit {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background: #d97706;
+        }
+
+        .btn-delete {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #dc2626;
+        }
+
+        .btn-variants {
+            background: #8b5cf6;
+            color: white;
+        }
+
+        .btn-variants:hover {
+            background: #7c3aed;
+        }
+
+        /* Variants Styles */
+        .variants-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .variants-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .variant-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            background: #f8fafc;
+        }
+
+        .variant-info {
+            flex: 1;
+        }
+
+        .variant-code {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.25rem;
+        }
+
+        .variant-status {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .status-available {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-sold {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .variant-nft,
+        .variant-price {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 0.25rem;
+        }
+
+        .variant-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .modal-overlay {
+                padding: 1rem;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .variant-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            
+            .variant-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+        }
+    </style>
 </body>
 </html>
