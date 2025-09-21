@@ -144,6 +144,11 @@ app.get('/admin/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'admin-panel', 'login.html'));
 });
 
+app.get('/admin/debug', (req, res) => {
+  console.log('🔍 /admin/debug route accessed');
+  res.sendFile(path.join(__dirname, 'admin-panel', 'debug.html'));
+});
+
 app.get('/admin/dashboard', requireAuth, (req, res) => {
   res.sendFile(path.join(__dirname, 'admin-panel', 'dashboard.html'));
 });
@@ -558,14 +563,74 @@ app.get('/api/admin/test-user', async (req, res) => {
     console.log('🔍 [TEST-USER] User found:', user ? 'YES' : 'NO');
     if (user) {
       console.log('🔍 [TEST-USER] User details:', { id: user.id, username: user.username, role: user.role });
+      console.log('🔍 [TEST-USER] Password hash exists:', !!user.password_hash);
+      console.log('🔍 [TEST-USER] Password hash preview:', user.password_hash ? user.password_hash.substring(0, 20) + '...' : 'NONE');
     }
     res.json({ 
       success: true, 
       userExists: !!user,
-      user: user ? { id: user.id, username: user.username, role: user.role } : null
+      user: user ? { id: user.id, username: user.username, role: user.role } : null,
+      hasPassword: user ? !!user.password_hash : false,
+      passwordHash: user ? user.password_hash : null
     });
   } catch (error) {
     console.error('❌ [TEST-USER] Error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Test endpoint to verify password hash
+app.post('/api/admin/test-password', async (req, res) => {
+  try {
+    const { password } = req.body;
+    console.log('🔐 [TEST-PASSWORD] Testing password:', password ? 'PROVIDED' : 'NOT_PROVIDED');
+    
+    const user = await adminAuth.database.getAdminByUsername('admin');
+    if (!user) {
+      return res.json({ success: false, message: 'Admin user not found' });
+    }
+    
+    const bcrypt = require('bcryptjs');
+    const isValid = await bcrypt.compare(password, user.password_hash);
+    
+    console.log('🔐 [TEST-PASSWORD] Password validation result:', isValid);
+    console.log('🔐 [TEST-PASSWORD] Stored hash:', user.password_hash);
+    
+    res.json({ 
+      success: true, 
+      isValid: isValid,
+      storedHash: user.password_hash
+    });
+  } catch (error) {
+    console.error('❌ [TEST-PASSWORD] Error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Reset admin password endpoint
+app.post('/api/admin/reset-password', async (req, res) => {
+  try {
+    const { newPassword } = req.body;
+    console.log('🔐 [RESET-PASSWORD] Resetting admin password...');
+    
+    if (!newPassword) {
+      return res.json({ success: false, message: 'New password required' });
+    }
+    
+    const bcrypt = require('bcryptjs');
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    
+    await adminAuth.database.updateAdminPassword('admin', hashedPassword);
+    
+    console.log('🔐 [RESET-PASSWORD] Admin password reset successfully');
+    
+    res.json({ 
+      success: true, 
+      message: 'Password reset successfully',
+      newHash: hashedPassword
+    });
+  } catch (error) {
+    console.error('❌ [RESET-PASSWORD] Error:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
