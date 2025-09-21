@@ -138,7 +138,15 @@ const requireAuth = (req, res, next) => {
   next();
 };
 
-// Admin routes
+// Debug middleware to log all requests
+app.use((req, res, next) => {
+  if (req.url.startsWith('/admin/')) {
+    console.log('🔍 [ROUTE-DEBUG] Admin route accessed:', req.url, 'Method:', req.method);
+  }
+  next();
+});
+
+// Admin routes - MUST be before static middleware
 app.get('/admin/login', (req, res) => {
   console.log('🔐 /admin/login route accessed');
   res.sendFile(path.join(__dirname, 'admin-panel', 'login.html'));
@@ -150,6 +158,7 @@ app.get('/admin/debug', (req, res) => {
 });
 
 app.get('/admin/dashboard', requireAuth, (req, res) => {
+  console.log('🔐 /admin/dashboard route accessed');
   res.sendFile(path.join(__dirname, 'admin-panel', 'dashboard.html'));
 });
 
