@@ -146,6 +146,12 @@ app.use((req, res, next) => {
   next();
 });
 
+// Test endpoint to verify server is running
+app.get('/test', (req, res) => {
+  console.log('🧪 Test endpoint accessed');
+  res.json({ success: true, message: 'Server is running!', timestamp: new Date().toISOString() });
+});
+
 // Admin routes - MUST be before static middleware
 app.get('/admin/login', (req, res) => {
   console.log('🔐 /admin/login route accessed');
