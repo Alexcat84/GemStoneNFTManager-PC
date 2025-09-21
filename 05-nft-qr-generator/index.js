@@ -442,6 +442,65 @@ app.delete('/api/codes/:codeId', requireAuth, async (req, res) => {
   }
 });
 
+// Website Admin API Routes
+app.get('/api/admin/products', requireAuth, async (req, res) => {
+  try {
+    console.log('🔍 [WEBSITE ADMIN] Loading products...');
+    
+    // For now, return mock data since we don't have a products table
+    const mockProducts = [
+      {
+        id: 1,
+        name: "Amethyst Crystal Planter",
+        price: 89.99,
+        status: "available",
+        image_url: "/images/placeholder-gem.jpg",
+        description: "Beautiful amethyst crystal planter for your plants",
+        crystal_type: "Amethyst",
+        rarity: "Rare"
+      },
+      {
+        id: 2,
+        name: "Rose Quartz Planter",
+        price: 75.50,
+        status: "sold",
+        image_url: "/images/placeholder-gem.jpg",
+        description: "Elegant rose quartz planter with healing properties",
+        crystal_type: "Rose Quartz",
+        rarity: "Uncommon"
+      },
+      {
+        id: 3,
+        name: "Clear Quartz Planter",
+        price: 65.00,
+        status: "pending",
+        image_url: "/images/placeholder-gem.jpg",
+        description: "Pure clear quartz planter for energy amplification",
+        crystal_type: "Clear Quartz",
+        rarity: "Common"
+      }
+    ];
+    
+    res.json({ success: true, products: mockProducts });
+  } catch (error) {
+    console.error('Error loading products:', error);
+    res.status(500).json({ success: false, message: 'Error loading products' });
+  }
+});
+
+app.delete('/api/admin/products/:productId', requireAuth, async (req, res) => {
+  try {
+    const { productId } = req.params;
+    console.log(`🗑️ [WEBSITE ADMIN] Deleting product ${productId}...`);
+    
+    // For now, just return success since we're using mock data
+    res.json({ success: true, message: 'Product deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting product:', error);
+    res.status(500).json({ success: false, message: 'Error deleting product' });
+  }
+});
+
 // Diagnostic endpoint to check database status
 app.get('/api/admin/db-status', requireAuth, async (req, res) => {
   try {
