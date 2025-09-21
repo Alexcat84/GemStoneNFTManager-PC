@@ -8,6 +8,7 @@ const PostgresDatabase = require('./database/postgres-database');
 const QRGenerator = require('./qr-generator/qr-generator');
 const AdminAuth = require('./admin-panel/admin-auth');
 const CodeGenerator = require('./code-generator/code-generator');
+const StockManager = require('./database/stock-manager');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -55,6 +56,7 @@ const nftDatabase = new PostgresDatabase();
 const qrGenerator = new QRGenerator();
 const adminAuth = new AdminAuth();
 const codeGenerator = new CodeGenerator();
+const stockManager = new StockManager();
 
 // Routes
 app.get('/', (req, res) => {
@@ -783,6 +785,122 @@ app.post('/api/admin/populate-locations', requireAuth, async (req, res) => {
   } catch (error) {
     console.error('❌ Error populating locations:', error);
     res.status(500).json({ success: false, message: 'Error populating locations' });
+  }
+});
+
+// Products API Routes
+app.get('/api/admin/products', requireAuth, async (req, res) => {
+  try {
+    const client = await nftDatabase.pool.connect();
+    const result = await client.query(`
+      SELECT id, name, description, price, stock_quantity as stock, image_url, category, created_at, updated_at
+      FROM products 
+      WHERE is_archived = false 
+      ORDER BY created_at DESC
+    `);
+    client.release();
+    
+    res.json({ success: true, products: result.rows });
+  } catch (error) {
+    console.error('Error fetching products:', error);
+    res.status(500).json({ success: false, message: 'Error fetching products' });
+  }
+});
+
+app.get('/api/admin/products/:id', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const client = await nftDatabase.pool.connect();
+    const result = await client.query(`
+      SELECT id, name, description, price, stock_quantity as stock, image_url, category, created_at, updated_at
+      FROM products 
+      WHERE id = $1 AND is_archived = false
+    `, [id]);
+    client.release();
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Product not found' });
+    }
+    
+    res.json({ success: true, product: result.rows[0] });
+  } catch (error) {
+    console.error('Error fetching product:', error);
+    res.status(500).json({ success: false, message: 'Error fetching product' });
+  }
+});
+
+app.post('/api/admin/products', requireAuth, async (req, res) => {
+  try {
+    const { name, description, price, stock, image_url, category } = req.body;
+    
+    if (!name || !description || !price || stock === undefined || !category) {
+      return res.status(400).json({ success: false, message: 'Missing required fields' });
+    }
+    
+    const client = await nftDatabase.pool.connect();
+    const result = await client.query(`
+      INSERT INTO products (name, description, price, stock_quantity, image_url, category, created_at, updated_at)
+      VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      RETURNING id, name, description, price, stock_quantity as stock, image_url, category, created_at, updated_at
+    `, [name, description, price, stock, image_url, category]);
+    client.release();
+    
+    res.json({ success: true, product: result.rows[0], message: 'Product created successfully' });
+  } catch (error) {
+    console.error('Error creating product:', error);
+    res.status(500).json({ success: false, message: 'Error creating product' });
+  }
+});
+
+app.put('/api/admin/products/:id', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, description, price, stock, image_url, category } = req.body;
+    
+    if (!name || !description || !price || stock === undefined || !category) {
+      return res.status(400).json({ success: false, message: 'Missing required fields' });
+    }
+    
+    const client = await nftDatabase.pool.connect();
+    const result = await client.query(`
+      UPDATE products 
+      SET name = $1, description = $2, price = $3, stock_quantity = $4, image_url = $5, category = $6, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $7 AND is_archived = false
+      RETURNING id, name, description, price, stock_quantity as stock, image_url, category, created_at, updated_at
+    `, [name, description, price, stock, image_url, category, id]);
+    client.release();
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Product not found' });
+    }
+    
+    res.json({ success: true, product: result.rows[0], message: 'Product updated successfully' });
+  } catch (error) {
+    console.error('Error updating product:', error);
+    res.status(500).json({ success: false, message: 'Error updating product' });
+  }
+});
+
+app.delete('/api/admin/products/:id', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const client = await nftDatabase.pool.connect();
+    const result = await client.query(`
+      UPDATE products 
+      SET is_archived = true, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $1 AND is_archived = false
+      RETURNING id, name
+    `, [id]);
+    client.release();
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Product not found' });
+    }
+    
+    res.json({ success: true, message: 'Product deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting product:', error);
+    res.status(500).json({ success: false, message: 'Error deleting product' });
   }
 });
 
