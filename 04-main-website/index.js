@@ -518,17 +518,49 @@ app.post('/api/checkout', async (req, res) => {
 
 app.post('/api/admin/login', async (req, res) => {
   try {
+    console.log('🔐 [LOGIN] Login attempt received');
+    console.log('🔐 [LOGIN] Request body:', req.body);
+    
     const { username, password } = req.body;
+    
+    if (!username || !password) {
+      console.log('🔐 [LOGIN] Missing username or password');
+      return res.status(400).json({ success: false, message: 'Username and password required' });
+    }
+    
+    console.log('🔐 [LOGIN] Attempting login for user:', username);
     const result = await adminAuth.login(username, password);
     
     if (result) {
+      console.log('🔐 [LOGIN] Login successful for user:', username);
       res.json({ success: true, token: result.token, user: result.user });
     } else {
+      console.log('🔐 [LOGIN] Login failed for user:', username);
       res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ success: false, message: 'Login failed' });
+    console.error('🔐 [LOGIN] Login error:', error);
+    res.status(500).json({ success: false, message: 'Login failed', error: error.message });
+  }
+});
+
+// Test endpoint to verify admin user exists
+app.get('/api/admin/test-user', async (req, res) => {
+  try {
+    console.log('🔍 [TEST-USER] Testing admin user lookup...');
+    const user = await adminAuth.database.getAdminByUsername('admin');
+    console.log('🔍 [TEST-USER] User found:', user ? 'YES' : 'NO');
+    if (user) {
+      console.log('🔍 [TEST-USER] User details:', { id: user.id, username: user.username, role: user.role });
+    }
+    res.json({ 
+      success: true, 
+      userExists: !!user,
+      user: user ? { id: user.id, username: user.username, role: user.role } : null
+    });
+  } catch (error) {
+    console.error('❌ [TEST-USER] Error:', error);
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 

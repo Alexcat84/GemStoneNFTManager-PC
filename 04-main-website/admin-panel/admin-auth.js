@@ -14,26 +14,26 @@ class AdminAuth {
 
     async login(username, password) {
         try {
-            console.log('🔐 Login attempt for user:', username);
-            console.log('🔐 Password provided:', password);
+            console.log('🔐 [ADMIN-AUTH] Login attempt for user:', username);
+            console.log('🔐 [ADMIN-AUTH] Password provided:', password ? 'YES' : 'NO');
             
             const user = await this.database.getAdminByUsername(username);
-            console.log('🔐 User found:', user ? 'YES' : 'NO');
+            console.log('🔐 [ADMIN-AUTH] User found:', user ? 'YES' : 'NO');
             if (user) {
-                console.log('🔐 User details:', { id: user.id, username: user.username, role: user.role });
-                console.log('🔐 Stored hash:', user.password_hash);
+                console.log('🔐 [ADMIN-AUTH] User details:', { id: user.id, username: user.username, role: user.role });
+                console.log('🔐 [ADMIN-AUTH] Stored hash exists:', user.password_hash ? 'YES' : 'NO');
             }
             
             if (!user) {
-                console.log('❌ User not found:', username);
+                console.log('❌ [ADMIN-AUTH] User not found:', username);
                 return null;
             }
 
             const isValidPassword = await bcrypt.compare(password, user.password_hash);
-            console.log('🔐 Password validation result:', isValidPassword);
+            console.log('🔐 [ADMIN-AUTH] Password validation result:', isValidPassword);
             
             if (!isValidPassword) {
-                console.log('❌ Invalid password for user:', username);
+                console.log('❌ [ADMIN-AUTH] Invalid password for user:', username);
                 return null;
             }
 
@@ -47,7 +47,7 @@ class AdminAuth {
                 loginTime: Date.now()
             });
 
-            console.log('Login successful for user:', username);
+            console.log('✅ [ADMIN-AUTH] Login successful for user:', username);
             return {
                 token: token,
                 sessionId: sessionId,
@@ -58,7 +58,7 @@ class AdminAuth {
                 }
             };
         } catch (error) {
-            console.error('Error in login:', error);
+            console.error('❌ [ADMIN-AUTH] Error in login:', error);
             return null;
         }
     }
