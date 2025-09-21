@@ -476,6 +476,76 @@ app.get('/api/admin/products', requireAuth, async (req, res) => {
   }
 });
 
+app.post('/api/admin/products', requireAuth, async (req, res) => {
+  try {
+    console.log('➕ [WEBSITE ADMIN] Creating new product...');
+    
+    const productData = {
+      name: req.body.name,
+      description: req.body.description,
+      price: parseFloat(req.body.price),
+      status: req.body.status || 'available',
+      category: req.body.category,
+      dimensions: req.body.dimensions,
+      weight: req.body.weight,
+      crystal_type: req.body.crystal_type,
+      rarity: req.body.rarity,
+      energy_properties: req.body.energy_properties,
+      personality_target: req.body.personality_target,
+      stock_quantity: parseInt(req.body.stock_quantity) || 1,
+      is_featured: req.body.is_featured === 'true',
+      is_archived: req.body.is_archived === 'true',
+      image_urls: req.body.image_urls ? JSON.parse(req.body.image_urls) : [],
+      nft_url: req.body.nft_url,
+      nft_image_url: req.body.nft_image_url
+    };
+    
+    const newProduct = await nftDatabase.createProduct(productData);
+    res.json({ success: true, product: newProduct, message: 'Product created successfully' });
+  } catch (error) {
+    console.error('Error creating product:', error);
+    res.status(500).json({ success: false, message: 'Error creating product' });
+  }
+});
+
+app.put('/api/admin/products/:productId', requireAuth, async (req, res) => {
+  try {
+    const { productId } = req.params;
+    console.log(`✏️ [WEBSITE ADMIN] Updating product ${productId}...`);
+    
+    const productData = {
+      name: req.body.name,
+      description: req.body.description,
+      price: parseFloat(req.body.price),
+      status: req.body.status,
+      category: req.body.category,
+      dimensions: req.body.dimensions,
+      weight: req.body.weight,
+      crystal_type: req.body.crystal_type,
+      rarity: req.body.rarity,
+      energy_properties: req.body.energy_properties,
+      personality_target: req.body.personality_target,
+      stock_quantity: parseInt(req.body.stock_quantity) || 1,
+      is_featured: req.body.is_featured === 'true',
+      is_archived: req.body.is_archived === 'true',
+      image_urls: req.body.image_urls ? JSON.parse(req.body.image_urls) : [],
+      nft_url: req.body.nft_url,
+      nft_image_url: req.body.nft_image_url
+    };
+    
+    const updatedProduct = await nftDatabase.updateProduct(productId, productData);
+    
+    if (updatedProduct) {
+      res.json({ success: true, product: updatedProduct, message: 'Product updated successfully' });
+    } else {
+      res.status(404).json({ success: false, message: 'Product not found' });
+    }
+  } catch (error) {
+    console.error('Error updating product:', error);
+    res.status(500).json({ success: false, message: 'Error updating product' });
+  }
+});
+
 app.delete('/api/admin/products/:productId', requireAuth, async (req, res) => {
   try {
     const { productId } = req.params;

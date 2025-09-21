@@ -2079,42 +2079,211 @@
             document.getElementById('pendingProducts').textContent = pending;
         }
 
-        function openAddProductModal() {
-            showMessage('Add Product functionality will be implemented', 'success');
-        }
-
-        function editProduct(id) {
-            showMessage('Edit Product functionality will be implemented', 'success');
-        }
-
-        function manageVariants(id) {
-            showMessage('Manage Variants functionality will be implemented', 'success');
-        }
-
-        async function deleteProduct(id) {
-            if (!confirm('Are you sure you want to delete this product?')) {
-                return;
+            function openAddProductModal() {
+                showProductModal();
             }
 
-            try {
-                const response = await fetch(`/api/admin/products/${id}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                    }
-                });
+            function editProduct(id) {
+                const product = products.find(p => p.id === id);
+                if (product) {
+                    showProductModal(product);
+                }
+            }
 
-                if (!response.ok) {
-                    throw new Error('Failed to delete product');
+            function manageVariants(id) {
+                showMessage('Manage Variants functionality will be implemented', 'success');
+            }
+
+            async function deleteProduct(id) {
+                if (!confirm('Are you sure you want to delete this product?')) {
+                    return;
                 }
 
-                showMessage('Product deleted successfully!', 'success');
-                await loadProducts();
-            } catch (error) {
-                console.error('Error deleting product:', error);
-                showMessage('Error deleting product', 'error');
+                try {
+                    const response = await fetch(`/api/admin/products/${id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                        }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to delete product');
+                    }
+
+                    showMessage('Product deleted successfully!', 'success');
+                    await loadProducts();
+                } catch (error) {
+                    console.error('Error deleting product:', error);
+                    showMessage('Error deleting product', 'error');
+                }
             }
-        }
+
+            // Product Modal Functions
+            function showProductModal(product = null) {
+                const isEdit = product !== null;
+                const modal = document.createElement('div');
+                modal.className = 'modal-overlay';
+                modal.innerHTML = `
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2>${isEdit ? 'Edit Product' : 'Add New Product'}</h2>
+                            <button class="modal-close" onclick="closeModal()">&times;</button>
+                        </div>
+                        <form id="productForm" enctype="multipart/form-data">
+                            <div class="form-group">
+                                <label for="productName">Product Name *</label>
+                                <input type="text" id="productName" name="name" required 
+                                       value="${product ? product.name : ''}">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="productDescription">Description</label>
+                                <textarea id="productDescription" name="description" rows="3">${product ? product.description || '' : ''}</textarea>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="productPrice">Price (CAD) *</label>
+                                    <input type="number" id="productPrice" name="price" step="0.01" required 
+                                           value="${product ? product.price : ''}">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="productStatus">Status</label>
+                                    <select id="productStatus" name="status">
+                                        <option value="available" ${product && product.status === 'available' ? 'selected' : ''}>Available</option>
+                                        <option value="sold" ${product && product.status === 'sold' ? 'selected' : ''}>Sold</option>
+                                        <option value="pending" ${product && product.status === 'pending' ? 'selected' : ''}>Pending</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="crystalType">Crystal Type</label>
+                                    <input type="text" id="crystalType" name="crystal_type" 
+                                           value="${product ? product.crystal_type || '' : ''}">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="productRarity">Rarity</label>
+                                    <select id="productRarity" name="rarity">
+                                        <option value="Common" ${product && product.rarity === 'Common' ? 'selected' : ''}>Common</option>
+                                        <option value="Uncommon" ${product && product.rarity === 'Uncommon' ? 'selected' : ''}>Uncommon</option>
+                                        <option value="Rare" ${product && product.rarity === 'Rare' ? 'selected' : ''}>Rare</option>
+                                        <option value="Epic" ${product && product.rarity === 'Epic' ? 'selected' : ''}>Epic</option>
+                                        <option value="Legendary" ${product && product.rarity === 'Legendary' ? 'selected' : ''}>Legendary</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="productDimensions">Dimensions</label>
+                                    <input type="text" id="productDimensions" name="dimensions" 
+                                           value="${product ? product.dimensions || '' : ''}">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="productWeight">Weight</label>
+                                    <input type="text" id="productWeight" name="weight" 
+                                           value="${product ? product.weight || '' : ''}">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="energyProperties">Energy Properties</label>
+                                <textarea id="energyProperties" name="energy_properties" rows="2">${product ? product.energy_properties || '' : ''}</textarea>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="personalityTarget">Personality Target</label>
+                                <textarea id="personalityTarget" name="personality_target" rows="2">${product ? product.personality_target || '' : ''}</textarea>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="productImages">Product Images</label>
+                                <input type="file" id="productImages" name="images" multiple accept="image/*">
+                                <small>Select multiple images for this product</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="nftImage">NFT Image</label>
+                                <input type="file" id="nftImage" name="nft_image" accept="image/*">
+                                <small>Select the NFT image for this product</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="nftUrl">NFT URL</label>
+                                <input type="url" id="nftUrl" name="nft_url" 
+                                       value="${product ? product.nft_url || '' : ''}">
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                                <button type="submit" class="btn btn-primary">
+                                    ${isEdit ? 'Update Product' : 'Add Product'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                `;
+                
+                document.body.appendChild(modal);
+                
+                // Handle form submission
+                const form = document.getElementById('productForm');
+                form.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    submitProductForm(product);
+                });
+            }
+
+            async function submitProductForm(product = null) {
+                const form = document.getElementById('productForm');
+                const formData = new FormData(form);
+                
+                if (product) {
+                    formData.append('existing_images', JSON.stringify(product.image_urls || []));
+                    formData.append('existing_nft_image', product.nft_image_url || '');
+                }
+                
+                // Show loading state
+                const submitBtn = form.querySelector('button[type="submit"]');
+                const originalText = submitBtn.textContent;
+                submitBtn.textContent = 'Saving...';
+                submitBtn.disabled = true;
+                
+                try {
+                    const url = product ? `/api/admin/products/${product.id}` : '/api/admin/products';
+                    const method = product ? 'PUT' : 'POST';
+                    
+                    const response = await fetch(url, {
+                        method: method,
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                        },
+                        body: formData
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        showMessage(product ? 'Product updated successfully!' : 'Product added successfully!', 'success');
+                        closeModal();
+                        await loadProducts();
+                    } else {
+                        showMessage(result.message || 'Error saving product', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error saving product:', error);
+                    showMessage('Error saving product', 'error');
+                } finally {
+                    submitBtn.textContent = originalText;
+                    submitBtn.disabled = false;
+                }
+            }
     </script>
 </body>
 </html>
