@@ -54,6 +54,49 @@ class PostgresDatabase {
                 )
             `);
 
+            // Create products table for Website Admin
+            await client.query(`
+                CREATE TABLE IF NOT EXISTS products (
+                    id SERIAL PRIMARY KEY,
+                    name VARCHAR(255) NOT NULL,
+                    description TEXT,
+                    price DECIMAL(10,2) NOT NULL,
+                    image_urls TEXT[], -- Array of image URLs
+                    nft_url TEXT,
+                    nft_image_url TEXT, -- NFT image
+                    status VARCHAR(50) DEFAULT 'available',
+                    category VARCHAR(100),
+                    dimensions VARCHAR(100),
+                    weight VARCHAR(50),
+                    crystal_type VARCHAR(100), -- Custom crystal type
+                    rarity VARCHAR(50),
+                    energy_properties TEXT, -- Energy properties
+                    personality_target TEXT, -- Target personality
+                    stock_quantity INTEGER DEFAULT 1,
+                    is_featured BOOLEAN DEFAULT false,
+                    is_archived BOOLEAN DEFAULT false, -- For sold/archived products
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                )
+            `);
+
+            // Create product variants table for individual NFT pots
+            await client.query(`
+                CREATE TABLE IF NOT EXISTS product_variants (
+                    id SERIAL PRIMARY KEY,
+                    product_id INTEGER REFERENCES products(id) ON DELETE CASCADE,
+                    variant_code VARCHAR(100) UNIQUE NOT NULL, -- Unique code for this specific pot
+                    nft_url TEXT,
+                    nft_image_url TEXT,
+                    qr_code_url TEXT,
+                    status VARCHAR(50) DEFAULT 'available', -- available, reserved, sold
+                    price DECIMAL(10,2), -- Override price if different from base product
+                    notes TEXT, -- Any specific notes about this variant
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                )
+            `);
+
             await client.query(`
                 CREATE TABLE IF NOT EXISTS generated_codes (
                     id SERIAL PRIMARY KEY,
@@ -630,6 +673,110 @@ class PostgresDatabase {
             };
         } catch (error) {
             console.error('Error adding location:', error);
+            throw error;
+        }
+    }
+
+    // Product management methods for Website Admin
+    async getAllProducts() {
+        try {
+            const client = await this.pool.connect();
+            const result = await client.query('SELECT * FROM products ORDER BY created_at DESC');
+            client.release();
+            return result.rows;
+        } catch (error) {
+            console.error('Error getting all products:', error);
+            throw error;
+        }
+    }
+
+    async getProductById(id) {
+        try {
+            const client = await this.pool.connect();
+            const result = await client.query('SELECT * FROM products WHERE id = $1', [id]);
+            client.release();
+            return result.rows[0];
+        } catch (error) {
+            console.error('Error getting product by ID:', error);
+            throw error;
+        }
+    }
+
+    async createProduct(productData) {
+        try {
+            const client = await this.pool.connect();
+            const {
+                name, description, price, image_urls, nft_url, nft_image_url,
+                status, category, dimensions, weight, crystal_type, rarity,
+                energy_properties, personality_target, stock_quantity,
+                is_featured, is_archived
+            } = productData;
+
+            const result = await client.query(`
+                INSERT INTO products (
+                    name, description, price, image_urls, nft_url, nft_image_url,
+                    status, category, dimensions, weight, crystal_type, rarity,
+                    energy_properties, personality_target, stock_quantity,
+                    is_featured, is_archived
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+                RETURNING *
+            `, [
+                name, description, price, image_urls, nft_url, nft_image_url,
+                status, category, dimensions, weight, crystal_type, rarity,
+                energy_properties, personality_target, stock_quantity,
+                is_featured, is_archived
+            ]);
+
+            client.release();
+            return result.rows[0];
+        } catch (error) {
+            console.error('Error creating product:', error);
+            throw error;
+        }
+    }
+
+    async updateProduct(id, productData) {
+        try {
+            const client = await this.pool.connect();
+            const {
+                name, description, price, image_urls, nft_url, nft_image_url,
+                status, category, dimensions, weight, crystal_type, rarity,
+                energy_properties, personality_target, stock_quantity,
+                is_featured, is_archived
+            } = productData;
+
+            const result = await client.query(`
+                UPDATE products SET
+                    name = $1, description = $2, price = $3, image_urls = $4,
+                    nft_url = $5, nft_image_url = $6, status = $7, category = $8,
+                    dimensions = $9, weight = $10, crystal_type = $11, rarity = $12,
+                    energy_properties = $13, personality_target = $14, stock_quantity = $15,
+                    is_featured = $16, is_archived = $17, updated_at = CURRENT_TIMESTAMP
+                WHERE id = $18
+                RETURNING *
+            `, [
+                name, description, price, image_urls, nft_url, nft_image_url,
+                status, category, dimensions, weight, crystal_type, rarity,
+                energy_properties, personality_target, stock_quantity,
+                is_featured, is_archived, id
+            ]);
+
+            client.release();
+            return result.rows[0];
+        } catch (error) {
+            console.error('Error updating product:', error);
+            throw error;
+        }
+    }
+
+    async deleteProduct(id) {
+        try {
+            const client = await this.pool.connect();
+            const result = await client.query('DELETE FROM products WHERE id = $1 RETURNING *', [id]);
+            client.release();
+            return result.rows[0];
+        } catch (error) {
+            console.error('Error deleting product:', error);
             throw error;
         }
     }

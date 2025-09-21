@@ -445,43 +445,31 @@ app.delete('/api/codes/:codeId', requireAuth, async (req, res) => {
 // Website Admin API Routes
 app.get('/api/admin/products', requireAuth, async (req, res) => {
   try {
-    console.log('🔍 [WEBSITE ADMIN] Loading products...');
+    console.log('🔍 [WEBSITE ADMIN] Loading products from database...');
     
-    // For now, return mock data since we don't have a products table
-    const mockProducts = [
-      {
-        id: 1,
-        name: "Amethyst Crystal Planter",
-        price: 89.99,
-        status: "available",
-        image_url: "/images/placeholder-gem.jpg",
-        description: "Beautiful amethyst crystal planter for your plants",
-        crystal_type: "Amethyst",
-        rarity: "Rare"
-      },
-      {
-        id: 2,
-        name: "Rose Quartz Planter",
-        price: 75.50,
-        status: "sold",
-        image_url: "/images/placeholder-gem.jpg",
-        description: "Elegant rose quartz planter with healing properties",
-        crystal_type: "Rose Quartz",
-        rarity: "Uncommon"
-      },
-      {
-        id: 3,
-        name: "Clear Quartz Planter",
-        price: 65.00,
-        status: "pending",
-        image_url: "/images/placeholder-gem.jpg",
-        description: "Pure clear quartz planter for energy amplification",
-        crystal_type: "Clear Quartz",
-        rarity: "Common"
-      }
-    ];
+    const products = await nftDatabase.getAllProducts();
     
-    res.json({ success: true, products: mockProducts });
+    // Transform products to match frontend expectations
+    const transformedProducts = products.map(product => ({
+      id: product.id,
+      name: product.name,
+      price: parseFloat(product.price),
+      status: product.status,
+      image_url: product.image_urls && product.image_urls.length > 0 ? product.image_urls[0] : '/images/placeholder-gem.jpg',
+      description: product.description,
+      crystal_type: product.crystal_type,
+      rarity: product.rarity,
+      category: product.category,
+      dimensions: product.dimensions,
+      weight: product.weight,
+      energy_properties: product.energy_properties,
+      personality_target: product.personality_target,
+      is_featured: product.is_featured,
+      is_archived: product.is_archived,
+      created_at: product.created_at
+    }));
+    
+    res.json({ success: true, products: transformedProducts });
   } catch (error) {
     console.error('Error loading products:', error);
     res.status(500).json({ success: false, message: 'Error loading products' });
@@ -493,8 +481,13 @@ app.delete('/api/admin/products/:productId', requireAuth, async (req, res) => {
     const { productId } = req.params;
     console.log(`🗑️ [WEBSITE ADMIN] Deleting product ${productId}...`);
     
-    // For now, just return success since we're using mock data
-    res.json({ success: true, message: 'Product deleted successfully' });
+    const deletedProduct = await nftDatabase.deleteProduct(productId);
+    
+    if (deletedProduct) {
+      res.json({ success: true, message: 'Product deleted successfully' });
+    } else {
+      res.status(404).json({ success: false, message: 'Product not found' });
+    }
   } catch (error) {
     console.error('Error deleting product:', error);
     res.status(500).json({ success: false, message: 'Error deleting product' });
