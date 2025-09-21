@@ -1,13 +1,15 @@
 {
   "version": 2,
-  "buildCommand": "cd 04-main-website && npm install",
-  "outputDirectory": "04-main-website/public",
-  "installCommand": "cd 04-main-website && npm install",
-  "functions": {
-    "04-main-website/index.js": {
-      "runtime": "@vercel/node@3.0.12"
+  "builds": [
+    {
+      "src": "04-main-website/index.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "04-main-website/public/**",
+      "use": "@vercel/static"
     }
-  },
+  ],
   "routes": [
     {
       "src": "/test",
