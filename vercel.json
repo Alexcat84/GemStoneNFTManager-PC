@@ -12,7 +12,15 @@
   ],
   "routes": [
     {
-      "src": "/admin/(.*)",
+      "src": "/admin/login",
+      "dest": "/04-main-website/index.js"
+    },
+    {
+      "src": "/admin/debug",
+      "dest": "/04-main-website/index.js"
+    },
+    {
+      "src": "/admin/dashboard",
       "dest": "/04-main-website/index.js"
     },
     {
