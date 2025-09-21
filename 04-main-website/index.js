@@ -515,8 +515,19 @@ app.post('/api/admin/login', async (req, res) => {
   try {
     console.log('🔐 [LOGIN] Login attempt received');
     console.log('🔐 [LOGIN] Request body:', req.body);
+    console.log('🔐 [LOGIN] Content-Type:', req.get('Content-Type'));
     
-    const { username, password } = req.body;
+    let username, password;
+    
+    // Handle both JSON and form data
+    if (req.get('Content-Type') && req.get('Content-Type').includes('application/json')) {
+      username = req.body.username;
+      password = req.body.password;
+    } else {
+      // Form data
+      username = req.body.username;
+      password = req.body.password;
+    }
     
     if (!username || !password) {
       console.log('🔐 [LOGIN] Missing username or password');

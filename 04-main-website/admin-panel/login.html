@@ -188,29 +188,68 @@
             loginBtn.disabled = true;
             loginBtn.textContent = 'Logging in...';
             
+            console.log('🔐 [CLIENT] Attempting login for user:', username);
+            
             try {
-                const response = await fetch('/api/admin/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ username, password })
-                });
+                // Try multiple approaches to bypass potential blocking
+                let response;
+                let result;
                 
-                const result = await response.json();
+                try {
+                    // First try: Standard fetch
+                    console.log('🔐 [CLIENT] Trying standard fetch...');
+                    response = await fetch('/api/admin/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ username, password })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    
+                    result = await response.json();
+                    console.log('🔐 [CLIENT] Standard fetch successful:', result);
+                    
+                } catch (fetchError) {
+                    console.log('🔐 [CLIENT] Standard fetch failed:', fetchError);
+                    
+                    // Second try: Form submission approach
+                    console.log('🔐 [CLIENT] Trying form submission approach...');
+                    
+                    const formData = new FormData();
+                    formData.append('username', username);
+                    formData.append('password', password);
+                    
+                    response = await fetch('/api/admin/login', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    
+                    result = await response.json();
+                    console.log('🔐 [CLIENT] Form submission successful:', result);
+                }
                 
                 if (result.success) {
                     localStorage.setItem('adminToken', result.token);
                     showMessage('Login successful! Redirecting...', 'success');
+                    console.log('🔐 [CLIENT] Login successful, redirecting...');
                     setTimeout(() => {
                         window.location.href = '/admin/dashboard';
                     }, 1000);
                 } else {
                     showMessage(result.message || 'Invalid credentials', 'error');
+                    console.log('🔐 [CLIENT] Login failed:', result.message);
                 }
             } catch (error) {
-                console.error('Login error:', error);
-                showMessage('Login failed. Please try again.', 'error');
+                console.error('🔐 [CLIENT] Login error:', error);
+                showMessage('Login failed. Please try again. Error: ' + error.message, 'error');
             } finally {
                 loginBtn.disabled = false;
                 loginBtn.textContent = 'Login';
