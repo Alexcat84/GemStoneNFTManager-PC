@@ -217,12 +217,9 @@
             }
         });
 
-        // Check if already logged in (only redirect if token exists, don't verify)
-        const token = localStorage.getItem('adminToken');
-        if (token) {
-            // Simply redirect to dashboard, let the dashboard handle token validation
-            window.location.href = '/admin/dashboard';
-        }
+        // DON'T auto-redirect to avoid infinite loop
+        // Let user manually login instead
+        console.log('Login page loaded - ready for manual login');
     </script>
 </body>
 </html>

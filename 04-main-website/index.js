@@ -109,12 +109,6 @@ app.get('/contact', (req, res) => {
 const requireAuth = (req, res, next) => {
   console.log('🔐 requireAuth middleware called for:', req.url);
   
-  // Skip authentication for login page
-  if (req.url === '/admin/login') {
-    console.log('🔐 Skipping auth for login page');
-    return next();
-  }
-  
   const token = req.headers.authorization?.replace('Bearer ', '') || req.query.token;
   console.log('🔐 Token found:', token ? 'YES' : 'NO');
   
@@ -124,7 +118,7 @@ const requireAuth = (req, res, next) => {
       console.log('🔐 API request without token, returning 401');
       return res.status(401).json({ success: false, message: 'Token required' });
     } else {
-      console.log('🔐 Redirecting to login...');
+      console.log('🔐 Page request without token, redirecting to login...');
       return res.redirect('/admin/login');
     }
   }
@@ -135,6 +129,7 @@ const requireAuth = (req, res, next) => {
     if (req.url.startsWith('/api/')) {
       return res.status(401).json({ success: false, message: 'Invalid token' });
     } else {
+      console.log('🔐 Invalid token, redirecting to login...');
       return res.redirect('/admin/login');
     }
   }
