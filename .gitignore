@@ -4,6 +4,21 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Uploads
+uploads/*
+!uploads/.gitkeep
+
+# Logs
+logs
+*.log
+
 # Runtime data
 pids
 *.pid
@@ -16,19 +31,8 @@ coverage/
 # nyc test coverage
 .nyc_output
 
-# Grunt intermediate storage
-.grunt
-
-# Bower dependency directory
-bower_components
-
-# node-waf configuration
-.lock-wscript
-
-# Compiled binary addons
-build/Release
-
 # Dependency directories
+node_modules/
 jspm_packages/
 
 # Optional npm cache directory
@@ -45,10 +49,8 @@ jspm_packages/
 
 # dotenv environment variables file
 .env
-.env.test
-.env.production
 
-# parcel-bundler cache
+# parcel-bundler cache (https://parceljs.org/)
 .cache
 .parcel-cache
 
@@ -70,12 +72,6 @@ jspm_packages/
 # DynamoDB Local files
 .dynamodb/
 
-# TernJS port file
-.tern-port
-
-# Stores VSCode versions used for testing VSCode extensions
-.vscode-test
-
 # OS generated files
 .DS_Store
 .DS_Store?
@@ -85,31 +81,13 @@ jspm_packages/
 ehthumbs.db
 Thumbs.db
 
-# Logs
-logs
-*.log
-
-# Temporary files
-tmp/
-temp/
-
-# Database files
-*.db
-*.sqlite
-*.sqlite3
-
-# QR codes directory (will be generated)
-qr-codes/
-
-# Uploads directory
-uploads/
-
 # IDE files
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
 
-# Build outputs
-dist/
-build/
+# Temporary files
+tmp/
+temp/

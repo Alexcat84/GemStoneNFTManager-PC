@@ -16,6 +16,10 @@
       "dest": "/index.js"
     },
     {
+      "src": "/",
+      "dest": "/index.js"
+    },
+    {
       "src": "/dashboard",
       "dest": "/index.js"
     },

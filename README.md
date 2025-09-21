@@ -1,10 +1,15 @@
 # GemSpots - Premium Crystal Planters with NFT
 
-A comprehensive system for managing premium crystal planters with NFT integration, QR code generation, and blockchain verification.
+A modern web application for managing and showcasing premium crystal planters with NFT integration.
 
-## 🌟 Overview
+## 🌟 Features
 
-GemSpots is a complete ecosystem for creating, managing, and showcasing premium crystal planters. Each planter comes with a unique NFT certificate and QR code for authenticity verification.
+- **Premium Crystal Planters**: Handcrafted planters with authentic crystals
+- **NFT Integration**: Each planter comes with a unique NFT certificate
+- **QR Code System**: Smart QR codes for verification and ownership
+- **Blockchain Technology**: Immutable records and public verification
+- **Admin Panel**: Complete management system for products and QR codes
+- **Responsive Design**: Beautiful, modern interface for all devices
 
 ## 🏗️ Project Structure
 
@@ -26,7 +31,7 @@ GemStoneNFTManager-PC/
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/Alexcat84/gemspots.git
+git clone https://github.com/yourusername/gemspots.git
 cd gemspots
 ```
 
@@ -64,27 +69,47 @@ For mobile testing on the same network:
 - **Main Website**: http://[YOUR_IP]:4000
 - **Admin Panel**: http://[YOUR_IP]:3000
 
-## 🎯 Features
+## 🔧 Configuration
 
-### Main Website (04-main-website)
+### Environment Variables
+Create a `.env` file in each project directory:
+
+```env
+# 04-main-website/.env
+PORT=4000
+NODE_ENV=development
+
+# 05-nft-qr-generator/.env
+PORT=3000
+JWT_SECRET=your-secret-key
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=your-password
+```
+
+## 🎨 Features
+
+### Main Website
 - **Hero Section**: Eye-catching introduction with crystal animations
 - **About Section**: Company information with blockchain technology explanation
 - **Gallery**: Dynamic product showcase with filtering
 - **Contact**: Contact form and information
 - **Responsive Design**: Works perfectly on all devices
 
-### QR Generator & Admin Panel (05-nft-qr-generator)
+### Admin Panel
 - **QR Code Generation**: Create QR codes with smart redirection
 - **Product Management**: Add, edit, and manage products
 - **Status Management**: Track QR code status (ready, pending, custom)
 - **Search & Filter**: Find products and QR codes easily
 - **Export Features**: Download QR codes in HD
 
-### Code Generator (01-code-generator)
-- **Unique Code Generation**: Proprietary algorithm for NFT codes
-- **Database Management**: SQLite database for code storage
-- **Multi-gemstone Support**: Support for various crystal combinations
-- **Location Tracking**: Worldwide location database
+### QR Code System
+- **Smart Redirection**: QR codes redirect based on status
+- **Status Types**:
+  - `ready`: Direct redirect to NFT URL
+  - `pending`: Shows "NFT in process" page
+  - `custom`: Redirects to custom URL
+- **HD Quality**: 1024x1024 pixel QR codes
+- **Database Storage**: All QR data stored in SQLite
 
 ## 🛠️ Technology Stack
 
@@ -95,34 +120,6 @@ For mobile testing on the same network:
 - **Authentication**: JWT, bcryptjs
 - **Security**: Helmet, CORS, Rate Limiting
 - **Animations**: AOS (Animate On Scroll)
-
-## 🔐 Security Features
-
-- **JWT Authentication**: Secure admin access
-- **Password Hashing**: bcryptjs for password security
-- **Rate Limiting**: API protection against abuse
-- **CORS Configuration**: Cross-origin request security
-- **Input Validation**: Server-side validation for all inputs
-
-## 🚀 Deployment
-
-### Vercel (Recommended)
-1. Connect your GitHub repository to Vercel
-2. Configure environment variables
-3. Deploy automatically on every push
-
-### Environment Variables
-```env
-# 04-main-website/.env
-PORT=4000
-NODE_ENV=production
-
-# 05-nft-qr-generator/.env
-PORT=3000
-JWT_SECRET=your-secret-key
-ADMIN_USERNAME=admin
-ADMIN_PASSWORD=your-password
-```
 
 ## 📊 Database Schema
 
@@ -139,6 +136,26 @@ CREATE TABLE qr_codes (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 ```
+
+## 🔐 Security Features
+
+- **JWT Authentication**: Secure admin access
+- **Password Hashing**: bcryptjs for password security
+- **Rate Limiting**: API protection against abuse
+- **CORS Configuration**: Cross-origin request security
+- **Input Validation**: Server-side validation for all inputs
+
+## 🚀 Deployment
+
+### Vercel (Recommended)
+1. Connect your GitHub repository to Vercel
+2. Configure environment variables
+3. Deploy automatically on every push
+
+### Other Platforms
+- **Netlify**: For static sites
+- **Heroku**: For full-stack applications
+- **DigitalOcean**: For VPS deployment
 
 ## 📝 API Endpoints
 

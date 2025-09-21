@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Full Gallery - GemSpots</title>
+    <meta name="description" content="Explore our complete collection of premium crystal planters with NFT integration.">
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/cart.css">
+    <link rel="stylesheet" href="/css/shipping.css">
+    <link rel="stylesheet" href="/css/animations.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <i class="fas fa-gem"></i>
+                <span>GemSpots</span>
+            </div>
+            <ul class="nav-menu" id="nav-menu">
+                <li class="nav-item">
+                    <a href="/" class="nav-link">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/gallery" class="nav-link active">Gallery</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/#about" class="nav-link">About</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/#contact" class="nav-link">Contact</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="cart-icon">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span>Cart</span>
+                        <span class="cart-count">0</span>
+                    </a>
+                </li>
+            </ul>
+            <div class="nav-toggle" id="nav-toggle">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Gallery Header -->
+    <section class="gallery-header">
+        <div class="container">
+            <div class="gallery-header-content">
+                <h1 class="gallery-title">Complete Collection</h1>
+                <p class="gallery-subtitle">Explore our entire range of premium crystal planters</p>
+                <div class="gallery-filters">
+                    <button class="filter-btn active" data-filter="all">All Products</button>
+                    <button class="filter-btn" data-filter="featured">Featured</button>
+                    <button class="filter-btn" data-filter="available">Available</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Full Gallery -->
+    <section class="full-gallery">
+        <div class="container">
+            <div class="gallery-grid" id="full-gallery-grid">
+                <!-- Gallery items will be loaded dynamically -->
+            </div>
+            <div class="gallery-loading" id="gallery-loading">
+                <div class="loading-spinner">
+                    <i class="fas fa-gem fa-spin"></i>
+                    <p>Loading products...</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Back to Home -->
+    <section class="gallery-cta">
+        <div class="container">
+            <div class="cta-content">
+                <h2>Ready to Start Your Collection?</h2>
+                <p>Contact us to learn more about our crystal planters</p>
+                <a href="/#contact" class="btn btn-primary">
+                    <span>Get In Touch</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-logo">
+                        <i class="fas fa-gem"></i>
+                        <span>GemSpots</span>
+                    </div>
+                    <p>Premium crystal planters with NFT integration for the modern collector.</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="/">Home</a></li>
+                        <li><a href="/#gallery">Gallery</a></li>
+                        <li><a href="/#about">About</a></li>
+                        <li><a href="/#contact">Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 GemSpots. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Cart Modal -->
+    <div class="cart-modal">
+        <div class="cart-modal-content">
+            <div class="cart-modal-header">
+                <h3 class="cart-modal-title">Shopping Cart</h3>
+                <button class="cart-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="cart-modal-body">
+                <div class="cart-items"></div>
+                <div class="cart-empty">
+                    <i class="fas fa-shopping-cart"></i>
+                    <h3>Your cart is empty</h3>
+                    <p>Add some beautiful crystal planters to get started!</p>
+                </div>
+                <div class="cart-total"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/js/cart-config.js"></script>
+    <script src="/js/cart.js"></script>
+    <script src="/js/shipping.js"></script>
+    <script src="/js/main.js"></script>
+    <script>
+        // Initialize navigation for gallery page
+        document.addEventListener('DOMContentLoaded', function() {
+            initNavigation();
+        });
+        // Load full gallery when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            loadFullGallery();
+            initGalleryFilters();
+        });
+
+        // Load all products for full gallery
+        async function loadFullGallery() {
+            try {
+                const response = await fetch('/api/gemspots');
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayFullGallery(data.gemspots);
+                } else {
+                    displayGalleryError();
+                }
+            } catch (error) {
+                console.error('Error loading full gallery:', error);
+                displayGalleryError();
+            }
+        }
+
+        // Display full gallery with all products
+        function displayFullGallery(gemspots) {
+            const galleryGrid = document.getElementById('full-gallery-grid');
+            const loading = document.getElementById('gallery-loading');
+            
+            if (!galleryGrid) return;
+
+            // Hide loading
+            if (loading) {
+                loading.style.display = 'none';
+            }
+
+            galleryGrid.innerHTML = gemspots.map(gemspot => {
+                // Get the first image or use a placeholder
+                const firstImage = gemspot.images && gemspot.images.length > 0 ? gemspot.images[0] : null;
+                const imageUrl = firstImage || '/images/placeholder-gem.jpg';
+                
+                return `
+                <div class="gallery-item hover-lift" data-category="${gemspot.isFeatured ? 'featured' : 'available'}" data-aos="fade-up" data-aos-delay="${Math.random() * 200}">
+                    <div class="gallery-image">
+                        <img src="${imageUrl}" alt="${gemspot.name}" loading="lazy">
+                        <div class="gallery-overlay">
+                            <button class="btn btn-primary" onclick="viewGemspot(${gemspot.id})">
+                                <span>View Details</span>
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="gallery-content">
+                        <h3 class="gallery-title">${gemspot.name}</h3>
+                        <div class="gallery-price">$${gemspot.price} CAD</div>
+                        <p class="gallery-description">${gemspot.description}</p>
+                        <div class="gallery-meta">
+                            <span class="crystal-type">
+                                <i class="fas fa-gem"></i>
+                                ${gemspot.crystal_type || 'Crystal'}
+                            </span>
+                            <div class="gallery-badges">
+                                <span class="rarity ${(gemspot.rarity || 'Common').toLowerCase().replace(' ', '-')}">
+                                    ${gemspot.rarity || 'Common'}
+                                </span>
+                                ${gemspot.nftUrl || gemspot.nftImage ? `
+                                <span class="nft-badge">
+                                    <i class="fas fa-certificate"></i>
+                                    NFT
+                                </span>
+                                ` : ''}
+                                ${gemspot.hasVariants ? `
+                                <span class="variants-badge">
+                                    <i class="fas fa-layer-group"></i>
+                                    ${gemspot.availableVariants} Available
+                                </span>
+                                ` : ''}
+                            </div>
+                            <button class="add-to-cart-btn" data-product-id="${gemspot.id}">
+                                <i class="fas fa-shopping-cart"></i>
+                                Add to Cart
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+
+            // Add hover effects
+            const galleryItems = document.querySelectorAll('.gallery-item');
+            galleryItems.forEach(item => {
+                item.addEventListener('mouseenter', () => {
+                    item.style.transform = 'translateY(-10px) scale(1.02)';
+                });
+                
+                item.addEventListener('mouseleave', () => {
+                    item.style.transform = 'translateY(0) scale(1)';
+                });
+            });
+        }
+
+        // Initialize gallery filters
+        function initGalleryFilters() {
+            const filterBtns = document.querySelectorAll('.filter-btn');
+            const galleryItems = document.querySelectorAll('.gallery-item');
+
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // Remove active class from all buttons
+                    filterBtns.forEach(b => b.classList.remove('active'));
+                    // Add active class to clicked button
+                    btn.classList.add('active');
+
+                    const filter = btn.getAttribute('data-filter');
+
+                    // Filter gallery items
+                    galleryItems.forEach(item => {
+                        if (filter === 'all' || item.getAttribute('data-category') === filter) {
+                            item.style.display = 'block';
+                        } else {
+                            item.style.display = 'none';
+                        }
+                    });
+                });
+            });
+        }
+
+        // Display gallery error
+        function displayGalleryError() {
+            const galleryGrid = document.getElementById('full-gallery-grid');
+            const loading = document.getElementById('gallery-loading');
+            
+            if (loading) {
+                loading.style.display = 'none';
+            }
+            
+            if (!galleryGrid) return;
+
+            galleryGrid.innerHTML = `
+                <div class="gallery-error">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p>Unable to load gallery. Please try again later.</p>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
