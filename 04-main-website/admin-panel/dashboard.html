@@ -420,22 +420,31 @@
         // Verify token is valid before proceeding
         async function verifyToken() {
             try {
+                console.log('🔐 [DASHBOARD] Verifying token:', token ? 'TOKEN_EXISTS' : 'NO_TOKEN');
+                console.log('🔐 [DASHBOARD] Token preview:', token ? token.substring(0, 20) + '...' : 'N/A');
+                
                 const response = await fetch('/api/admin/verify', {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
                 });
                 
+                console.log('🔐 [DASHBOARD] Verify response status:', response.status);
+                console.log('🔐 [DASHBOARD] Verify response ok:', response.ok);
+                
                 const result = await response.json();
+                console.log('🔐 [DASHBOARD] Verify result:', result);
+                
                 if (!result.success) {
-                    console.log('Token invalid, redirecting to login...');
+                    console.log('🔐 [DASHBOARD] Token invalid, redirecting to login...');
                     localStorage.removeItem('adminToken');
                     window.location.href = '/admin/login';
                     return false;
                 }
+                console.log('🔐 [DASHBOARD] Token verification successful');
                 return true;
             } catch (error) {
-                console.log('Token verification failed, redirecting to login...');
+                console.log('🔐 [DASHBOARD] Token verification failed:', error);
                 localStorage.removeItem('adminToken');
                 window.location.href = '/admin/login';
                 return false;
@@ -444,14 +453,23 @@
 
         // Initialize dashboard
         document.addEventListener('DOMContentLoaded', async () => {
+            console.log('🔐 [DASHBOARD] DOM loaded, starting initialization...');
+            
             // Verify token before loading dashboard
             const isValid = await verifyToken();
+            console.log('🔐 [DASHBOARD] Token validation result:', isValid);
+            
             if (!isValid) {
+                console.log('🔐 [DASHBOARD] Token invalid, stopping initialization');
                 return; // Will redirect to login
             }
             
+            console.log('🔐 [DASHBOARD] Token valid, loading dashboard content...');
+            
             await loadProducts();
             updateStats();
+            
+            console.log('🔐 [DASHBOARD] Dashboard initialization complete');
         });
 
         async function loadProducts() {
