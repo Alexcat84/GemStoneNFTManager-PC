@@ -1,0 +1,38 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "index.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "admin-panel/**/*",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/index.js"
+    },
+    {
+      "src": "/dashboard",
+      "dest": "/index.js"
+    },
+    {
+      "src": "/qr/(.*)",
+      "dest": "/index.js"
+    },
+    {
+      "src": "/qr-codes/(.*)",
+      "dest": "/index.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/admin-panel/$1"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  }
+}
