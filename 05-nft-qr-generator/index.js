@@ -4,6 +4,7 @@ const fs = require('fs');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const multer = require('multer');
 const PostgresDatabase = require('./database/postgres-database');
 const QRGenerator = require('./qr-generator/qr-generator');
 const AdminAuth = require('./admin-panel/admin-auth');
@@ -21,6 +22,15 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'assets')));
 app.use(express.static(path.join(__dirname, 'admin-panel')));
+
+// Configure multer for file uploads
+const storage = multer.memoryStorage();
+const upload = multer({ 
+  storage: storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB limit
+  }
+});
 // Serve QR codes from database in Vercel, from files locally
 if (process.env.VERCEL) {
   app.get('/qr-codes/:filename', async (req, res) => {
@@ -476,7 +486,10 @@ app.get('/api/admin/products', requireAuth, async (req, res) => {
   }
 });
 
-app.post('/api/admin/products', requireAuth, async (req, res) => {
+app.post('/api/admin/products', requireAuth, upload.fields([
+  { name: 'images', maxCount: 4 },
+  { name: 'nft_image', maxCount: 1 }
+]), async (req, res) => {
   try {
     console.log('➕ [WEBSITE ADMIN] Creating new product...');
     console.log('📦 [DEBUG] Request body:', req.body);
@@ -512,7 +525,10 @@ app.post('/api/admin/products', requireAuth, async (req, res) => {
   }
 });
 
-app.put('/api/admin/products/:productId', requireAuth, async (req, res) => {
+app.put('/api/admin/products/:productId', requireAuth, upload.fields([
+  { name: 'images', maxCount: 4 },
+  { name: 'nft_image', maxCount: 1 }
+]), async (req, res) => {
   try {
     const { productId } = req.params;
     console.log(`✏️ [WEBSITE ADMIN] Updating product ${productId}...`);
