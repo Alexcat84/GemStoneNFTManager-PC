@@ -142,49 +142,132 @@ const requireAuth = (req, res, next) => {
 // API Routes for GemSpots data
 app.get('/api/gemspots', async (req, res) => {
   try {
+    console.log('🔍 [API] Fetching featured products...');
     const products = await database.getFeaturedProducts();
+    console.log('🔍 [API] Found products:', products.length);
+    
+    if (products.length === 0) {
+      console.log('⚠️ [API] No featured products found, trying all available products...');
+      const allProducts = await database.getAvailableProducts();
+      console.log('🔍 [API] Found all products:', allProducts.length);
+      
+      if (allProducts.length === 0) {
+        return res.json({ success: true, gemspots: [] });
+      }
+      
+      // Use all products if no featured products exist
+      products = allProducts;
+    }
     
     const gemspots = await Promise.all(products.map(async (product) => {
-      // Get available variants for this product
-      const variants = await database.getAvailableVariants(product.id);
-      
-      return {
-        id: product.id,
-        name: product.name,
-        description: product.description,
-        price: parseFloat(product.price),
-        images: product.image_urls || ["/images/default-gemspot.jpg"],
-        nftUrl: product.nft_url,
-        nftImage: product.nft_image_url,
-        crystal_type: product.crystal_type,
-        rarity: product.rarity,
-        energyProperties: product.energy_properties,
-        personalityTarget: product.personality_target,
-        status: product.status,
-        category: product.category,
-        dimensions: product.dimensions,
-        weight: product.weight,
-        stock: product.stock_quantity,
-        isFeatured: product.is_featured,
-        createdAt: product.created_at,
-        availableVariants: variants.length,
-        hasVariants: variants.length > 0,
-        variants: variants.map(variant => ({
-          id: variant.id,
-          variant_code: variant.variant_code,
-          nft_url: variant.nft_url,
-          nft_image_url: variant.nft_image_url,
-          qr_code_url: variant.qr_code_url,
-          price: variant.price ? parseFloat(variant.price) : parseFloat(product.price),
-          status: variant.status
-        }))
-      };
+      try {
+        // Get available variants for this product
+        const variants = await database.getAvailableVariants(product.id);
+        
+        return {
+          id: product.id,
+          name: product.name,
+          description: product.description,
+          price: parseFloat(product.price),
+          images: product.image_urls || ["/images/default-gemspot.jpg"],
+          nftUrl: product.nft_url,
+          nftImage: product.nft_image_url,
+          crystal_type: product.crystal_type,
+          rarity: product.rarity,
+          energyProperties: product.energy_properties,
+          personalityTarget: product.personality_target,
+          status: product.status,
+          category: product.category,
+          dimensions: product.dimensions,
+          weight: product.weight,
+          stock: product.stock_quantity,
+          isFeatured: product.is_featured,
+          createdAt: product.created_at,
+          availableVariants: variants.length,
+          hasVariants: variants.length > 0,
+          variants: variants.map(variant => ({
+            id: variant.id,
+            variant_code: variant.variant_code,
+            nft_url: variant.nft_url,
+            nft_image_url: variant.nft_image_url,
+            qr_code_url: variant.qr_code_url,
+            price: variant.price ? parseFloat(variant.price) : parseFloat(product.price),
+            status: variant.status
+          }))
+        };
+      } catch (variantError) {
+        console.error('❌ [API] Error processing product variants for product', product.id, ':', variantError);
+        // Return product without variants if variant loading fails
+        return {
+          id: product.id,
+          name: product.name,
+          description: product.description,
+          price: parseFloat(product.price),
+          images: product.image_urls || ["/images/default-gemspot.jpg"],
+          nftUrl: product.nft_url,
+          nftImage: product.nft_image_url,
+          crystal_type: product.crystal_type,
+          rarity: product.rarity,
+          energyProperties: product.energy_properties,
+          personalityTarget: product.personality_target,
+          status: product.status,
+          category: product.category,
+          dimensions: product.dimensions,
+          weight: product.weight,
+          stock: product.stock_quantity,
+          isFeatured: product.is_featured,
+          createdAt: product.created_at,
+          availableVariants: 0,
+          hasVariants: false,
+          variants: []
+        };
+      }
     }));
     
+    console.log('✅ [API] Successfully processed', gemspots.length, 'products');
     res.json({ success: true, gemspots });
   } catch (error) {
-    console.error('Error fetching gemspots:', error);
-    res.status(500).json({ success: false, message: 'Error fetching products' });
+    console.error('❌ [API] Error fetching gemspots:', error);
+    console.error('❌ [API] Error stack:', error.stack);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error fetching products',
+      error: error.message 
+    });
+  }
+});
+
+// Debug endpoint to check database status
+app.get('/api/debug/products', async (req, res) => {
+  try {
+    console.log('🔍 [DEBUG] Checking database status...');
+    
+    const allProducts = await database.getAllProducts();
+    const featuredProducts = await database.getFeaturedProducts();
+    const availableProducts = await database.getAvailableProducts();
+    
+    res.json({
+      success: true,
+      debug: {
+        totalProducts: allProducts.length,
+        featuredProducts: featuredProducts.length,
+        availableProducts: availableProducts.length,
+        allProducts: allProducts.map(p => ({
+          id: p.id,
+          name: p.name,
+          is_featured: p.is_featured,
+          status: p.status,
+          is_archived: p.is_archived
+        }))
+      }
+    });
+  } catch (error) {
+    console.error('❌ [DEBUG] Error:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message,
+      stack: error.stack 
+    });
   }
 });
 
