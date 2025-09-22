@@ -495,6 +495,28 @@ app.post('/api/admin/products', requireAuth, upload.fields([
     console.log('📦 [DEBUG] Request body:', req.body);
     console.log('📦 [DEBUG] Request files:', req.files);
     
+    // Process uploaded images
+    let imageUrls = [];
+    let nftImageUrl = null;
+    
+    if (req.files) {
+      // Process product images
+      if (req.files.images && req.files.images.length > 0) {
+        imageUrls = req.files.images.map(file => {
+          // For now, store as base64 data URLs (in production, upload to cloud storage)
+          const base64 = file.buffer.toString('base64');
+          return `data:${file.mimetype};base64,${base64}`;
+        });
+      }
+      
+      // Process NFT image
+      if (req.files.nft_image && req.files.nft_image.length > 0) {
+        const nftFile = req.files.nft_image[0];
+        const base64 = nftFile.buffer.toString('base64');
+        nftImageUrl = `data:${nftFile.mimetype};base64,${base64}`;
+      }
+    }
+    
     const productData = {
       name: req.body.name,
       description: req.body.description,
@@ -510,9 +532,9 @@ app.post('/api/admin/products', requireAuth, upload.fields([
       stock_quantity: parseInt(req.body.stock_quantity) || 1,
       is_featured: req.body.is_featured === 'true',
       is_archived: req.body.is_archived === 'true',
-      image_urls: req.body.image_urls ? JSON.parse(req.body.image_urls) : [],
+      image_urls: imageUrls,
       nft_url: req.body.nft_url,
-      nft_image_url: req.body.nft_image_url
+      nft_image_url: nftImageUrl
     };
     
     console.log('📦 [DEBUG] Product data prepared:', productData);
@@ -533,6 +555,41 @@ app.put('/api/admin/products/:productId', requireAuth, upload.fields([
     const { productId } = req.params;
     console.log(`✏️ [WEBSITE ADMIN] Updating product ${productId}...`);
     
+    // Process uploaded images
+    let imageUrls = [];
+    let nftImageUrl = null;
+    
+    if (req.files) {
+      // Process product images
+      if (req.files.images && req.files.images.length > 0) {
+        imageUrls = req.files.images.map(file => {
+          // For now, store as base64 data URLs (in production, upload to cloud storage)
+          const base64 = file.buffer.toString('base64');
+          return `data:${file.mimetype};base64,${base64}`;
+        });
+      }
+      
+      // Process NFT image
+      if (req.files.nft_image && req.files.nft_image.length > 0) {
+        const nftFile = req.files.nft_image[0];
+        const base64 = nftFile.buffer.toString('base64');
+        nftImageUrl = `data:${nftFile.mimetype};base64,${base64}`;
+      }
+    }
+    
+    // If no new images uploaded, keep existing ones
+    if (imageUrls.length === 0 && req.body.existing_images) {
+      try {
+        imageUrls = JSON.parse(req.body.existing_images);
+      } catch (e) {
+        console.log('Could not parse existing images:', e);
+      }
+    }
+    
+    if (!nftImageUrl && req.body.existing_nft_image) {
+      nftImageUrl = req.body.existing_nft_image;
+    }
+    
     const productData = {
       name: req.body.name,
       description: req.body.description,
@@ -548,9 +605,9 @@ app.put('/api/admin/products/:productId', requireAuth, upload.fields([
       stock_quantity: parseInt(req.body.stock_quantity) || 1,
       is_featured: req.body.is_featured === 'true',
       is_archived: req.body.is_archived === 'true',
-      image_urls: req.body.image_urls ? JSON.parse(req.body.image_urls) : [],
+      image_urls: imageUrls,
       nft_url: req.body.nft_url,
-      nft_image_url: req.body.nft_image_url
+      nft_image_url: nftImageUrl
     };
     
     const updatedProduct = await nftDatabase.updateProduct(productId, productData);
