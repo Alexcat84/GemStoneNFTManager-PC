@@ -479,6 +479,8 @@ app.get('/api/admin/products', requireAuth, async (req, res) => {
 app.post('/api/admin/products', requireAuth, async (req, res) => {
   try {
     console.log('➕ [WEBSITE ADMIN] Creating new product...');
+    console.log('📦 [DEBUG] Request body:', req.body);
+    console.log('📦 [DEBUG] Request files:', req.files);
     
     const productData = {
       name: req.body.name,
@@ -499,6 +501,8 @@ app.post('/api/admin/products', requireAuth, async (req, res) => {
       nft_url: req.body.nft_url,
       nft_image_url: req.body.nft_image_url
     };
+    
+    console.log('📦 [DEBUG] Product data prepared:', productData);
     
     const newProduct = await nftDatabase.createProduct(productData);
     res.json({ success: true, product: newProduct, message: 'Product created successfully' });
