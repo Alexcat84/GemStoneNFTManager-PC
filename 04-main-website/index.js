@@ -271,6 +271,90 @@ app.get('/api/debug/products', async (req, res) => {
   }
 });
 
+// API endpoint for full gallery (all products)
+app.get('/api/gallery', async (req, res) => {
+  try {
+    console.log('🔍 [GALLERY API] Fetching all available products...');
+    const products = await database.getAvailableProducts();
+    console.log('🔍 [GALLERY API] Found products:', products.length);
+    
+    const gemspots = await Promise.all(products.map(async (product) => {
+      try {
+        // Get available variants for this product
+        const variants = await database.getAvailableVariants(product.id);
+        
+        return {
+          id: product.id,
+          name: product.name,
+          description: product.description,
+          price: parseFloat(product.price),
+          images: product.image_urls || ["/images/default-gemspot.jpg"],
+          nftUrl: product.nft_url,
+          nftImage: product.nft_image_url,
+          crystal_type: product.crystal_type,
+          rarity: product.rarity,
+          energyProperties: product.energy_properties,
+          personalityTarget: product.personality_target,
+          status: product.status,
+          category: product.category,
+          dimensions: product.dimensions,
+          weight: product.weight,
+          stock: product.stock_quantity,
+          isFeatured: product.is_featured,
+          createdAt: product.created_at,
+          availableVariants: variants.length,
+          hasVariants: variants.length > 0,
+          variants: variants.map(variant => ({
+            id: variant.id,
+            variant_code: variant.variant_code,
+            nft_url: variant.nft_url,
+            nft_image_url: variant.nft_image_url,
+            qr_code_url: variant.qr_code_url,
+            price: variant.price ? parseFloat(variant.price) : parseFloat(product.price),
+            status: variant.status
+          }))
+        };
+      } catch (variantError) {
+        console.error('❌ [GALLERY API] Error processing product variants for product', product.id, ':', variantError);
+        // Return product without variants if variant loading fails
+        return {
+          id: product.id,
+          name: product.name,
+          description: product.description,
+          price: parseFloat(product.price),
+          images: product.image_urls || ["/images/default-gemspot.jpg"],
+          nftUrl: product.nft_url,
+          nftImage: product.nft_image_url,
+          crystal_type: product.crystal_type,
+          rarity: product.rarity,
+          energyProperties: product.energy_properties,
+          personalityTarget: product.personality_target,
+          status: product.status,
+          category: product.category,
+          dimensions: product.dimensions,
+          weight: product.weight,
+          stock: product.stock_quantity,
+          isFeatured: product.is_featured,
+          createdAt: product.created_at,
+          availableVariants: 0,
+          hasVariants: false,
+          variants: []
+        };
+      }
+    }));
+    
+    console.log('✅ [GALLERY API] Successfully processed', gemspots.length, 'products');
+    res.json({ success: true, gemspots });
+  } catch (error) {
+    console.error('❌ [GALLERY API] Error fetching gallery products:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error fetching gallery products',
+      error: error.message 
+    });
+  }
+});
+
 // API endpoint to get a specific product by ID
 app.get('/api/gemspots/:id', async (req, res) => {
   try {
