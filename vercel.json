@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/05-nft-qr-generator/index.js"
+    }
+  ]
+}
