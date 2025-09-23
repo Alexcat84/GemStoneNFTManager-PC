@@ -168,21 +168,27 @@ app.get('/api/gemspots', async (req, res) => {
       return res.status(500).json({ success: false, message: 'Database not available' });
     }
     
-    console.log('🔍 [API] Fetching featured products...');
-    const products = await database.getFeaturedProducts();
+    // Check if this is a request for all products (from gallery page)
+    const isGalleryRequest = req.headers.referer && req.headers.referer.includes('/gallery');
+    
+    let products;
+    if (isGalleryRequest) {
+      console.log('🔍 [API] Gallery request - fetching all available products...');
+      products = await database.getAvailableProducts();
+    } else {
+      console.log('🔍 [API] Homepage request - fetching featured products...');
+      products = await database.getFeaturedProducts();
+      
+      if (products.length === 0) {
+        console.log('⚠️ [API] No featured products found, trying all available products...');
+        products = await database.getAvailableProducts();
+      }
+    }
+    
     console.log('🔍 [API] Found products:', products.length);
     
     if (products.length === 0) {
-      console.log('⚠️ [API] No featured products found, trying all available products...');
-      const allProducts = await database.getAvailableProducts();
-      console.log('🔍 [API] Found all products:', allProducts.length);
-      
-      if (allProducts.length === 0) {
-        return res.json({ success: true, gemspots: [] });
-      }
-      
-      // Use all products if no featured products exist
-      products = allProducts;
+      return res.json({ success: true, gemspots: [] });
     }
     
     const gemspots = await Promise.all(products.map(async (product) => {

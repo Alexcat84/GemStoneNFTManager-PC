@@ -166,7 +166,7 @@
         // Load all products for full gallery
         async function loadFullGallery() {
             try {
-                const response = await fetch('/api/gallery');
+                const response = await fetch('/api/gemspots');
                 const data = await response.json();
                 
                 if (data.success) {
