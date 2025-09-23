@@ -32,6 +32,14 @@
       "dest": "/index.js"
     },
     {
+      "src": "/gallery",
+      "dest": "/04-main-website/index.js"
+    },
+    {
+      "src": "/api/gemspots",
+      "dest": "/04-main-website/index.js"
+    },
+    {
       "src": "/(.*)",
       "dest": "/admin-panel/$1"
     }
