@@ -142,7 +142,17 @@ const requireAuth = (req, res, next) => {
 // API Routes for GemSpots data
 app.get('/api/gemspots', async (req, res) => {
   try {
-    const products = await database.getFeaturedProducts();
+    // Check if request is coming from gallery page
+    const isGalleryRequest = req.headers.referer && req.headers.referer.includes('/gallery');
+    
+    let products;
+    if (isGalleryRequest) {
+      // For gallery page, get all available products
+      products = await database.getAllProducts();
+    } else {
+      // For homepage, get only featured products
+      products = await database.getFeaturedProducts();
+    }
     
     const gemspots = await Promise.all(products.map(async (product) => {
       // Get available variants for this product
