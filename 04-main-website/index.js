@@ -15,10 +15,18 @@ const PORT = process.env.PORT || 4000;
 // Configure Express for Vercel (trust proxy)
 app.set('trust proxy', 1);
 
-// Initialize services
-const database = new PostgresDatabase();
-const adminAuth = new AdminAuth();
-const stockManager = new StockManager();
+// Initialize services with error handling
+let database, adminAuth, stockManager;
+
+try {
+  database = new PostgresDatabase();
+  adminAuth = new AdminAuth();
+  stockManager = new StockManager();
+  console.log('✅ Services initialized successfully');
+} catch (error) {
+  console.error('❌ Error initializing services:', error);
+  // Continue without services for now
+}
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -93,6 +101,19 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    services: {
+      database: database ? 'OK' : 'ERROR',
+      adminAuth: adminAuth ? 'OK' : 'ERROR',
+      stockManager: stockManager ? 'OK' : 'ERROR'
+    }
+  });
+});
+
 app.get('/gallery', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'gallery.html'));
 });
@@ -142,6 +163,11 @@ const requireAuth = (req, res, next) => {
 // API Routes for GemSpots data
 app.get('/api/gemspots', async (req, res) => {
   try {
+    if (!database) {
+      console.error('❌ [API] Database not initialized');
+      return res.status(500).json({ success: false, message: 'Database not available' });
+    }
+    
     console.log('🔍 [API] Fetching featured products...');
     const products = await database.getFeaturedProducts();
     console.log('🔍 [API] Found products:', products.length);
