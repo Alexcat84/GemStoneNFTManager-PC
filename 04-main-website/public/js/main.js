@@ -171,7 +171,7 @@ function displayGallery(gemspots) {
     galleryGrid.innerHTML = gemspots.map(gemspot => {
         // Get the first image or use a placeholder
         const firstImage = gemspot.images && gemspot.images.length > 0 ? gemspot.images[0] : null;
-        const imageUrl = firstImage || '/images/placeholder-gem.jpg';
+        const imageUrl = firstImage || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjhmYWZjIi8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pgo8L3N2Zz4K';
         
         return `
         <div class="gallery-item hover-lift" data-aos="fade-up" data-aos-delay="${Math.random() * 200}">
@@ -284,7 +284,7 @@ function showProductModal(product) {
                     <div class="product-modal-images">
                         ${product.images && product.images.length > 0 ? 
                             product.images.map(img => `<img src="${img}" alt="${product.name}" loading="lazy">`).join('') :
-                            '<img src="/images/placeholder-gem.jpg" alt="No image available">'
+                            '<img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjhmYWZjIi8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pgo8L3N2Zz4K" alt="No image available">'
                         }
                     </div>
                     <div class="product-modal-details">

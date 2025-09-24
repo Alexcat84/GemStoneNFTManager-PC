@@ -899,7 +899,17 @@ app.post('/api/admin/migrate-database', async (req, res) => {
 app.get('/api/admin/products', requireAuth, async (req, res) => {
   try {
     const products = await database.getAllProducts();
-    res.json({ success: true, products });
+    
+    // Transform products for admin dashboard compatibility
+    const transformedProducts = products.map(product => ({
+      ...product,
+      image_url: product.image_urls && product.image_urls.length > 0 ? product.image_urls[0] : null,
+      image_urls: product.image_urls || [],
+      nft_image_url: product.nft_image_url || null,
+      nft_url: product.nft_url || null
+    }));
+    
+    res.json({ success: true, products: transformedProducts });
   } catch (error) {
     console.error('Error fetching products:', error);
     res.status(500).json({ success: false, message: 'Error fetching products' });
