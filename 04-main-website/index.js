@@ -1000,19 +1000,34 @@ app.put('/api/admin/products/:id', requireAuth, upload.fields([
   try {
     const productId = req.params.id;
     
+    console.log('🔄 [EDIT PRODUCT] Starting product update for ID:', productId);
+    console.log('🔄 [EDIT PRODUCT] Files received:', req.files ? Object.keys(req.files) : 'No files');
+    console.log('🔄 [EDIT PRODUCT] Body data:', req.body);
+    console.log('🔄 [EDIT PRODUCT] existing_images:', req.body.existing_images);
+    console.log('🔄 [EDIT PRODUCT] existing_nft_image:', req.body.existing_nft_image);
+    
     // Get existing product data if needed (for preserving images)
     let existingProduct = null;
     const needsExistingData = (!req.files || !req.files.images) && !req.body.existing_images;
     const needsExistingNft = (!req.files || !req.files.nftImage) && !req.body.existing_nft_image;
     
+    console.log('🔄 [EDIT PRODUCT] needsExistingData:', needsExistingData);
+    console.log('🔄 [EDIT PRODUCT] needsExistingNft:', needsExistingNft);
+    
     if (needsExistingData || needsExistingNft) {
       existingProduct = await database.getProductById(productId);
+      console.log('🔄 [EDIT PRODUCT] Retrieved existing product:', existingProduct ? 'Found' : 'Not found');
+      if (existingProduct) {
+        console.log('🔄 [EDIT PRODUCT] Existing image_urls:', existingProduct.image_urls);
+        console.log('🔄 [EDIT PRODUCT] Existing nft_image_url:', existingProduct.nft_image_url);
+      }
     }
     
     // Process multiple images
     let imageUrls = [];
     if (req.files && req.files.images) {
       // New images uploaded - use them
+      console.log('🔄 [EDIT PRODUCT] Processing new images:', req.files.images.length);
       req.files.images.forEach(file => {
         // Store as base64 for Vercel, or file path for local
         if (process.env.VERCEL) {
@@ -1026,16 +1041,23 @@ app.put('/api/admin/products/:id', requireAuth, upload.fields([
       });
     } else if (req.body.existing_images) {
       // No new images - keep existing ones from form data
+      console.log('🔄 [EDIT PRODUCT] Using existing images from form data');
       imageUrls = JSON.parse(req.body.existing_images);
     } else if (existingProduct && existingProduct.image_urls) {
       // No new images and no existing_images in body - get from database
+      console.log('🔄 [EDIT PRODUCT] Using existing images from database');
       imageUrls = existingProduct.image_urls;
     }
+    
+    console.log('🔄 [EDIT PRODUCT] Final imageUrls:', imageUrls);
 
     // Process NFT image
     let nftImageUrl = req.body.existing_nft_image;
+    console.log('🔄 [EDIT PRODUCT] Initial nftImageUrl from form:', nftImageUrl);
+    
     if (req.files && req.files.nftImage && req.files.nftImage[0]) {
       // New NFT image uploaded - use it
+      console.log('🔄 [EDIT PRODUCT] Processing new NFT image');
       if (process.env.VERCEL) {
         const fs = require('fs');
         const imageBuffer = fs.readFileSync(req.files.nftImage[0].path);
@@ -1046,8 +1068,11 @@ app.put('/api/admin/products/:id', requireAuth, upload.fields([
       }
     } else if (!nftImageUrl && existingProduct && existingProduct.nft_image_url) {
       // No new NFT image and no existing_nft_image in body - get from database
+      console.log('🔄 [EDIT PRODUCT] Using existing NFT image from database');
       nftImageUrl = existingProduct.nft_image_url;
     }
+    
+    console.log('🔄 [EDIT PRODUCT] Final nftImageUrl:', nftImageUrl);
 
     const productData = {
       name: req.body.name,
