@@ -169,7 +169,8 @@ app.get('/api/gemspots', async (req, res) => {
     }
     
     // Check if request is coming from gallery page
-    const isGalleryRequest = req.headers.referer && req.headers.referer.includes('/gallery');
+    const isGalleryRequest = (req.headers.referer && req.headers.referer.includes('/gallery')) || 
+                            req.query.source === 'gallery';
     
     let products;
     if (isGalleryRequest) {
