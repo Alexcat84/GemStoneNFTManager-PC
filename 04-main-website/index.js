@@ -1061,6 +1061,17 @@ app.delete('/api/admin/products/:id', requireAuth, async (req, res) => {
   }
 });
 
+app.put('/api/admin/products/:id/mark-sold', requireAuth, async (req, res) => {
+  try {
+    const productId = req.params.id;
+    const result = await database.updateProductStatus(productId, 'sold');
+    res.json({ success: true, message: 'Product marked as sold successfully' });
+  } catch (error) {
+    console.error('Error marking product as sold:', error);
+    res.status(500).json({ success: false, message: 'Error marking product as sold' });
+  }
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);

@@ -288,6 +288,21 @@ class PostgresDatabase {
         }
     }
 
+    async updateProductStatus(id, status) {
+        try {
+            const client = await this.pool.connect();
+            const result = await client.query(
+                'UPDATE products SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *',
+                [status, id]
+            );
+            client.release();
+            return result.rows[0];
+        } catch (error) {
+            console.error('Error updating product status:', error);
+            throw error;
+        }
+    }
+
     async deleteProduct(id) {
         let client;
         let retries = 3;
