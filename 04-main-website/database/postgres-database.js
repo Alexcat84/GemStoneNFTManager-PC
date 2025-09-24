@@ -2,18 +2,39 @@ const { Pool } = require('pg');
 
 class PostgresDatabase {
     constructor() {
+        if (!process.env.DATABASE_URL) {
+            console.error('❌ [DATABASE] DATABASE_URL not found in environment variables');
+            this.pool = null;
+            return;
+        }
+        
         this.pool = new Pool({
             connectionString: process.env.DATABASE_URL,
             ssl: {
                 rejectUnauthorized: false
-            }
+            },
+            connectionTimeoutMillis: 10000, // 10 seconds
+            idleTimeoutMillis: 30000, // 30 seconds
+            max: 10 // Maximum number of clients in the pool
         });
-        this.initializeTables();
+        
+        // Initialize tables with error handling
+        this.initializeTables().catch(error => {
+            console.error('❌ [DATABASE] Failed to initialize tables:', error.message);
+        });
     }
 
     async initializeTables() {
-        const client = await this.pool.connect();
+        if (!this.pool) {
+            console.error('❌ [DATABASE] Cannot initialize tables - no database pool');
+            return;
+        }
+        
+        let client;
         try {
+            console.log('🔄 [DATABASE] Connecting to database...');
+            client = await this.pool.connect();
+            console.log('✅ [DATABASE] Connected to database successfully');
             // Create products table
             await client.query(`
                 CREATE TABLE IF NOT EXISTS products (
@@ -91,6 +112,11 @@ class PostgresDatabase {
 
     // Product management methods
     async getAllProducts() {
+        if (!this.pool) {
+            console.error('❌ [DATABASE] Cannot get products - no database pool');
+            return [];
+        }
+        
         let client;
         let retries = 3;
         
@@ -158,6 +184,11 @@ class PostgresDatabase {
     }
 
     async getProductById(id) {
+        if (!this.pool) {
+            console.error('❌ [DATABASE] Cannot get product by ID - no database pool');
+            return null;
+        }
+        
         let client;
         let retries = 3;
         
@@ -238,6 +269,11 @@ class PostgresDatabase {
     }
 
     async updateProduct(id, productData) {
+        if (!this.pool) {
+            console.error('❌ [DATABASE] Cannot update product - no database pool');
+            throw new Error('Database not available');
+        }
+        
         let client;
         let retries = 3;
         
