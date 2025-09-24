@@ -80,6 +80,7 @@ class PostgresDatabase {
                 );
             }
 
+
             console.log('✅ Database tables initialized successfully');
         } catch (error) {
             console.error('❌ Error initializing database:', error);

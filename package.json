@@ -1,16 +1,15 @@
 {
-  "name": "gemspots-main-website",
+  "name": "gemstone-nft-manager",
   "version": "1.0.0",
-  "description": "GemSpots - Premium Crystal Planters with NFT Integration",
-  "main": "index.js",
+  "description": "GemStone NFT Manager - Main Website and QR Generator",
+  "main": "04-main-website/index.js",
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js",
-    "build": "echo 'No build step required for this project'"
+    "start": "node 04-main-website/index.js",
+    "build": "echo 'No build step required'"
   },
-  "keywords": ["gemstones", "crystals", "nft", "planters", "ecommerce"],
-  "author": "GemSpots",
-  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0"
+  },
   "dependencies": {
     "express": "^4.18.2",
     "cors": "^2.8.5",
@@ -21,8 +20,5 @@
     "bcryptjs": "^2.4.3",
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.11.3"
-  },
-  "devDependencies": {
-    "nodemon": "^3.0.2"
   }
 }

@@ -4,6 +4,7 @@ const fs = require('fs');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const multer = require('multer');
 const PostgresDatabase = require('./database/postgres-database');
 const QRGenerator = require('./qr-generator/qr-generator');
 const AdminAuth = require('./admin-panel/admin-auth');
@@ -21,6 +22,15 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'assets')));
 app.use(express.static(path.join(__dirname, 'admin-panel')));
+
+// Configure multer for file uploads
+const storage = multer.memoryStorage();
+const upload = multer({ 
+  storage: storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB limit
+  }
+});
 // Serve QR codes from database in Vercel, from files locally
 if (process.env.VERCEL) {
   app.get('/qr-codes/:filename', async (req, res) => {
@@ -476,9 +486,36 @@ app.get('/api/admin/products', requireAuth, async (req, res) => {
   }
 });
 
-app.post('/api/admin/products', requireAuth, async (req, res) => {
+app.post('/api/admin/products', requireAuth, upload.fields([
+  { name: 'images', maxCount: 4 },
+  { name: 'nft_image', maxCount: 1 }
+]), async (req, res) => {
   try {
     console.log('➕ [WEBSITE ADMIN] Creating new product...');
+    console.log('📦 [DEBUG] Request body:', req.body);
+    console.log('📦 [DEBUG] Request files:', req.files);
+    
+    // Process uploaded images
+    let imageUrls = [];
+    let nftImageUrl = null;
+    
+    if (req.files) {
+      // Process product images
+      if (req.files.images && req.files.images.length > 0) {
+        imageUrls = req.files.images.map(file => {
+          // For now, store as base64 data URLs (in production, upload to cloud storage)
+          const base64 = file.buffer.toString('base64');
+          return `data:${file.mimetype};base64,${base64}`;
+        });
+      }
+      
+      // Process NFT image
+      if (req.files.nft_image && req.files.nft_image.length > 0) {
+        const nftFile = req.files.nft_image[0];
+        const base64 = nftFile.buffer.toString('base64');
+        nftImageUrl = `data:${nftFile.mimetype};base64,${base64}`;
+      }
+    }
     
     const productData = {
       name: req.body.name,
@@ -495,10 +532,12 @@ app.post('/api/admin/products', requireAuth, async (req, res) => {
       stock_quantity: parseInt(req.body.stock_quantity) || 1,
       is_featured: req.body.is_featured === 'true',
       is_archived: req.body.is_archived === 'true',
-      image_urls: req.body.image_urls ? JSON.parse(req.body.image_urls) : [],
+      image_urls: imageUrls,
       nft_url: req.body.nft_url,
-      nft_image_url: req.body.nft_image_url
+      nft_image_url: nftImageUrl
     };
+    
+    console.log('📦 [DEBUG] Product data prepared:', productData);
     
     const newProduct = await nftDatabase.createProduct(productData);
     res.json({ success: true, product: newProduct, message: 'Product created successfully' });
@@ -508,10 +547,48 @@ app.post('/api/admin/products', requireAuth, async (req, res) => {
   }
 });
 
-app.put('/api/admin/products/:productId', requireAuth, async (req, res) => {
+app.put('/api/admin/products/:productId', requireAuth, upload.fields([
+  { name: 'images', maxCount: 4 },
+  { name: 'nft_image', maxCount: 1 }
+]), async (req, res) => {
   try {
     const { productId } = req.params;
     console.log(`✏️ [WEBSITE ADMIN] Updating product ${productId}...`);
+    
+    // Process uploaded images
+    let imageUrls = [];
+    let nftImageUrl = null;
+    
+    if (req.files) {
+      // Process product images
+      if (req.files.images && req.files.images.length > 0) {
+        imageUrls = req.files.images.map(file => {
+          // For now, store as base64 data URLs (in production, upload to cloud storage)
+          const base64 = file.buffer.toString('base64');
+          return `data:${file.mimetype};base64,${base64}`;
+        });
+      }
+      
+      // Process NFT image
+      if (req.files.nft_image && req.files.nft_image.length > 0) {
+        const nftFile = req.files.nft_image[0];
+        const base64 = nftFile.buffer.toString('base64');
+        nftImageUrl = `data:${nftFile.mimetype};base64,${base64}`;
+      }
+    }
+    
+    // If no new images uploaded, keep existing ones
+    if (imageUrls.length === 0 && req.body.existing_images) {
+      try {
+        imageUrls = JSON.parse(req.body.existing_images);
+      } catch (e) {
+        console.log('Could not parse existing images:', e);
+      }
+    }
+    
+    if (!nftImageUrl && req.body.existing_nft_image) {
+      nftImageUrl = req.body.existing_nft_image;
+    }
     
     const productData = {
       name: req.body.name,
@@ -528,9 +605,9 @@ app.put('/api/admin/products/:productId', requireAuth, async (req, res) => {
       stock_quantity: parseInt(req.body.stock_quantity) || 1,
       is_featured: req.body.is_featured === 'true',
       is_archived: req.body.is_archived === 'true',
-      image_urls: req.body.image_urls ? JSON.parse(req.body.image_urls) : [],
+      image_urls: imageUrls,
       nft_url: req.body.nft_url,
-      nft_image_url: req.body.nft_image_url
+      nft_image_url: nftImageUrl
     };
     
     const updatedProduct = await nftDatabase.updateProduct(productId, productData);

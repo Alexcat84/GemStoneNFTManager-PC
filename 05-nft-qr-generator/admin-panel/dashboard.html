@@ -2398,6 +2398,15 @@
                                        value="${product ? product.nft_url || '' : ''}">
                             </div>
                             
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="isFeatured" name="is_featured" value="true" 
+                                           ${product && product.is_featured ? 'checked' : ''}>
+                                    Mark as Featured Product
+                                </label>
+                                <small>Featured products appear on the main website homepage</small>
+                            </div>
+                            
                             <div class="form-actions">
                                 <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
                                 <button type="submit" class="btn btn-primary">
