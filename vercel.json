@@ -17,7 +17,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "/04-main-website/public/$1"
+      "dest": "/04-main-website/index.js"
     }
   ]
 }
