@@ -990,9 +990,19 @@ app.put('/api/admin/products/:id', requireAuth, upload.fields([
   try {
     const productId = req.params.id;
     
+    // Get existing product data if needed (for preserving images)
+    let existingProduct = null;
+    const needsExistingData = (!req.files || !req.files.images) && !req.body.existing_images;
+    const needsExistingNft = (!req.files || !req.files.nftImage) && !req.body.existing_nft_image;
+    
+    if (needsExistingData || needsExistingNft) {
+      existingProduct = await database.getProductById(productId);
+    }
+    
     // Process multiple images
-    const imageUrls = [];
+    let imageUrls = [];
     if (req.files && req.files.images) {
+      // New images uploaded - use them
       req.files.images.forEach(file => {
         // Store as base64 for Vercel, or file path for local
         if (process.env.VERCEL) {
@@ -1005,13 +1015,17 @@ app.put('/api/admin/products/:id', requireAuth, upload.fields([
         }
       });
     } else if (req.body.existing_images) {
-      // Keep existing images if no new ones uploaded
-      imageUrls.push(...JSON.parse(req.body.existing_images));
+      // No new images - keep existing ones from form data
+      imageUrls = JSON.parse(req.body.existing_images);
+    } else if (existingProduct && existingProduct.image_urls) {
+      // No new images and no existing_images in body - get from database
+      imageUrls = existingProduct.image_urls;
     }
 
     // Process NFT image
     let nftImageUrl = req.body.existing_nft_image;
     if (req.files && req.files.nftImage && req.files.nftImage[0]) {
+      // New NFT image uploaded - use it
       if (process.env.VERCEL) {
         const fs = require('fs');
         const imageBuffer = fs.readFileSync(req.files.nftImage[0].path);
@@ -1020,6 +1034,9 @@ app.put('/api/admin/products/:id', requireAuth, upload.fields([
       } else {
         nftImageUrl = `/uploads/${req.files.nftImage[0].filename}`;
       }
+    } else if (!nftImageUrl && existingProduct && existingProduct.nft_image_url) {
+      // No new NFT image and no existing_nft_image in body - get from database
+      nftImageUrl = existingProduct.nft_image_url;
     }
 
     const productData = {
