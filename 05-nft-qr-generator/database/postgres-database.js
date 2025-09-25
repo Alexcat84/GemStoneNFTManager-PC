@@ -831,8 +831,47 @@ class PostgresDatabase {
         }
     }
 
+    // Admin authentication method
+    async authenticateAdmin(username, password) {
+        try {
+            if (!this.pool) {
+                return { success: false, message: 'Database not available' };
+            }
+
+            const client = await this.pool.connect();
+            const result = await client.query('SELECT * FROM admin_users WHERE username = $1', [username]);
+            client.release();
+
+            if (result.rows.length === 0) {
+                return { success: false, message: 'Invalid credentials' };
+            }
+
+            const admin = result.rows[0];
+            const bcrypt = require('bcryptjs');
+            const isValidPassword = await bcrypt.compare(password, admin.password_hash);
+
+            if (!isValidPassword) {
+                return { success: false, message: 'Invalid credentials' };
+            }
+
+            // Generate a simple token (in production, use JWT)
+            const token = Buffer.from(`${username}:${Date.now()}`).toString('base64');
+            
+            return { 
+                success: true, 
+                token: token,
+                user: { username: admin.username, role: admin.role }
+            };
+        } catch (error) {
+            console.error('Authentication error:', error);
+            return { success: false, message: 'Authentication failed' };
+        }
+    }
+
     async close() {
-        await this.pool.end();
+        if (this.pool) {
+            await this.pool.end();
+        }
     }
 }
 
