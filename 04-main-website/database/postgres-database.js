@@ -16,7 +16,8 @@ class PostgresDatabase {
             console.log('🔍 [DATABASE] Raw connection string:', connectionString.substring(0, 50) + '...');
             
             // Extract components using regex - handle both postgres:// and postgresql://
-            const match = connectionString.match(/^postgres(ql)?:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/(.+)$/);
+            // Also handle query parameters like ?sslmode=require
+            const match = connectionString.match(/^postgres(ql)?:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/([^?]+)(\?.*)?$/);
             
             if (!match) {
                 throw new Error('Invalid PostgreSQL connection string format');
