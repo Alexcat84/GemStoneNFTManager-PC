@@ -6,11 +6,19 @@
       "use": "@vercel/node"
     },
     {
+      "src": "05-nft-qr-generator/index-simple.js",
+      "use": "@vercel/node"
+    },
+    {
       "src": "04-main-website/public/**",
       "use": "@vercel/static"
     },
     {
       "src": "04-main-website/admin-panel/**",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "05-nft-qr-generator/admin-panel/**",
       "use": "@vercel/static"
     }
   ],
