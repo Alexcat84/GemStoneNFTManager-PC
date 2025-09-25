@@ -8,6 +8,18 @@ class PostgresDatabase {
             return;
         }
         
+        // Log DATABASE_URL info (without exposing credentials)
+        const dbUrl = process.env.DATABASE_URL;
+        const urlParts = new URL(dbUrl);
+        console.log('🔍 [DATABASE] Connection details:', {
+            host: urlParts.hostname,
+            port: urlParts.port,
+            database: urlParts.pathname.substring(1),
+            ssl: urlParts.searchParams.get('sslmode'),
+            hasPassword: !!urlParts.password,
+            hasUsername: !!urlParts.username
+        });
+        
         this.pool = new Pool({
             connectionString: process.env.DATABASE_URL,
             ssl: {
@@ -21,6 +33,13 @@ class PostgresDatabase {
         // Initialize tables with error handling
         this.initializeTables().catch(error => {
             console.error('❌ [DATABASE] Failed to initialize tables:', error.message);
+            console.error('❌ [DATABASE] Error details:', {
+                code: error.code,
+                errno: error.errno,
+                syscall: error.syscall,
+                address: error.address,
+                port: error.port
+            });
         });
     }
 
@@ -33,8 +52,18 @@ class PostgresDatabase {
         let client;
         try {
             console.log('🔄 [DATABASE] Connecting to database...');
+            console.log('🔄 [DATABASE] Pool status:', {
+                totalCount: this.pool.totalCount,
+                idleCount: this.pool.idleCount,
+                waitingCount: this.pool.waitingCount
+            });
+            
             client = await this.pool.connect();
             console.log('✅ [DATABASE] Connected to database successfully');
+            console.log('✅ [DATABASE] Client info:', {
+                processID: client.processID,
+                secretKey: client.secretKey ? 'present' : 'missing'
+            });
             // Create products table
             await client.query(`
                 CREATE TABLE IF NOT EXISTS products (
