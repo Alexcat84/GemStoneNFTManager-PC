@@ -89,7 +89,8 @@ class PostgresDatabase {
                 await new Promise(resolve => setTimeout(resolve, 2000));
             }
         }
-            
+        
+        try {
             // Create tables - only if they don't exist and are needed
             try {
                 await client.query(`
