@@ -11,23 +11,33 @@ class PostgresDatabase {
         console.log('🔍 [DATABASE] DATABASE_URL found:', process.env.DATABASE_URL.substring(0, 50) + '...');
         
         try {
-            // Parse the connection string manually to avoid pg-connection-string issues
-            const url = new URL(process.env.DATABASE_URL);
+            // Parse PostgreSQL connection string manually
+            const connectionString = process.env.DATABASE_URL;
+            console.log('🔍 [DATABASE] Raw connection string:', connectionString.substring(0, 50) + '...');
             
-            console.log('🔍 [DATABASE] Parsed URL components:', {
-                hostname: url.hostname,
-                port: url.port || 5432,
-                database: url.pathname.substring(1),
-                username: url.username,
-                hasPassword: !!url.password
+            // Extract components using regex
+            const match = connectionString.match(/^postgresql:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/(.+)$/);
+            
+            if (!match) {
+                throw new Error('Invalid PostgreSQL connection string format');
+            }
+            
+            const [, username, password, hostname, port, database] = match;
+            
+            console.log('🔍 [DATABASE] Parsed components:', {
+                hostname,
+                port: parseInt(port),
+                database,
+                username,
+                hasPassword: !!password
             });
             
             this.pool = new Pool({
-                host: url.hostname,
-                port: url.port || 5432,
-                database: url.pathname.substring(1), // Remove leading slash
-                user: url.username,
-                password: url.password,
+                host: hostname,
+                port: parseInt(port),
+                database: database,
+                user: username,
+                password: password,
                 ssl: {
                     rejectUnauthorized: false
                 },
@@ -35,7 +45,7 @@ class PostgresDatabase {
                 idleTimeoutMillis: 30000, // 30 seconds
                 max: 10 // Maximum number of clients in the pool
             });
-            console.log('✅ [DATABASE] Pool created successfully with manual parsing');
+            console.log('✅ [DATABASE] Pool created successfully with regex parsing');
         } catch (error) {
             console.error('❌ [DATABASE] Error creating pool:', error);
             console.error('❌ [DATABASE] Error details:', error.message);
