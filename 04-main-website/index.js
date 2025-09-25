@@ -1029,20 +1029,23 @@ app.put('/api/admin/products/:id', requireAuth, upload.fields([
     console.log('🔄 [EDIT PRODUCT] existing_images:', req.body.existing_images);
     console.log('🔄 [EDIT PRODUCT] existing_nft_image:', req.body.existing_nft_image);
     
-    // Get existing product data if needed (for preserving images)
+    // Get existing product data if needed (for preserving images and NFT data)
     let existingProduct = null;
     const needsExistingData = (!req.files || !req.files.images) && !req.body.existing_images;
     const needsExistingNft = (!req.files || !req.files.nftImage) && !req.body.existing_nft_image;
+    const needsExistingNftUrl = !req.body.nft_url && !req.body.existing_nft_url;
     
     console.log('🔄 [EDIT PRODUCT] needsExistingData:', needsExistingData);
     console.log('🔄 [EDIT PRODUCT] needsExistingNft:', needsExistingNft);
+    console.log('🔄 [EDIT PRODUCT] needsExistingNftUrl:', needsExistingNftUrl);
     
-    if (needsExistingData || needsExistingNft) {
+    if (needsExistingData || needsExistingNft || needsExistingNftUrl) {
       existingProduct = await database.getProductById(productId);
       console.log('🔄 [EDIT PRODUCT] Retrieved existing product:', existingProduct ? 'Found' : 'Not found');
       if (existingProduct) {
         console.log('🔄 [EDIT PRODUCT] Existing image_urls:', existingProduct.image_urls);
         console.log('🔄 [EDIT PRODUCT] Existing nft_image_url:', existingProduct.nft_image_url);
+        console.log('🔄 [EDIT PRODUCT] Existing nft_url:', existingProduct.nft_url);
       }
     }
     
@@ -1097,12 +1100,26 @@ app.put('/api/admin/products/:id', requireAuth, upload.fields([
     
     console.log('🔄 [EDIT PRODUCT] Final nftImageUrl:', nftImageUrl);
 
+    // Process NFT URL - preserve existing if not provided
+    let nftUrl = req.body.nft_url;
+    if (!nftUrl && req.body.existing_nft_url) {
+      // Use existing NFT URL from form data
+      nftUrl = req.body.existing_nft_url;
+      console.log('🔄 [EDIT PRODUCT] Using existing NFT URL from form data');
+    } else if (!nftUrl && existingProduct && existingProduct.nft_url) {
+      // Use existing NFT URL from database
+      nftUrl = existingProduct.nft_url;
+      console.log('🔄 [EDIT PRODUCT] Using existing NFT URL from database');
+    }
+    
+    console.log('🔄 [EDIT PRODUCT] Final nftUrl:', nftUrl);
+
     const productData = {
       name: req.body.name,
       description: req.body.description,
       price: parseFloat(req.body.price),
       image_urls: imageUrls,
-      nft_url: req.body.nft_url,
+      nft_url: nftUrl,
       nft_image_url: nftImageUrl,
       status: req.body.status,
       category: req.body.category,
