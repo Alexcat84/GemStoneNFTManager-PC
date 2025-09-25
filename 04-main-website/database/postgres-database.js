@@ -106,7 +106,9 @@ class PostgresDatabase {
         } catch (error) {
             console.error('❌ Error initializing database:', error);
         } finally {
-            client.release();
+            if (client) {
+                client.release();
+            }
         }
     }
 
