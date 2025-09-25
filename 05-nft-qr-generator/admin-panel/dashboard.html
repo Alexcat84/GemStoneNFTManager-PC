@@ -2434,6 +2434,7 @@
                 if (product) {
                     formData.append('existing_images', JSON.stringify(product.image_urls || []));
                     formData.append('existing_nft_image', product.nft_image_url || '');
+                    formData.append('existing_nft_url', product.nft_url || '');
                 }
                 
                 // Show loading state
