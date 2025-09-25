@@ -567,6 +567,24 @@ app.put('/api/admin/products/:productId', requireAuth, upload.fields([
     const { productId } = req.params;
     console.log(`✏️ [WEBSITE ADMIN] Updating product ${productId}...`);
     
+    // Debug: Log all form data received
+    console.log('🔄 [EDIT PRODUCT] Form data received:');
+    console.log('🔄 [EDIT PRODUCT] req.body.existing_images:', req.body.existing_images);
+    console.log('🔄 [EDIT PRODUCT] req.body.existing_nft_image:', req.body.existing_nft_image);
+    console.log('🔄 [EDIT PRODUCT] req.body.existing_nft_url:', req.body.existing_nft_url);
+    console.log('🔄 [EDIT PRODUCT] req.body.nft_url:', req.body.nft_url);
+    
+    // Get current product data from database for debugging
+    try {
+      const currentProduct = await nftDatabase.getProductById(productId);
+      console.log('🔄 [EDIT PRODUCT] Current product from database:');
+      console.log('🔄 [EDIT PRODUCT] Current image_urls:', currentProduct?.image_urls);
+      console.log('🔄 [EDIT PRODUCT] Current nft_image_url:', currentProduct?.nft_image_url);
+      console.log('🔄 [EDIT PRODUCT] Current nft_url:', currentProduct?.nft_url);
+    } catch (error) {
+      console.log('🔄 [EDIT PRODUCT] Error getting current product:', error.message);
+    }
+    
     // Process uploaded images
     let imageUrls = [];
     let nftImageUrl = null;
