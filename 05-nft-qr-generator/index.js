@@ -593,6 +593,8 @@ app.put('/api/admin/products/:productId', requireAuth, upload.fields([
     if (imageUrls.length === 0 && req.body.existing_images) {
       try {
         imageUrls = JSON.parse(req.body.existing_images);
+        console.log('🔄 [EDIT PRODUCT] Using existing images from form data');
+        console.log('🔄 [EDIT PRODUCT] Parsed existing_images:', imageUrls);
       } catch (e) {
         console.log('Could not parse existing images:', e);
       }
@@ -600,7 +602,20 @@ app.put('/api/admin/products/:productId', requireAuth, upload.fields([
     
     if (!nftImageUrl && req.body.existing_nft_image) {
       nftImageUrl = req.body.existing_nft_image;
+      console.log('🔄 [EDIT PRODUCT] Using existing NFT image from form data');
     }
+    
+    // Process NFT URL - preserve existing if not provided
+    let nftUrl = req.body.nft_url;
+    if (!nftUrl && req.body.existing_nft_url) {
+      // Use existing NFT URL from form data
+      nftUrl = req.body.existing_nft_url;
+      console.log('🔄 [EDIT PRODUCT] Using existing NFT URL from form data');
+    }
+    
+    console.log('🔄 [EDIT PRODUCT] Final imageUrls:', imageUrls);
+    console.log('🔄 [EDIT PRODUCT] Final nftImageUrl:', nftImageUrl);
+    console.log('🔄 [EDIT PRODUCT] Final nftUrl:', nftUrl);
     
     const productData = {
       name: req.body.name,
@@ -618,7 +633,7 @@ app.put('/api/admin/products/:productId', requireAuth, upload.fields([
       is_featured: req.body.is_featured === 'true',
       is_archived: req.body.is_archived === 'true',
       image_urls: imageUrls,
-      nft_url: req.body.nft_url,
+      nft_url: nftUrl,
       nft_image_url: nftImageUrl
     };
     
