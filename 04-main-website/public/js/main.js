@@ -40,14 +40,14 @@ function initNavigation() {
         }
     });
 
-    // Smooth scrolling for anchor links
+    // Handle navigation links
     navLinks.forEach(link => {
         link.addEventListener('click', (e) => {
-            e.preventDefault();
             const targetId = link.getAttribute('href');
             
-            // Only handle anchor links (starting with #)
+            // Handle anchor links (starting with #)
             if (targetId && targetId.startsWith('#')) {
+                e.preventDefault();
                 const targetSection = document.querySelector(targetId);
                 
                 if (targetSection) {
@@ -58,6 +58,8 @@ function initNavigation() {
                     });
                 }
             }
+            // For regular links (/, /gallery, etc.), let them work normally
+            // Don't prevent default behavior for these links
         });
     });
 
