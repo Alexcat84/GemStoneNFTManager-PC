@@ -464,6 +464,43 @@ class PostgresDatabase {
         }
     }
 
+    // Update product status (for Mark as Sold functionality)
+    async updateProductStatus(id, status) {
+        let client;
+        let retries = 3;
+        
+        while (retries > 0) {
+            try {
+                client = await this.pool.connect();
+                const result = await client.query(`
+                    UPDATE products 
+                    SET status = $1, updated_at = CURRENT_TIMESTAMP
+                    WHERE id = $2
+                    RETURNING *
+                `, [status, id]);
+                client.release();
+                return result.rows[0];
+            } catch (error) {
+                if (client) {
+                    try {
+                        client.release();
+                    } catch (releaseError) {
+                        console.error('Error releasing client:', releaseError);
+                    }
+                }
+                
+                console.error(`Update product status attempt ${4 - retries} failed:`, error.message);
+                
+                if (retries === 1) {
+                    throw new Error(`Failed to update product status after 3 attempts: ${error.message}`);
+                }
+                
+                retries--;
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
+            }
+        }
+    }
+
     async close() {
         await this.pool.end();
     }

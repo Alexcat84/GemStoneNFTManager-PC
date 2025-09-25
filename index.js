@@ -142,7 +142,11 @@ const requireAuth = (req, res, next) => {
 // API Routes for GemSpots data
 app.get('/api/gemspots', async (req, res) => {
   try {
-    const products = await database.getFeaturedProducts();
+    // Check if this is a request from the gallery page
+    const isGalleryRequest = req.query.source === 'gallery';
+    const products = isGalleryRequest ? 
+      await database.getAvailableProducts() : 
+      await database.getFeaturedProducts();
     
     const gemspots = await Promise.all(products.map(async (product) => {
       // Get available variants for this product
@@ -806,7 +810,12 @@ app.put('/api/admin/products/:id', requireAuth, upload.fields([
       });
     } else if (req.body.existing_images) {
       // Keep existing images if no new ones uploaded
-      imageUrls.push(...JSON.parse(req.body.existing_images));
+      try {
+        const existingImages = JSON.parse(req.body.existing_images);
+        imageUrls.push(...existingImages);
+      } catch (error) {
+        console.log('Error parsing existing images:', error);
+      }
     }
 
     // Process NFT image
@@ -847,6 +856,17 @@ app.put('/api/admin/products/:id', requireAuth, upload.fields([
   } catch (error) {
     console.error('Error updating product:', error);
     res.status(500).json({ success: false, message: 'Error updating product' });
+  }
+});
+
+app.put('/api/admin/products/:id/mark-sold', requireAuth, async (req, res) => {
+  try {
+    const productId = req.params.id;
+    const result = await database.updateProductStatus(productId, 'sold');
+    res.json({ success: true, message: 'Product marked as sold successfully', product: result });
+  } catch (error) {
+    console.error('Error marking product as sold:', error);
+    res.status(500).json({ success: false, message: 'Error marking product as sold' });
   }
 });
 

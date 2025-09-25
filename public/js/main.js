@@ -171,7 +171,7 @@ function displayGallery(gemspots) {
     galleryGrid.innerHTML = gemspots.map(gemspot => {
         // Get the first image or use a placeholder
         const firstImage = gemspot.images && gemspot.images.length > 0 ? gemspot.images[0] : null;
-        const imageUrl = firstImage || '/images/placeholder-gem.jpg';
+        const imageUrl = firstImage || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDMwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjhGQUZDIi8+CjxwYXRoIGQ9Ik0xNTAgNTBMMTgwIDEyMEwxNTAgMTUwTDEyMCAxMjBMMTUwIDUwWiIgZmlsbD0iIzY2N0VlYSIvPgo8Y2lyY2xlIGN4PSIxNTAiIGN5PSIxMDAiIHI9IjEwIiBmaWxsPSIjRjU5RTBCIi8+Cjx0ZXh0IHg9IjE1MCIgeT0iMTgwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNjY2IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTIiPkdlbVNwb3Q8L3RleHQ+Cjwvc3ZnPgo=';
         
         return `
         <div class="gallery-item hover-lift" data-aos="fade-up" data-aos-delay="${Math.random() * 200}">
@@ -284,7 +284,7 @@ function showProductModal(product) {
                     <div class="product-modal-images">
                         ${product.images && product.images.length > 0 ? 
                             product.images.map(img => `<img src="${img}" alt="${product.name}" loading="lazy">`).join('') :
-                            '<img src="/images/placeholder-gem.jpg" alt="No image available">'
+                            '<img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDMwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjhGQUZDIi8+CjxwYXRoIGQ9Ik0xNTAgNTBMMTgwIDEyMEwxNTAgMTUwTDEyMCAxMjBMMTUwIDUwWiIgZmlsbD0iIzY2N0VlYSIvPgo8Y2lyY2xlIGN4PSIxNTAiIGN5PSIxMDAiIHI9IjEwIiBmaWxsPSIjRjU5RTBCIi8+Cjx0ZXh0IHg9IjE1MCIgeT0iMTgwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNjY2IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTIiPkdlbVNwb3Q8L3RleHQ+Cjwvc3ZnPgo=" alt="No image available">'
                         }
                     </div>
                     <div class="product-modal-details">
