@@ -69,42 +69,57 @@ class PostgresDatabase {
         try {
             client = await this.pool.connect();
             
-            // Create tables
-            await client.query(`
-                CREATE TABLE IF NOT EXISTS nfts (
-                    id SERIAL PRIMARY KEY,
-                    opensea_url VARCHAR(500) NOT NULL,
-                    nft_code VARCHAR(50) UNIQUE NOT NULL,
-                    gemstone_names TEXT NOT NULL,
-                    location_id INTEGER NOT NULL,
-                    piece_number INTEGER NOT NULL,
-                    checksum VARCHAR(10) NOT NULL,
-                    notes TEXT,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            `);
+            // Create tables - only if they don't exist and are needed
+            try {
+                await client.query(`
+                    CREATE TABLE IF NOT EXISTS nfts (
+                        id SERIAL PRIMARY KEY,
+                        opensea_url VARCHAR(500) NOT NULL,
+                        nft_code VARCHAR(50) UNIQUE NOT NULL,
+                        gemstone_names TEXT NOT NULL,
+                        location_id INTEGER NOT NULL,
+                        piece_number INTEGER NOT NULL,
+                        checksum VARCHAR(10) NOT NULL,
+                        notes TEXT,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                `);
+                console.log('NFTs table created/verified');
+            } catch (e) {
+                console.log('NFTs table creation skipped:', e.message);
+            }
 
-            await client.query(`
-                CREATE TABLE IF NOT EXISTS qr_codes (
-                    id SERIAL PRIMARY KEY,
-                    nft_id INTEGER NOT NULL,
-                    type VARCHAR(20) NOT NULL,
-                    qr_data TEXT NOT NULL,
-                    qr_image_path VARCHAR(255),
-                    is_active BOOLEAN DEFAULT TRUE,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    FOREIGN KEY (nft_id) REFERENCES nfts(id)
-                )
-            `);
+            try {
+                await client.query(`
+                    CREATE TABLE IF NOT EXISTS qr_codes (
+                        id SERIAL PRIMARY KEY,
+                        nft_id INTEGER NOT NULL,
+                        type VARCHAR(20) NOT NULL,
+                        qr_data TEXT NOT NULL,
+                        qr_image_path VARCHAR(255),
+                        is_active BOOLEAN DEFAULT TRUE,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (nft_id) REFERENCES nfts(id)
+                    )
+                `);
+                console.log('QR codes table created/verified');
+            } catch (e) {
+                console.log('QR codes table creation skipped:', e.message);
+            }
 
-            await client.query(`
-                CREATE TABLE IF NOT EXISTS locations (
-                    id SERIAL PRIMARY KEY,
-                    country VARCHAR(50) NOT NULL,
-                    region VARCHAR(100) NOT NULL,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            `);
+            try {
+                await client.query(`
+                    CREATE TABLE IF NOT EXISTS locations (
+                        id SERIAL PRIMARY KEY,
+                        country VARCHAR(50) NOT NULL,
+                        region VARCHAR(100) NOT NULL,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                `);
+                console.log('Locations table created/verified');
+            } catch (e) {
+                console.log('Locations table creation skipped:', e.message);
+            }
 
             // Create products table for Website Admin
             await client.query(`
@@ -149,35 +164,68 @@ class PostgresDatabase {
                 )
             `);
 
-            await client.query(`
-                CREATE TABLE IF NOT EXISTS generated_codes (
-                    id SERIAL PRIMARY KEY,
-                    full_code VARCHAR(50) UNIQUE NOT NULL,
-                    gemstone_names TEXT NOT NULL,
-                    gemstone_codes TEXT NOT NULL,
-                    location_id INTEGER NOT NULL,
-                    piece_number INTEGER NOT NULL,
-                    generation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    month INTEGER NOT NULL,
-                    year INTEGER NOT NULL,
-                    checksum VARCHAR(10) NOT NULL,
-                    notes TEXT,
-                    FOREIGN KEY (location_id) REFERENCES locations(id)
-                )
-            `);
+            try {
+                await client.query(`
+                    CREATE TABLE IF NOT EXISTS generated_codes (
+                        id SERIAL PRIMARY KEY,
+                        full_code VARCHAR(50) UNIQUE NOT NULL,
+                        gemstone_names TEXT NOT NULL,
+                        gemstone_codes TEXT NOT NULL,
+                        location_id INTEGER NOT NULL,
+                        piece_number INTEGER NOT NULL,
+                        generation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        month INTEGER NOT NULL,
+                        year INTEGER NOT NULL,
+                        checksum VARCHAR(10) NOT NULL,
+                        notes TEXT,
+                        FOREIGN KEY (location_id) REFERENCES locations(id)
+                    )
+                `);
+                console.log('Generated codes table created/verified');
+            } catch (e) {
+                console.log('Generated codes table creation skipped:', e.message);
+            }
 
-            // Create indexes
-            await client.query(`CREATE INDEX IF NOT EXISTS idx_nfts_nft_code ON nfts(nft_code)`);
-            await client.query(`CREATE INDEX IF NOT EXISTS idx_nfts_created_at ON nfts(created_at)`);
-            await client.query(`CREATE INDEX IF NOT EXISTS idx_qr_codes_nft_id ON qr_codes(nft_id)`);
-            await client.query(`CREATE INDEX IF NOT EXISTS idx_qr_codes_type ON qr_codes(type)`);
-            await client.query(`CREATE INDEX IF NOT EXISTS idx_locations_country ON locations(country)`);
-            await client.query(`CREATE INDEX IF NOT EXISTS idx_generated_codes_full_code ON generated_codes(full_code)`);
-            await client.query(`CREATE INDEX IF NOT EXISTS idx_generated_codes_generation_date ON generated_codes(generation_date)`);
-            await client.query(`CREATE INDEX IF NOT EXISTS idx_generated_codes_month_year ON generated_codes(month, year)`);
+            // Create indexes - only for tables that exist
+            try {
+                await client.query(`CREATE INDEX IF NOT EXISTS idx_nfts_nft_code ON nfts(nft_code)`);
+                await client.query(`CREATE INDEX IF NOT EXISTS idx_nfts_created_at ON nfts(created_at)`);
+                console.log('NFTs indexes created/verified');
+            } catch (e) {
+                console.log('NFTs indexes skipped:', e.message);
+            }
+            
+            // Only create qr_codes indexes if the table exists
+            try {
+                await client.query(`CREATE INDEX IF NOT EXISTS idx_qr_codes_nft_id ON qr_codes(nft_id)`);
+                await client.query(`CREATE INDEX IF NOT EXISTS idx_qr_codes_type ON qr_codes(type)`);
+                console.log('QR codes indexes created/verified');
+            } catch (e) {
+                console.log('QR codes indexes skipped:', e.message);
+            }
+            try {
+                await client.query(`CREATE INDEX IF NOT EXISTS idx_locations_country ON locations(country)`);
+                console.log('Locations indexes created/verified');
+            } catch (e) {
+                console.log('Locations indexes skipped:', e.message);
+            }
+            
+            try {
+                await client.query(`CREATE INDEX IF NOT EXISTS idx_generated_codes_full_code ON generated_codes(full_code)`);
+                await client.query(`CREATE INDEX IF NOT EXISTS idx_generated_codes_generation_date ON generated_codes(generation_date)`);
+                await client.query(`CREATE INDEX IF NOT EXISTS idx_generated_codes_month_year ON generated_codes(month, year)`);
+                console.log('Generated codes indexes created/verified');
+            } catch (e) {
+                console.log('Generated codes indexes skipped:', e.message);
+            }
 
             // Insert initial data
-            await this.insertInitialData(client);
+            try {
+                await this.insertInitialData(client);
+                console.log('Initial data inserted successfully');
+            } catch (e) {
+                console.log('Initial data insertion skipped:', e.message);
+            }
             
             console.log('PostgreSQL database initialized successfully');
         } catch (error) {
