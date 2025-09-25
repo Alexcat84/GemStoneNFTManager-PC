@@ -1028,6 +1028,8 @@ app.put('/api/admin/products/:id', requireAuth, upload.fields([
     console.log('🔄 [EDIT PRODUCT] Body data:', req.body);
     console.log('🔄 [EDIT PRODUCT] existing_images:', req.body.existing_images);
     console.log('🔄 [EDIT PRODUCT] existing_nft_image:', req.body.existing_nft_image);
+    console.log('🔄 [EDIT PRODUCT] existing_nft_url:', req.body.existing_nft_url);
+    console.log('🔄 [EDIT PRODUCT] nft_url from form:', req.body.nft_url);
     
     // Get existing product data if needed (for preserving images and NFT data)
     let existingProduct = null;
@@ -1068,7 +1070,14 @@ app.put('/api/admin/products/:id', requireAuth, upload.fields([
     } else if (req.body.existing_images) {
       // No new images - keep existing ones from form data
       console.log('🔄 [EDIT PRODUCT] Using existing images from form data');
-      imageUrls = JSON.parse(req.body.existing_images);
+      console.log('🔄 [EDIT PRODUCT] Raw existing_images string:', req.body.existing_images);
+      try {
+        imageUrls = JSON.parse(req.body.existing_images);
+        console.log('🔄 [EDIT PRODUCT] Parsed existing_images:', imageUrls);
+      } catch (parseError) {
+        console.error('🔄 [EDIT PRODUCT] Error parsing existing_images:', parseError);
+        imageUrls = [];
+      }
     } else if (existingProduct && existingProduct.image_urls) {
       // No new images and no existing_images in body - get from database
       console.log('🔄 [EDIT PRODUCT] Using existing images from database');
