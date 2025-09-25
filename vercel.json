@@ -6,7 +6,7 @@
       "use": "@vercel/node"
     },
     {
-      "src": "05-nft-qr-generator/index-simple.js",
+      "src": "05-nft-qr-generator/index.js",
       "use": "@vercel/node"
     },
     {
@@ -30,6 +30,22 @@
     {
       "src": "/admin/(.*)",
       "dest": "/04-main-website/admin-panel/$1"
+    },
+    {
+      "src": "/qr-api/(.*)",
+      "dest": "/05-nft-qr-generator/index.js"
+    },
+    {
+      "src": "/qr-admin/(.*)",
+      "dest": "/05-nft-qr-generator/admin-panel/$1"
+    },
+    {
+      "src": "/qr/(.*)",
+      "dest": "/05-nft-qr-generator/index.js"
+    },
+    {
+      "src": "/qr-codes/(.*)",
+      "dest": "/05-nft-qr-generator/index.js"
     },
     {
       "src": "/(.*)",
