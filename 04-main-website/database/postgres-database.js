@@ -15,14 +15,14 @@ class PostgresDatabase {
             const connectionString = process.env.DATABASE_URL;
             console.log('🔍 [DATABASE] Raw connection string:', connectionString.substring(0, 50) + '...');
             
-            // Extract components using regex
-            const match = connectionString.match(/^postgresql:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/(.+)$/);
+            // Extract components using regex - handle both postgres:// and postgresql://
+            const match = connectionString.match(/^postgres(ql)?:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/(.+)$/);
             
             if (!match) {
                 throw new Error('Invalid PostgreSQL connection string format');
             }
             
-            const [, username, password, hostname, port, database] = match;
+            const [, , username, password, hostname, port, database] = match;
             
             console.log('🔍 [DATABASE] Parsed components:', {
                 hostname,
@@ -39,11 +39,15 @@ class PostgresDatabase {
                 user: username,
                 password: password,
                 ssl: {
-                    rejectUnauthorized: false
+                    rejectUnauthorized: false,
+                    require: true
                 },
-                connectionTimeoutMillis: 10000, // 10 seconds
-                idleTimeoutMillis: 30000, // 30 seconds
-                max: 10 // Maximum number of clients in the pool
+                connectionTimeoutMillis: 30000, // 30 seconds
+                idleTimeoutMillis: 60000, // 60 seconds
+                max: 5, // Maximum number of clients in the pool
+                allowExitOnIdle: true,
+                keepAlive: true,
+                keepAliveInitialDelayMillis: 10000
             });
             console.log('✅ [DATABASE] Pool created successfully with regex parsing');
         } catch (error) {
