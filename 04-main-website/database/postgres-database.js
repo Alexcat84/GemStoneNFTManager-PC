@@ -8,15 +8,23 @@ class PostgresDatabase {
             return;
         }
         
-        this.pool = new Pool({
-            connectionString: process.env.DATABASE_URL,
-            ssl: {
-                rejectUnauthorized: false
-            },
-            connectionTimeoutMillis: 10000, // 10 seconds
-            idleTimeoutMillis: 30000, // 30 seconds
-            max: 10 // Maximum number of clients in the pool
-        });
+        console.log('🔍 [DATABASE] DATABASE_URL found:', process.env.DATABASE_URL.substring(0, 50) + '...');
+        
+        try {
+            this.pool = new Pool({
+                connectionString: process.env.DATABASE_URL,
+                ssl: {
+                    rejectUnauthorized: false
+                },
+                connectionTimeoutMillis: 10000, // 10 seconds
+                idleTimeoutMillis: 30000, // 30 seconds
+                max: 10 // Maximum number of clients in the pool
+            });
+            console.log('✅ [DATABASE] Pool created successfully');
+        } catch (error) {
+            console.error('❌ [DATABASE] Error creating pool:', error);
+            this.pool = null;
+        }
         
         // Initialize tables with error handling
         this.initializeTables().catch(error => {
