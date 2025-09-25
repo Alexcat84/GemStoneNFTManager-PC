@@ -41,12 +41,16 @@ class PostgresDatabase {
                     rejectUnauthorized: false,
                     require: true
                 },
-                connectionTimeoutMillis: 30000, // 30 seconds
-                idleTimeoutMillis: 60000, // 60 seconds
-                max: 5, // Maximum number of clients in the pool
-                allowExitOnIdle: true,
+                connectionTimeoutMillis: 60000, // 60 seconds
+                idleTimeoutMillis: 300000, // 5 minutes
+                max: 3, // Maximum number of clients in the pool
+                min: 0, // Minimum number of clients in the pool
+                allowExitOnIdle: false, // Don't exit on idle
                 keepAlive: true,
-                keepAliveInitialDelayMillis: 10000
+                keepAliveInitialDelayMillis: 0,
+                statement_timeout: 30000, // 30 seconds
+                query_timeout: 30000, // 30 seconds
+                application_name: 'qr-generator'
             });
             console.log('✅ [DATABASE] Pool created successfully with regex parsing');
         } catch (error) {
@@ -66,8 +70,25 @@ class PostgresDatabase {
         }
         
         let client;
-        try {
-            client = await this.pool.connect();
+        let retries = 3;
+        
+        while (retries > 0) {
+            try {
+                console.log(`🔄 [DATABASE] Attempting to connect (${4-retries}/3)...`);
+                client = await this.pool.connect();
+                console.log('✅ [DATABASE] Connection established successfully');
+                break;
+            } catch (error) {
+                retries--;
+                console.error(`❌ [DATABASE] Connection attempt failed (${4-retries}/3):`, error.message);
+                if (retries === 0) {
+                    console.error('❌ [DATABASE] All connection attempts failed');
+                    throw error;
+                }
+                // Wait before retrying
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+        }
             
             // Create tables - only if they don't exist and are needed
             try {
@@ -227,12 +248,19 @@ class PostgresDatabase {
                 console.log('Initial data insertion skipped:', e.message);
             }
             
-            console.log('PostgreSQL database initialized successfully');
+            console.log('✅ [DATABASE] PostgreSQL database initialized successfully');
         } catch (error) {
-            console.error('Error initializing PostgreSQL database:', error);
+            console.error('❌ [DATABASE] Error initializing PostgreSQL database:', error);
+            console.error('❌ [DATABASE] Error details:', error.message);
+            console.error('❌ [DATABASE] Error stack:', error.stack);
         } finally {
             if (client) {
-                client.release();
+                try {
+                    client.release();
+                    console.log('✅ [DATABASE] Client released successfully');
+                } catch (releaseError) {
+                    console.error('❌ [DATABASE] Error releasing client:', releaseError.message);
+                }
             }
         }
     }
@@ -921,9 +949,39 @@ class PostgresDatabase {
         }
     }
 
+    // Helper method to safely execute database operations
+    async safeQuery(query, params = []) {
+        if (!this.pool) {
+            throw new Error('Database pool not available');
+        }
+        
+        let client;
+        try {
+            client = await this.pool.connect();
+            const result = await client.query(query, params);
+            return result;
+        } catch (error) {
+            console.error('❌ [DATABASE] Query error:', error.message);
+            throw error;
+        } finally {
+            if (client) {
+                try {
+                    client.release();
+                } catch (releaseError) {
+                    console.error('❌ [DATABASE] Error releasing client:', releaseError.message);
+                }
+            }
+        }
+    }
+
     async close() {
         if (this.pool) {
-            await this.pool.end();
+            try {
+                await this.pool.end();
+                console.log('✅ [DATABASE] Pool closed successfully');
+            } catch (error) {
+                console.error('❌ [DATABASE] Error closing pool:', error.message);
+            }
         }
     }
 }
