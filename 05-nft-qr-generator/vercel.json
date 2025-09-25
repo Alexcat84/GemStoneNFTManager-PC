@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "index-simple.js",
+      "src": "index.js",
       "use": "@vercel/node"
     },
     {
@@ -13,23 +13,23 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/index-simple.js"
+      "dest": "/index.js"
     },
     {
       "src": "/",
-      "dest": "/index-simple.js"
+      "dest": "/index.js"
     },
     {
       "src": "/dashboard",
-      "dest": "/index-simple.js"
+      "dest": "/index.js"
     },
     {
       "src": "/qr/(.*)",
-      "dest": "/index-simple.js"
+      "dest": "/index.js"
     },
     {
       "src": "/qr-codes/(.*)",
-      "dest": "/index-simple.js"
+      "dest": "/index.js"
     },
     {
       "src": "/(.*)",
