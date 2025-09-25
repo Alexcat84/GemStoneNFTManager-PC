@@ -478,6 +478,9 @@ app.get('/api/admin/products', requireAuth, async (req, res) => {
       price: parseFloat(product.price),
       status: product.status,
       image_url: product.image_urls && product.image_urls.length > 0 ? product.image_urls[0] : '/images/placeholder-gem.jpg',
+      image_urls: product.image_urls || [], // Include full array for editing
+      nft_image_url: product.nft_image_url || '', // Include NFT image URL
+      nft_url: product.nft_url || '', // Include NFT URL
       description: product.description,
       crystal_type: product.crystal_type,
       rarity: product.rarity,
