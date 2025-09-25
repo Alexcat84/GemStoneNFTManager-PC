@@ -61,10 +61,19 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // Initialize database and services
-const nftDatabase = new PostgresDatabase();
-const qrGenerator = new QRGenerator();
-const adminAuth = new AdminAuth();
-const codeGenerator = new CodeGenerator();
+let nftDatabase, qrGenerator, adminAuth, codeGenerator;
+
+try {
+  console.log('🔄 Initializing services...');
+  nftDatabase = new PostgresDatabase();
+  qrGenerator = new QRGenerator();
+  adminAuth = new AdminAuth();
+  codeGenerator = new CodeGenerator();
+  console.log('✅ Services initialized successfully');
+} catch (error) {
+  console.error('❌ Error initializing services:', error);
+  // Continue without services for now
+}
 
 // Routes
 app.get('/', (req, res) => {
