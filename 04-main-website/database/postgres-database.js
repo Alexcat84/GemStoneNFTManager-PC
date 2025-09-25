@@ -14,6 +14,14 @@ class PostgresDatabase {
             // Parse the connection string manually to avoid pg-connection-string issues
             const url = new URL(process.env.DATABASE_URL);
             
+            console.log('🔍 [DATABASE] Parsed URL components:', {
+                hostname: url.hostname,
+                port: url.port || 5432,
+                database: url.pathname.substring(1),
+                username: url.username,
+                hasPassword: !!url.password
+            });
+            
             this.pool = new Pool({
                 host: url.hostname,
                 port: url.port || 5432,
@@ -30,6 +38,7 @@ class PostgresDatabase {
             console.log('✅ [DATABASE] Pool created successfully with manual parsing');
         } catch (error) {
             console.error('❌ [DATABASE] Error creating pool:', error);
+            console.error('❌ [DATABASE] Error details:', error.message);
             this.pool = null;
         }
         
