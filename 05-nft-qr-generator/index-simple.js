@@ -18,6 +18,9 @@ console.log('✅ Rate limit loaded');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust proxy for Vercel
+app.set('trust proxy', 1);
+
 console.log('✅ App created');
 
 // Basic middleware
