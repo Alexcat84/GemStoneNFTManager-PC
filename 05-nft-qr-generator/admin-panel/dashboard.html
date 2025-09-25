@@ -796,6 +796,15 @@
             background: #7c3aed;
         }
 
+        .btn-sold {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-sold:hover {
+            background: #059669;
+        }
+
         @media (max-width: 768px) {
             .main-content {
                 grid-template-columns: 1fr;
@@ -2056,6 +2065,9 @@
                                     <button class="btn btn-small btn-variants" onclick="manageVariants(${product.id})">
                                         Variants
                                     </button>
+                                    <button class="btn btn-small btn-sold" onclick="markAsSold(${product.id})">
+                                        Mark as Sold
+                                    </button>
                                     <button class="btn btn-small btn-delete" onclick="deleteProduct(${product.id})">
                                         Delete
                                     </button>
@@ -2294,6 +2306,31 @@
                 } catch (error) {
                     console.error('Error deleting product:', error);
                     showMessage('Error deleting product', 'error');
+                }
+            }
+
+            async function markAsSold(id) {
+                if (!confirm('Mark this product as sold? This will remove it from the public gallery but keep it in records.')) {
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/api/admin/products/${id}/mark-sold`, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                        }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to mark product as sold');
+                    }
+
+                    showMessage('Product marked as sold successfully!', 'success');
+                    await loadProducts();
+                } catch (error) {
+                    console.error('Error marking product as sold:', error);
+                    showMessage('Error marking product as sold', 'error');
                 }
             }
 

@@ -913,6 +913,18 @@ class PostgresDatabase {
         }
     }
 
+    async updateProductStatus(id, status) {
+        try {
+            const client = await this.pool.connect();
+            const result = await client.query('UPDATE products SET status = $1 WHERE id = $2 RETURNING *', [status, id]);
+            client.release();
+            return result.rows[0];
+        } catch (error) {
+            console.error('Error updating product status:', error);
+            throw error;
+        }
+    }
+
     // Admin authentication method
     async authenticateAdmin(username, password) {
         try {

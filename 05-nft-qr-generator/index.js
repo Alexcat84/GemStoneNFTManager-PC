@@ -689,6 +689,24 @@ app.delete('/api/admin/products/:productId', requireAuth, async (req, res) => {
   }
 });
 
+app.put('/api/admin/products/:productId/mark-sold', requireAuth, async (req, res) => {
+  try {
+    const { productId } = req.params;
+    console.log(`💰 [WEBSITE ADMIN] Marking product ${productId} as sold...`);
+    
+    const result = await nftDatabase.updateProductStatus(productId, 'sold');
+    
+    if (result) {
+      res.json({ success: true, message: 'Product marked as sold successfully' });
+    } else {
+      res.status(404).json({ success: false, message: 'Product not found' });
+    }
+  } catch (error) {
+    console.error('Error marking product as sold:', error);
+    res.status(500).json({ success: false, message: 'Error marking product as sold' });
+  }
+});
+
 // Product Variants API Routes
 app.get('/api/products/:productId/variants', requireAuth, async (req, res) => {
   try {
