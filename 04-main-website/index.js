@@ -15,10 +15,18 @@ const PORT = process.env.PORT || 4000;
 // Configure Express for Vercel (trust proxy)
 app.set('trust proxy', 1);
 
-// Initialize services
-const database = new PostgresDatabase();
-const adminAuth = new AdminAuth();
-const stockManager = new StockManager();
+// Initialize services with error handling
+let database, adminAuth, stockManager;
+
+try {
+  database = new PostgresDatabase();
+  adminAuth = new AdminAuth();
+  stockManager = new StockManager();
+  console.log('✅ Services initialized successfully');
+} catch (error) {
+  console.error('❌ Error initializing services:', error);
+  // Continue without services for now
+}
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -93,6 +101,19 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    services: {
+      database: database ? 'OK' : 'ERROR',
+      adminAuth: adminAuth ? 'OK' : 'ERROR',
+      stockManager: stockManager ? 'OK' : 'ERROR'
+    }
+  });
+});
+
 app.get('/gallery', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'gallery.html'));
 });
@@ -142,49 +163,228 @@ const requireAuth = (req, res, next) => {
 // API Routes for GemSpots data
 app.get('/api/gemspots', async (req, res) => {
   try {
-    const products = await database.getFeaturedProducts();
+    if (!database) {
+      console.error('❌ [API] Database not initialized');
+      return res.status(500).json({ success: false, message: 'Database not available' });
+    }
+    
+    // Check if request is coming from gallery page
+    const isGalleryRequest = (req.headers.referer && req.headers.referer.includes('/gallery')) || 
+                            req.query.source === 'gallery';
+    
+    let products;
+    if (isGalleryRequest) {
+      console.log('🔍 [API] Gallery request - fetching all available products...');
+      products = await database.getAvailableProducts();
+    } else {
+      console.log('🔍 [API] Homepage request - fetching featured products...');
+      products = await database.getFeaturedProducts();
+      
+      if (products.length === 0) {
+        console.log('⚠️ [API] No featured products found, trying all available products...');
+        products = await database.getAvailableProducts();
+      }
+    }
+    
+    console.log('🔍 [API] Found products:', products.length);
+    
+    if (products.length === 0) {
+      return res.json({ success: true, gemspots: [] });
+    }
     
     const gemspots = await Promise.all(products.map(async (product) => {
-      // Get available variants for this product
-      const variants = await database.getAvailableVariants(product.id);
-      
-      return {
-        id: product.id,
-        name: product.name,
-        description: product.description,
-        price: parseFloat(product.price),
-        images: product.image_urls || ["/images/default-gemspot.jpg"],
-        nftUrl: product.nft_url,
-        nftImage: product.nft_image_url,
-        crystal_type: product.crystal_type,
-        rarity: product.rarity,
-        energyProperties: product.energy_properties,
-        personalityTarget: product.personality_target,
-        status: product.status,
-        category: product.category,
-        dimensions: product.dimensions,
-        weight: product.weight,
-        stock: product.stock_quantity,
-        isFeatured: product.is_featured,
-        createdAt: product.created_at,
-        availableVariants: variants.length,
-        hasVariants: variants.length > 0,
-        variants: variants.map(variant => ({
-          id: variant.id,
-          variant_code: variant.variant_code,
-          nft_url: variant.nft_url,
-          nft_image_url: variant.nft_image_url,
-          qr_code_url: variant.qr_code_url,
-          price: variant.price ? parseFloat(variant.price) : parseFloat(product.price),
-          status: variant.status
-        }))
-      };
+      try {
+        // Get available variants for this product
+        const variants = await database.getAvailableVariants(product.id);
+        
+        return {
+          id: product.id,
+          name: product.name,
+          description: product.description,
+          price: parseFloat(product.price),
+          images: product.image_urls || ["/images/default-gemspot.jpg"],
+          nftUrl: product.nft_url,
+          nftImage: product.nft_image_url,
+          crystal_type: product.crystal_type,
+          rarity: product.rarity,
+          energyProperties: product.energy_properties,
+          personalityTarget: product.personality_target,
+          status: product.status,
+          category: product.category,
+          dimensions: product.dimensions,
+          weight: product.weight,
+          stock: product.stock_quantity,
+          isFeatured: product.is_featured,
+          createdAt: product.created_at,
+          availableVariants: variants.length,
+          hasVariants: variants.length > 0,
+          variants: variants.map(variant => ({
+            id: variant.id,
+            variant_code: variant.variant_code,
+            nft_url: variant.nft_url,
+            nft_image_url: variant.nft_image_url,
+            qr_code_url: variant.qr_code_url,
+            price: variant.price ? parseFloat(variant.price) : parseFloat(product.price),
+            status: variant.status
+          }))
+        };
+      } catch (variantError) {
+        console.error('❌ [API] Error processing product variants for product', product.id, ':', variantError);
+        // Return product without variants if variant loading fails
+        return {
+          id: product.id,
+          name: product.name,
+          description: product.description,
+          price: parseFloat(product.price),
+          images: product.image_urls || ["/images/default-gemspot.jpg"],
+          nftUrl: product.nft_url,
+          nftImage: product.nft_image_url,
+          crystal_type: product.crystal_type,
+          rarity: product.rarity,
+          energyProperties: product.energy_properties,
+          personalityTarget: product.personality_target,
+          status: product.status,
+          category: product.category,
+          dimensions: product.dimensions,
+          weight: product.weight,
+          stock: product.stock_quantity,
+          isFeatured: product.is_featured,
+          createdAt: product.created_at,
+          availableVariants: 0,
+          hasVariants: false,
+          variants: []
+        };
+      }
     }));
     
+    console.log('✅ [API] Successfully processed', gemspots.length, 'products');
     res.json({ success: true, gemspots });
   } catch (error) {
-    console.error('Error fetching gemspots:', error);
-    res.status(500).json({ success: false, message: 'Error fetching products' });
+    console.error('❌ [API] Error fetching gemspots:', error);
+    console.error('❌ [API] Error stack:', error.stack);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error fetching products',
+      error: error.message 
+    });
+  }
+});
+
+// Debug endpoint to check database status
+app.get('/api/debug/products', async (req, res) => {
+  try {
+    console.log('🔍 [DEBUG] Checking database status...');
+    
+    const allProducts = await database.getAllProducts();
+    const featuredProducts = await database.getFeaturedProducts();
+    const availableProducts = await database.getAvailableProducts();
+    
+    res.json({
+      success: true,
+      debug: {
+        totalProducts: allProducts.length,
+        featuredProducts: featuredProducts.length,
+        availableProducts: availableProducts.length,
+        allProducts: allProducts.map(p => ({
+          id: p.id,
+          name: p.name,
+          is_featured: p.is_featured,
+          status: p.status,
+          is_archived: p.is_archived
+        }))
+      }
+    });
+  } catch (error) {
+    console.error('❌ [DEBUG] Error:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message,
+      stack: error.stack 
+    });
+  }
+});
+
+// API endpoint for full gallery (all products)
+app.get('/api/gallery', async (req, res) => {
+  try {
+    console.log('🔍 [GALLERY API] Fetching all available products...');
+    const products = await database.getAvailableProducts();
+    console.log('🔍 [GALLERY API] Found products:', products.length);
+    
+    const gemspots = await Promise.all(products.map(async (product) => {
+      try {
+        // Get available variants for this product
+        const variants = await database.getAvailableVariants(product.id);
+        
+        return {
+          id: product.id,
+          name: product.name,
+          description: product.description,
+          price: parseFloat(product.price),
+          images: product.image_urls || ["/images/default-gemspot.jpg"],
+          nftUrl: product.nft_url,
+          nftImage: product.nft_image_url,
+          crystal_type: product.crystal_type,
+          rarity: product.rarity,
+          energyProperties: product.energy_properties,
+          personalityTarget: product.personality_target,
+          status: product.status,
+          category: product.category,
+          dimensions: product.dimensions,
+          weight: product.weight,
+          stock: product.stock_quantity,
+          isFeatured: product.is_featured,
+          createdAt: product.created_at,
+          availableVariants: variants.length,
+          hasVariants: variants.length > 0,
+          variants: variants.map(variant => ({
+            id: variant.id,
+            variant_code: variant.variant_code,
+            nft_url: variant.nft_url,
+            nft_image_url: variant.nft_image_url,
+            qr_code_url: variant.qr_code_url,
+            price: variant.price ? parseFloat(variant.price) : parseFloat(product.price),
+            status: variant.status
+          }))
+        };
+      } catch (variantError) {
+        console.error('❌ [GALLERY API] Error processing product variants for product', product.id, ':', variantError);
+        // Return product without variants if variant loading fails
+        return {
+          id: product.id,
+          name: product.name,
+          description: product.description,
+          price: parseFloat(product.price),
+          images: product.image_urls || ["/images/default-gemspot.jpg"],
+          nftUrl: product.nft_url,
+          nftImage: product.nft_image_url,
+          crystal_type: product.crystal_type,
+          rarity: product.rarity,
+          energyProperties: product.energy_properties,
+          personalityTarget: product.personality_target,
+          status: product.status,
+          category: product.category,
+          dimensions: product.dimensions,
+          weight: product.weight,
+          stock: product.stock_quantity,
+          isFeatured: product.is_featured,
+          createdAt: product.created_at,
+          availableVariants: 0,
+          hasVariants: false,
+          variants: []
+        };
+      }
+    }));
+    
+    console.log('✅ [GALLERY API] Successfully processed', gemspots.length, 'products');
+    res.json({ success: true, gemspots });
+  } catch (error) {
+    console.error('❌ [GALLERY API] Error fetching gallery products:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error fetching gallery products',
+      error: error.message 
+    });
   }
 });
 
@@ -699,7 +899,40 @@ app.post('/api/admin/migrate-database', async (req, res) => {
 app.get('/api/admin/products', requireAuth, async (req, res) => {
   try {
     const products = await database.getAllProducts();
-    res.json({ success: true, products });
+    
+    console.log('🔍 [ADMIN API] Raw products from database:', products.length);
+    products.forEach((product, index) => {
+      console.log(`🔍 [ADMIN API] Product ${index + 1}:`, {
+        id: product.id,
+        name: product.name,
+        image_urls: product.image_urls,
+        nft_url: product.nft_url,
+        nft_image_url: product.nft_image_url
+      });
+    });
+    
+    // Transform products for admin dashboard compatibility
+    const transformedProducts = products.map(product => ({
+      ...product,
+      image_url: product.image_urls && product.image_urls.length > 0 ? product.image_urls[0] : null,
+      image_urls: product.image_urls || [],
+      nft_image_url: product.nft_image_url || null,
+      nft_url: product.nft_url || null
+    }));
+    
+    console.log('🔍 [ADMIN API] Transformed products:', transformedProducts.length);
+    transformedProducts.forEach((product, index) => {
+      console.log(`🔍 [ADMIN API] Transformed Product ${index + 1}:`, {
+        id: product.id,
+        name: product.name,
+        image_url: product.image_url,
+        image_urls: product.image_urls,
+        nft_url: product.nft_url,
+        nft_image_url: product.nft_image_url
+      });
+    });
+    
+    res.json({ success: true, products: transformedProducts });
   } catch (error) {
     console.error('Error fetching products:', error);
     res.status(500).json({ success: false, message: 'Error fetching products' });
@@ -790,9 +1023,34 @@ app.put('/api/admin/products/:id', requireAuth, upload.fields([
   try {
     const productId = req.params.id;
     
+    console.log('🔄 [EDIT PRODUCT] Starting product update for ID:', productId);
+    console.log('🔄 [EDIT PRODUCT] Files received:', req.files ? Object.keys(req.files) : 'No files');
+    console.log('🔄 [EDIT PRODUCT] Body data:', req.body);
+    console.log('🔄 [EDIT PRODUCT] existing_images:', req.body.existing_images);
+    console.log('🔄 [EDIT PRODUCT] existing_nft_image:', req.body.existing_nft_image);
+    
+    // Get existing product data if needed (for preserving images)
+    let existingProduct = null;
+    const needsExistingData = (!req.files || !req.files.images) && !req.body.existing_images;
+    const needsExistingNft = (!req.files || !req.files.nftImage) && !req.body.existing_nft_image;
+    
+    console.log('🔄 [EDIT PRODUCT] needsExistingData:', needsExistingData);
+    console.log('🔄 [EDIT PRODUCT] needsExistingNft:', needsExistingNft);
+    
+    if (needsExistingData || needsExistingNft) {
+      existingProduct = await database.getProductById(productId);
+      console.log('🔄 [EDIT PRODUCT] Retrieved existing product:', existingProduct ? 'Found' : 'Not found');
+      if (existingProduct) {
+        console.log('🔄 [EDIT PRODUCT] Existing image_urls:', existingProduct.image_urls);
+        console.log('🔄 [EDIT PRODUCT] Existing nft_image_url:', existingProduct.nft_image_url);
+      }
+    }
+    
     // Process multiple images
-    const imageUrls = [];
+    let imageUrls = [];
     if (req.files && req.files.images) {
+      // New images uploaded - use them
+      console.log('🔄 [EDIT PRODUCT] Processing new images:', req.files.images.length);
       req.files.images.forEach(file => {
         // Store as base64 for Vercel, or file path for local
         if (process.env.VERCEL) {
@@ -805,13 +1063,24 @@ app.put('/api/admin/products/:id', requireAuth, upload.fields([
         }
       });
     } else if (req.body.existing_images) {
-      // Keep existing images if no new ones uploaded
-      imageUrls.push(...JSON.parse(req.body.existing_images));
+      // No new images - keep existing ones from form data
+      console.log('🔄 [EDIT PRODUCT] Using existing images from form data');
+      imageUrls = JSON.parse(req.body.existing_images);
+    } else if (existingProduct && existingProduct.image_urls) {
+      // No new images and no existing_images in body - get from database
+      console.log('🔄 [EDIT PRODUCT] Using existing images from database');
+      imageUrls = existingProduct.image_urls;
     }
+    
+    console.log('🔄 [EDIT PRODUCT] Final imageUrls:', imageUrls);
 
     // Process NFT image
     let nftImageUrl = req.body.existing_nft_image;
+    console.log('🔄 [EDIT PRODUCT] Initial nftImageUrl from form:', nftImageUrl);
+    
     if (req.files && req.files.nftImage && req.files.nftImage[0]) {
+      // New NFT image uploaded - use it
+      console.log('🔄 [EDIT PRODUCT] Processing new NFT image');
       if (process.env.VERCEL) {
         const fs = require('fs');
         const imageBuffer = fs.readFileSync(req.files.nftImage[0].path);
@@ -820,7 +1089,13 @@ app.put('/api/admin/products/:id', requireAuth, upload.fields([
       } else {
         nftImageUrl = `/uploads/${req.files.nftImage[0].filename}`;
       }
+    } else if (!nftImageUrl && existingProduct && existingProduct.nft_image_url) {
+      // No new NFT image and no existing_nft_image in body - get from database
+      console.log('🔄 [EDIT PRODUCT] Using existing NFT image from database');
+      nftImageUrl = existingProduct.nft_image_url;
     }
+    
+    console.log('🔄 [EDIT PRODUCT] Final nftImageUrl:', nftImageUrl);
 
     const productData = {
       name: req.body.name,
@@ -858,6 +1133,17 @@ app.delete('/api/admin/products/:id', requireAuth, async (req, res) => {
   } catch (error) {
     console.error('Error deleting product:', error);
     res.status(500).json({ success: false, message: 'Error deleting product' });
+  }
+});
+
+app.put('/api/admin/products/:id/mark-sold', requireAuth, async (req, res) => {
+  try {
+    const productId = req.params.id;
+    const result = await database.updateProductStatus(productId, 'sold');
+    res.json({ success: true, message: 'Product marked as sold successfully' });
+  } catch (error) {
+    console.error('Error marking product as sold:', error);
+    res.status(500).json({ success: false, message: 'Error marking product as sold' });
   }
 });
 

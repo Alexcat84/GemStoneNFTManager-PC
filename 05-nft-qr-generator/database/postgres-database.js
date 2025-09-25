@@ -3,19 +3,66 @@ const CodeGenerator = require('../src/utils/code-generator');
 
 class PostgresDatabase {
     constructor() {
-        this.pool = new Pool({
-            connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
-            ssl: {
-                rejectUnauthorized: false
+        if (!process.env.DATABASE_URL && !process.env.POSTGRES_URL) {
+            console.error('❌ [DATABASE] DATABASE_URL not found in environment variables');
+            this.pool = null;
+            return;
+        }
+        
+        const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+        console.log('🔍 [DATABASE] DATABASE_URL found:', connectionString.substring(0, 50) + '...');
+        
+        try {
+            // Parse PostgreSQL connection string manually
+            const match = connectionString.match(/^postgresql:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/(.+)$/);
+            
+            if (!match) {
+                throw new Error('Invalid PostgreSQL connection string format');
             }
-        });
+            
+            const [, username, password, hostname, port, database] = match;
+            
+            console.log('🔍 [DATABASE] Parsed components:', {
+                hostname,
+                port: parseInt(port),
+                database,
+                username,
+                hasPassword: !!password
+            });
+            
+            this.pool = new Pool({
+                host: hostname,
+                port: parseInt(port),
+                database: database,
+                user: username,
+                password: password,
+                ssl: {
+                    rejectUnauthorized: false
+                },
+                connectionTimeoutMillis: 10000,
+                idleTimeoutMillis: 30000,
+                max: 10
+            });
+            console.log('✅ [DATABASE] Pool created successfully with regex parsing');
+        } catch (error) {
+            console.error('❌ [DATABASE] Error creating pool:', error);
+            console.error('❌ [DATABASE] Error details:', error.message);
+            this.pool = null;
+        }
+        
         this.codeGenerator = new CodeGenerator();
         this.initializeTables();
     }
 
     async initializeTables() {
+        if (!this.pool) {
+            console.error('❌ [DATABASE] Cannot initialize tables - no database pool');
+            return;
+        }
+        
+        let client;
         try {
-            const client = await this.pool.connect();
+            client = await this.pool.connect();
             
             // Create tables
             await client.query(`
@@ -127,10 +174,13 @@ class PostgresDatabase {
             // Insert initial data
             await this.insertInitialData(client);
             
-            client.release();
             console.log('PostgreSQL database initialized successfully');
         } catch (error) {
             console.error('Error initializing PostgreSQL database:', error);
+        } finally {
+            if (client) {
+                client.release();
+            }
         }
     }
 

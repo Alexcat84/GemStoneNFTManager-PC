@@ -1,0 +1,42 @@
+{
+  "name": "nft-qr-generator",
+  "version": "1.0.0",
+  "description": "Generador de códigos QR para NFTs de GemStone",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "build": "npm run build:css && npm run build:js",
+    "build:css": "tailwindcss -i ./src/styles/input.css -o ./assets/styles.css --watch",
+    "build:js": "webpack --mode production"
+  },
+  "keywords": [
+    "nft",
+    "qr-code",
+    "gemstone",
+    "opensea",
+    "blockchain"
+  ],
+  "author": "GemStone NFT Manager",
+  "license": "MIT",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.2",
+    "pg": "^8.11.3",
+    "qrcode": "^1.5.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2",
+    "tailwindcss": "^3.3.6",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

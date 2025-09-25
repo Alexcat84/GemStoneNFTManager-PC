@@ -62,9 +62,8 @@
                 <h1 class="gallery-title">Complete Collection</h1>
                 <p class="gallery-subtitle">Explore our entire range of premium crystal planters</p>
                 <div class="gallery-filters">
-                    <button class="filter-btn active" data-filter="all">All Products</button>
-                    <button class="filter-btn" data-filter="featured">Featured</button>
-                    <button class="filter-btn" data-filter="available">Available</button>
+                    <button class="filter-btn active" data-filter="all">All Available</button>
+                    <button class="filter-btn" data-filter="featured">Featured Only</button>
                 </div>
             </div>
         </div>
@@ -166,7 +165,7 @@
         // Load all products for full gallery
         async function loadFullGallery() {
             try {
-                const response = await fetch('/api/gemspots');
+                const response = await fetch('/api/gemspots?source=gallery');
                 const data = await response.json();
                 
                 if (data.success) {
@@ -195,7 +194,7 @@
             galleryGrid.innerHTML = gemspots.map(gemspot => {
                 // Get the first image or use a placeholder
                 const firstImage = gemspot.images && gemspot.images.length > 0 ? gemspot.images[0] : null;
-                const imageUrl = firstImage || '/images/placeholder-gem.jpg';
+                const imageUrl = firstImage || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjhmYWZjIi8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pgo8L3N2Zz4K';
                 
                 return `
                 <div class="gallery-item hover-lift" data-category="${gemspot.isFeatured ? 'featured' : 'available'}" data-aos="fade-up" data-aos-delay="${Math.random() * 200}">

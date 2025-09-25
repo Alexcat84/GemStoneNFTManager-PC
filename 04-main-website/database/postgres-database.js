@@ -2,18 +2,73 @@ const { Pool } = require('pg');
 
 class PostgresDatabase {
     constructor() {
-        this.pool = new Pool({
-            connectionString: process.env.DATABASE_URL,
-            ssl: {
-                rejectUnauthorized: false
+        if (!process.env.DATABASE_URL) {
+            console.error('❌ [DATABASE] DATABASE_URL not found in environment variables');
+            this.pool = null;
+            return;
+        }
+        
+        console.log('🔍 [DATABASE] DATABASE_URL found:', process.env.DATABASE_URL.substring(0, 50) + '...');
+        
+        try {
+            // Parse PostgreSQL connection string manually
+            const connectionString = process.env.DATABASE_URL;
+            console.log('🔍 [DATABASE] Raw connection string:', connectionString.substring(0, 50) + '...');
+            
+            // Extract components using regex
+            const match = connectionString.match(/^postgresql:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/(.+)$/);
+            
+            if (!match) {
+                throw new Error('Invalid PostgreSQL connection string format');
             }
+            
+            const [, username, password, hostname, port, database] = match;
+            
+            console.log('🔍 [DATABASE] Parsed components:', {
+                hostname,
+                port: parseInt(port),
+                database,
+                username,
+                hasPassword: !!password
+            });
+            
+            this.pool = new Pool({
+                host: hostname,
+                port: parseInt(port),
+                database: database,
+                user: username,
+                password: password,
+                ssl: {
+                    rejectUnauthorized: false
+                },
+                connectionTimeoutMillis: 10000, // 10 seconds
+                idleTimeoutMillis: 30000, // 30 seconds
+                max: 10 // Maximum number of clients in the pool
+            });
+            console.log('✅ [DATABASE] Pool created successfully with regex parsing');
+        } catch (error) {
+            console.error('❌ [DATABASE] Error creating pool:', error);
+            console.error('❌ [DATABASE] Error details:', error.message);
+            this.pool = null;
+        }
+        
+        // Initialize tables with error handling
+        this.initializeTables().catch(error => {
+            console.error('❌ [DATABASE] Failed to initialize tables:', error.message);
         });
-        this.initializeTables();
     }
 
     async initializeTables() {
-        const client = await this.pool.connect();
+        if (!this.pool) {
+            console.error('❌ [DATABASE] Cannot initialize tables - no database pool');
+            return;
+        }
+        
+        let client;
         try {
+            console.log('🔄 [DATABASE] Connecting to database...');
+            client = await this.pool.connect();
+            console.log('✅ [DATABASE] Connected to database successfully');
             // Create products table
             await client.query(`
                 CREATE TABLE IF NOT EXISTS products (
@@ -80,16 +135,24 @@ class PostgresDatabase {
                 );
             }
 
+
             console.log('✅ Database tables initialized successfully');
         } catch (error) {
             console.error('❌ Error initializing database:', error);
         } finally {
-            client.release();
+            if (client) {
+                client.release();
+            }
         }
     }
 
     // Product management methods
     async getAllProducts() {
+        if (!this.pool) {
+            console.error('❌ [DATABASE] Cannot get products - no database pool');
+            return [];
+        }
+        
         let client;
         let retries = 3;
         
@@ -157,6 +220,11 @@ class PostgresDatabase {
     }
 
     async getProductById(id) {
+        if (!this.pool) {
+            console.error('❌ [DATABASE] Cannot get product by ID - no database pool');
+            return null;
+        }
+        
         let client;
         let retries = 3;
         
@@ -237,6 +305,11 @@ class PostgresDatabase {
     }
 
     async updateProduct(id, productData) {
+        if (!this.pool) {
+            console.error('❌ [DATABASE] Cannot update product - no database pool');
+            throw new Error('Database not available');
+        }
+        
         let client;
         let retries = 3;
         
@@ -284,6 +357,21 @@ class PostgresDatabase {
                 retries--;
                 await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
             }
+        }
+    }
+
+    async updateProductStatus(id, status) {
+        try {
+            const client = await this.pool.connect();
+            const result = await client.query(
+                'UPDATE products SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *',
+                [status, id]
+            );
+            client.release();
+            return result.rows[0];
+        } catch (error) {
+            console.error('Error updating product status:', error);
+            throw error;
         }
     }
 
