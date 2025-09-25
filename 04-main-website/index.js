@@ -900,6 +900,17 @@ app.get('/api/admin/products', requireAuth, async (req, res) => {
   try {
     const products = await database.getAllProducts();
     
+    console.log('🔍 [ADMIN API] Raw products from database:', products.length);
+    products.forEach((product, index) => {
+      console.log(`🔍 [ADMIN API] Product ${index + 1}:`, {
+        id: product.id,
+        name: product.name,
+        image_urls: product.image_urls,
+        nft_url: product.nft_url,
+        nft_image_url: product.nft_image_url
+      });
+    });
+    
     // Transform products for admin dashboard compatibility
     const transformedProducts = products.map(product => ({
       ...product,
@@ -908,6 +919,18 @@ app.get('/api/admin/products', requireAuth, async (req, res) => {
       nft_image_url: product.nft_image_url || null,
       nft_url: product.nft_url || null
     }));
+    
+    console.log('🔍 [ADMIN API] Transformed products:', transformedProducts.length);
+    transformedProducts.forEach((product, index) => {
+      console.log(`🔍 [ADMIN API] Transformed Product ${index + 1}:`, {
+        id: product.id,
+        name: product.name,
+        image_url: product.image_url,
+        image_urls: product.image_urls,
+        nft_url: product.nft_url,
+        nft_image_url: product.nft_image_url
+      });
+    });
     
     res.json({ success: true, products: transformedProducts });
   } catch (error) {
