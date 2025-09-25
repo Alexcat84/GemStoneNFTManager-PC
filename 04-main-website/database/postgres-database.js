@@ -11,8 +11,15 @@ class PostgresDatabase {
         console.log('🔍 [DATABASE] DATABASE_URL found:', process.env.DATABASE_URL.substring(0, 50) + '...');
         
         try {
+            // Parse the connection string manually to avoid pg-connection-string issues
+            const url = new URL(process.env.DATABASE_URL);
+            
             this.pool = new Pool({
-                connectionString: process.env.DATABASE_URL,
+                host: url.hostname,
+                port: url.port || 5432,
+                database: url.pathname.substring(1), // Remove leading slash
+                user: url.username,
+                password: url.password,
                 ssl: {
                     rejectUnauthorized: false
                 },
@@ -20,7 +27,7 @@ class PostgresDatabase {
                 idleTimeoutMillis: 30000, // 30 seconds
                 max: 10 // Maximum number of clients in the pool
             });
-            console.log('✅ [DATABASE] Pool created successfully');
+            console.log('✅ [DATABASE] Pool created successfully with manual parsing');
         } catch (error) {
             console.error('❌ [DATABASE] Error creating pool:', error);
             this.pool = null;
