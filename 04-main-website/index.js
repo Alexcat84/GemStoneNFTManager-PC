@@ -177,13 +177,8 @@ app.get('/api/gemspots', async (req, res) => {
       console.log('🔍 [API] Gallery request - fetching all available products...');
       products = await database.getAvailableProducts();
     } else {
-      console.log('🔍 [API] Homepage request - fetching featured products...');
-      products = await database.getFeaturedProducts();
-      
-      if (products.length === 0) {
-        console.log('⚠️ [API] No featured products found, trying all available products...');
-        products = await database.getAvailableProducts();
-      }
+      console.log('🔍 [API] Homepage request - fetching all available products...');
+      products = await database.getAvailableProducts();
     }
     
     console.log('🔍 [API] Found products:', products.length);
