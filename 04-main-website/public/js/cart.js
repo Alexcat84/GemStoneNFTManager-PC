@@ -5,6 +5,7 @@ class ShoppingCart {
         this.items = this.loadCart();
         this.updateCartDisplay();
         this.bindEvents();
+        this.loadAllProducts();
     }
 
     // Load cart from localStorage
@@ -615,6 +616,24 @@ class ShoppingCart {
                 modal.remove();
             }
         });
+    }
+
+    // Load all available products for cart access
+    async loadAllProducts() {
+        try {
+            console.log('🛒 Loading all available products for cart...');
+            const response = await fetch('/api/gemspots?source=gallery');
+            const data = await response.json();
+            
+            if (data.success && data.gemspots) {
+                window.productsData = data.gemspots;
+                console.log('🛒 All products loaded for cart:', window.productsData.length, 'products');
+            } else {
+                console.warn('🛒 Failed to load all products, using existing data');
+            }
+        } catch (error) {
+            console.error('🛒 Error loading all products:', error);
+        }
     }
 }
 
