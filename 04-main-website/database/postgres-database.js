@@ -95,6 +95,7 @@ class PostgresDatabase {
                     stock_quantity INTEGER DEFAULT 1,
                     is_featured BOOLEAN DEFAULT false,
                     is_archived BOOLEAN DEFAULT false, -- For sold/archived products
+                    sold_date TIMESTAMP WITH TIME ZONE, -- Date when product was sold
                     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
                 )
@@ -368,10 +369,19 @@ class PostgresDatabase {
     async updateProductStatus(id, status) {
         try {
             const client = await this.pool.connect();
-            const result = await client.query(
-                'UPDATE products SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *',
-                [status, id]
-            );
+            let query, params;
+            
+            if (status === 'sold') {
+                // When marking as sold, also set the sold_date
+                query = 'UPDATE products SET status = $1, sold_date = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *';
+                params = [status, id];
+            } else {
+                // For other status changes, clear sold_date if it exists
+                query = 'UPDATE products SET status = $1, sold_date = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *';
+                params = [status, id];
+            }
+            
+            const result = await client.query(query, params);
             client.release();
             return result.rows[0];
         } catch (error) {
