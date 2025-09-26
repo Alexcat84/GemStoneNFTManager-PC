@@ -170,6 +170,17 @@ class PostgresDatabase {
                 )
             `);
 
+            // Add sold_date column if it doesn't exist (migration)
+            try {
+                await client.query(`
+                    ALTER TABLE products 
+                    ADD COLUMN IF NOT EXISTS sold_date TIMESTAMP WITH TIME ZONE
+                `);
+                console.log('✅ sold_date column added/verified in products table');
+            } catch (error) {
+                console.log('ℹ️ sold_date column already exists or error:', error.message);
+            }
+
             // Create product variants table for individual NFT pots
             await client.query(`
                 CREATE TABLE IF NOT EXISTS product_variants (
@@ -816,6 +827,19 @@ class PostgresDatabase {
             const client = await this.pool.connect();
             const result = await client.query('SELECT * FROM products ORDER BY created_at DESC');
             client.release();
+            
+            // Debug: Log the raw database results
+            console.log('🔍 [QR DATABASE] Raw products from DB:', result.rows);
+            result.rows.forEach((product, index) => {
+                console.log(`🔍 [QR DATABASE] Product ${index + 1}:`, {
+                    id: product.id,
+                    name: product.name,
+                    created_at: product.created_at,
+                    sold_date: product.sold_date,
+                    status: product.status
+                });
+            });
+            
             return result.rows;
         } catch (error) {
             console.error('Error getting all products:', error);
