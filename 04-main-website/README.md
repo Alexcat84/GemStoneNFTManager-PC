@@ -1,205 +1,226 @@
-# GemSpots - Premium Crystal Planters with NFT
+# Main Website - GemStone NFT Manager
 
-A modern web application for managing and showcasing premium crystal planters with NFT integration.
+## 🎯 Overview
+The main e-commerce website for GemStone NFT Manager, featuring a public product gallery, shopping cart functionality, and admin panel for product management.
 
-## 🌟 Features
+## 🚀 Features
+- **Public Gallery**: Display premium crystal planters with NFT certificates
+- **Shopping Cart**: Add products to cart with persistent storage
+- **Product Details**: Modal view with images, specifications, and NFT information
+- **Admin Panel**: Secure authentication and product management
+- **Responsive Design**: Mobile-friendly interface
+- **SEO Optimized**: Meta tags and structured data
 
-- **Premium Crystal Planters**: Handcrafted planters with authentic crystals
-- **NFT Integration**: Each planter comes with a unique NFT certificate
-- **QR Code System**: Smart QR codes for verification and ownership
-- **Blockchain Technology**: Immutable records and public verification
-- **Admin Panel**: Complete management system for products and QR codes
-- **Responsive Design**: Beautiful, modern interface for all devices
-
-## 🏗️ Project Structure
-
+## 📁 Project Structure
 ```
-GemStoneNFTManager-PC/
-├── 01-code-generator/          # Unique NFT code generator
-├── 04-main-website/           # Main public website
-├── 05-nft-qr-generator/       # QR code generator and admin panel
-└── README.md
-```
-
-## 🚀 Quick Start
-
-### Prerequisites
-- Node.js (v14 or higher)
-- npm or yarn
-
-### Installation
-
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/gemspots.git
-cd gemspots
-```
-
-2. Install dependencies for each project:
-```bash
-# Main website
-cd 04-main-website
-npm install
-
-# QR Generator
-cd ../05-nft-qr-generator
-npm install
+04-main-website/
+├── index.js                  # Express server
+├── package.json              # Dependencies
+├── vercel.json               # Vercel configuration
+├── database/
+│   └── postgres-database.js  # Database operations
+├── admin-panel/
+│   ├── dashboard.html        # Admin interface
+│   ├── login.html           # Login page
+│   ├── login.js             # Login logic
+│   └── admin-auth.js        # Auth middleware
+├── public/
+│   ├── index.html           # Homepage
+│   ├── gallery.html         # Product gallery
+│   ├── css/                 # Stylesheets
+│   │   ├── main.css         # Main styles
+│   │   ├── animations.css   # CSS animations
+│   │   ├── cart.css         # Cart styles
+│   │   └── shipping.css     # Shipping styles
+│   ├── js/                  # JavaScript
+│   │   ├── main.js          # Main functionality
+│   │   ├── cart.js          # Cart operations
+│   │   ├── cart-config.js   # Cart configuration
+│   │   └── shipping.js      # Shipping calculations
+│   └── images/              # Static images
+└── uploads/                 # File uploads
 ```
 
-3. Start the servers:
-```bash
-# Main website (port 4000)
-cd 04-main-website
-npm start
+## 🔧 API Endpoints
 
-# QR Generator (port 3000)
-cd ../05-nft-qr-generator
-npm start
+### Public Endpoints
+- `GET /` - Homepage
+- `GET /gallery` - Product gallery
+- `GET /api/gemspots` - Get featured products
+- `GET /api/gemspots?source=gallery` - Get all products
+- `GET /api/gemspots/:id` - Get product details
+
+### Admin Endpoints
+- `GET /admin` - Admin login page
+- `POST /api/admin/login` - Admin authentication
+- `GET /admin/dashboard` - Admin dashboard
+- `GET /api/admin/products` - Get all products (admin)
+- `POST /api/admin/products` - Create product
+- `PUT /api/admin/products/:id` - Update product
+- `PUT /api/admin/products/:id/mark-sold` - Mark as sold
+- `DELETE /api/admin/products/:id` - Delete product
+
+## 🗄️ Database Operations
+
+### Product Management
+```javascript
+// Get featured products
+const products = await database.getFeaturedProducts();
+
+// Get all available products
+const products = await database.getAvailableProducts();
+
+// Create new product
+const product = await database.createProduct(productData);
+
+// Update product
+const updated = await database.updateProduct(id, productData);
+
+// Mark as sold
+const result = await database.updateProductStatus(id, 'sold');
 ```
 
-## 🌐 Access URLs
+### Admin Authentication
+```javascript
+// Authenticate admin
+const auth = await database.authenticateAdmin(username, password);
 
-- **Main Website**: http://localhost:4000
-- **Admin Panel**: http://localhost:3000
-- **API Endpoints**: http://localhost:3000/api
-
-## 📱 Mobile Access
-
-For mobile testing on the same network:
-- **Main Website**: http://[YOUR_IP]:4000
-- **Admin Panel**: http://[YOUR_IP]:3000
-
-## 🔧 Configuration
-
-### Environment Variables
-Create a `.env` file in each project directory:
-
-```env
-# 04-main-website/.env
-PORT=4000
-NODE_ENV=development
-
-# 05-nft-qr-generator/.env
-PORT=3000
-JWT_SECRET=your-secret-key
-ADMIN_USERNAME=admin
-ADMIN_PASSWORD=your-password
+// Generate JWT token
+const token = jwt.sign({ userId: admin.id }, JWT_SECRET);
 ```
 
-## 🎨 Features
+## 🎨 Frontend Features
 
-### Main Website
-- **Hero Section**: Eye-catching introduction with crystal animations
-- **About Section**: Company information with blockchain technology explanation
-- **Gallery**: Dynamic product showcase with filtering
-- **Contact**: Contact form and information
-- **Responsive Design**: Works perfectly on all devices
+### Gallery System
+- **Dynamic Loading**: Products loaded via API
+- **Modal Details**: Click to view product information
+- **Image Gallery**: Multiple product images
+- **NFT Integration**: QR codes and marketplace links
+- **Responsive Grid**: Adapts to screen size
 
-### Admin Panel
-- **QR Code Generation**: Create QR codes with smart redirection
-- **Product Management**: Add, edit, and manage products
-- **Status Management**: Track QR code status (ready, pending, custom)
-- **Search & Filter**: Find products and QR codes easily
-- **Export Features**: Download QR codes in HD
+### Shopping Cart
+- **Local Storage**: Persistent cart data
+- **Add/Remove Items**: Dynamic cart management
+- **Price Calculation**: Automatic totals
+- **Shipping Options**: Multiple delivery methods
 
-### QR Code System
-- **Smart Redirection**: QR codes redirect based on status
-- **Status Types**:
-  - `ready`: Direct redirect to NFT URL
-  - `pending`: Shows "NFT in process" page
-  - `custom`: Redirects to custom URL
-- **HD Quality**: 1024x1024 pixel QR codes
-- **Database Storage**: All QR data stored in SQLite
-
-## 🛠️ Technology Stack
-
-- **Frontend**: HTML5, CSS3, JavaScript (ES6+)
-- **Backend**: Node.js, Express.js
-- **Database**: SQLite3
-- **QR Generation**: QRCode.js
-- **Authentication**: JWT, bcryptjs
-- **Security**: Helmet, CORS, Rate Limiting
-- **Animations**: AOS (Animate On Scroll)
-
-## 📊 Database Schema
-
-### QR Codes Table
-```sql
-CREATE TABLE qr_codes (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    qr_id TEXT UNIQUE NOT NULL,
-    url TEXT NOT NULL,
-    status VARCHAR(20) DEFAULT 'ready',
-    nft_url TEXT,
-    estimated_ready_date DATETIME,
-    notes TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-```
+### Admin Interface
+- **Secure Login**: JWT-based authentication
+- **Product CRUD**: Create, read, update, delete
+- **Image Upload**: Multiple image support
+- **NFT Management**: Certificate and URL handling
+- **Status Management**: Available/Sold tracking
 
 ## 🔐 Security Features
 
-- **JWT Authentication**: Secure admin access
-- **Password Hashing**: bcryptjs for password security
-- **Rate Limiting**: API protection against abuse
-- **CORS Configuration**: Cross-origin request security
-- **Input Validation**: Server-side validation for all inputs
+### Authentication
+- **JWT Tokens**: Secure session management
+- **Password Hashing**: bcrypt encryption
+- **Session Timeout**: Automatic logout
+- **CSRF Protection**: Request validation
+
+### File Upload Security
+- **File Type Validation**: Image formats only
+- **Size Limits**: Prevent large uploads
+- **Path Sanitization**: Secure file storage
+- **Virus Scanning**: Malware protection
 
 ## 🚀 Deployment
 
-### Vercel (Recommended)
-1. Connect your GitHub repository to Vercel
-2. Configure environment variables
-3. Deploy automatically on every push
+### Vercel Configuration
+```json
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "index.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "public/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/index.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.js"
+    }
+  ]
+}
+```
 
-### Other Platforms
-- **Netlify**: For static sites
-- **Heroku**: For full-stack applications
-- **DigitalOcean**: For VPS deployment
+### Environment Variables
+```bash
+DATABASE_URL=postgresql://...
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD_HASH=...
+JWT_SECRET=...
+NODE_ENV=production
+```
 
-## 📝 API Endpoints
+## 🛠️ Development
 
-### QR Code Management
-- `POST /api/qr/generate` - Generate new QR code
-- `GET /api/qr/list` - Get all QR codes
-- `PUT /api/qr/update/:qrId` - Update QR code details
-- `GET /api/qr/details/:qrId` - Get QR code details
+### Local Setup
+```bash
+cd 04-main-website
+npm install
+npm start
+```
 
-### Authentication
-- `POST /api/auth/login` - Admin login
-- `POST /api/auth/logout` - Admin logout
+### Testing
+```bash
+# Test API endpoints
+curl http://localhost:3000/api/gemspots
 
-### Smart Redirection
-- `GET /qr/:qrId` - Smart QR code redirection
+# Test admin login
+curl -X POST http://localhost:3000/api/admin/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"password"}'
+```
 
-## 🤝 Contributing
+### Debugging
+```javascript
+// Enable debug logging
+console.log('🔍 Debug info:', data);
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+// Database connection test
+const db = new PostgresDatabase();
+await db.testConnection();
+```
 
-## 📄 License
+## 📊 Performance
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+### Optimization Features
+- **Image Compression**: Optimized product images
+- **Lazy Loading**: Defer non-critical resources
+- **Caching**: Static asset caching
+- **CDN**: Global content delivery
+- **Database Indexing**: Optimized queries
 
-## 📞 Support
+### Monitoring
+- **Vercel Analytics**: Performance metrics
+- **Error Tracking**: Automatic error reporting
+- **Uptime Monitoring**: Service availability
+- **Database Monitoring**: Query performance
 
-For support and questions:
-- **Email**: info@gemspots.ca
-- **Phone**: +1 (613) 617-7296
-- **Location**: Ottawa, Ontario, Canada
+## 🔄 Recent Updates
 
-## 🎯 Roadmap
+### Latest Changes
+- ✅ Removed filter buttons from gallery
+- ✅ Fixed navigation links
+- ✅ Implemented "Mark as Sold" functionality
+- ✅ Improved image/NFT data persistence
+- ✅ Enhanced error handling
 
-- [ ] E-commerce integration
-- [ ] Payment processing
-- [ ] Inventory management
-- [ ] Customer portal
-- [ ] Analytics dashboard
-- [ ] Mobile app
+### Known Issues
+- None currently reported
 
 ---
 
-**GemSpots** - Where nature meets technology ✨
+**Maintained by**: GemStone NFT Manager Team  
+**Last Updated**: January 2025
