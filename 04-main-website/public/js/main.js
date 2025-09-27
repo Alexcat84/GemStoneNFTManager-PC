@@ -153,7 +153,7 @@ async function loadGallery() {
         const data = await response.json();
         
         if (data.success) {
-            displayGallery(data.gemspots.slice(0, 4)); // Show only first 4 items on homepage
+            displayGallery(data.gemspots); // Show all featured products on homepage
         }
     } catch (error) {
         console.error('Error loading gallery:', error);
