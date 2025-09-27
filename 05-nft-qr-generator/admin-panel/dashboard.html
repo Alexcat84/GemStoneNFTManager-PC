@@ -749,6 +749,29 @@
             margin-bottom: 1rem;
         }
 
+        .product-timestamps {
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border-left: 3px solid #667eea;
+        }
+
+        .timestamp {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 0.25rem;
+        }
+
+        .timestamp:last-child {
+            margin-bottom: 0;
+        }
+
+        .sold-timestamp {
+            color: #dc3545;
+            font-weight: 500;
+        }
+
         .status-available {
             background: #d4edda;
             color: #155724;
@@ -2058,6 +2081,16 @@
                                 <div class="product-name">${product.name}</div>
                                 <div class="product-price">$${product.price}</div>
                                 <div class="product-status status-${product.status}">${product.status}</div>
+                                <div class="product-timestamps">
+                                    <div class="timestamp">
+                                        <strong>Created:</strong> ${new Date(product.created_at).toLocaleString()}
+                                    </div>
+                                    ${product.sold_date ? `
+                                        <div class="timestamp sold-timestamp">
+                                            <strong>Sold:</strong> ${new Date(product.sold_date).toLocaleString()}
+                                        </div>
+                                    ` : ''}
+                                </div>
                                 <div class="product-actions">
                                     <button class="btn btn-small btn-edit" onclick="editProduct(${product.id})">
                                         Edit

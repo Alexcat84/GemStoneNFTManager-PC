@@ -902,23 +902,44 @@ class PostgresDatabase {
                 is_featured, is_archived
             } = productData;
 
+            // First, get the current product to check status change
+            const currentProduct = await client.query('SELECT status FROM products WHERE id = $1', [id]);
+            const currentStatus = currentProduct.rows[0]?.status;
+
+            console.log(`🔄 [QR DATABASE] Updating product ${id} - Current status: ${currentStatus}, New status: ${status}`);
+
+            // Determine sold_date handling based on status change
+            let soldDateClause = '';
+            let queryParams = [
+                name, description, price, image_urls, nft_url, nft_image_url,
+                status, category, dimensions, weight, crystal_type, rarity,
+                energy_properties, personality_target, stock_quantity,
+                is_featured, is_archived, id
+            ];
+
+            if (status === 'sold' && currentStatus !== 'sold') {
+                // Product is being marked as sold for the first time
+                console.log(`🔄 [QR DATABASE] Setting sold_date for product ${id} (status changed to sold)`);
+                soldDateClause = ', sold_date = CURRENT_TIMESTAMP';
+            } else if (status !== 'sold' && currentStatus === 'sold') {
+                // Product is being changed from sold to another status
+                console.log(`🔄 [QR DATABASE] Clearing sold_date for product ${id} (status changed from sold)`);
+                soldDateClause = ', sold_date = NULL';
+            }
+
             const result = await client.query(`
                 UPDATE products SET
                     name = $1, description = $2, price = $3, image_urls = $4,
                     nft_url = $5, nft_image_url = $6, status = $7, category = $8,
                     dimensions = $9, weight = $10, crystal_type = $11, rarity = $12,
                     energy_properties = $13, personality_target = $14, stock_quantity = $15,
-                    is_featured = $16, is_archived = $17, updated_at = CURRENT_TIMESTAMP
+                    is_featured = $16, is_archived = $17, updated_at = CURRENT_TIMESTAMP${soldDateClause}
                 WHERE id = $18
                 RETURNING *
-            `, [
-                name, description, price, image_urls, nft_url, nft_image_url,
-                status, category, dimensions, weight, crystal_type, rarity,
-                energy_properties, personality_target, stock_quantity,
-                is_featured, is_archived, id
-            ]);
+            `, queryParams);
 
             client.release();
+            console.log(`✅ [QR DATABASE] Product ${id} updated. New sold_date: ${result.rows[0].sold_date}`);
             return result.rows[0];
         } catch (error) {
             console.error('Error updating product:', error);
