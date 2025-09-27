@@ -697,8 +697,10 @@ app.put('/api/admin/products/:productId/mark-sold', requireAuth, async (req, res
     const result = await nftDatabase.updateProductStatus(productId, 'sold');
     
     if (result) {
-      res.json({ success: true, message: 'Product marked as sold successfully' });
+      console.log(`✅ [WEBSITE ADMIN] Product ${productId} marked as sold successfully. sold_date: ${result.sold_date}`);
+      res.json({ success: true, message: 'Product marked as sold successfully', product: result });
     } else {
+      console.log(`❌ [WEBSITE ADMIN] Product ${productId} not found`);
       res.status(404).json({ success: false, message: 'Product not found' });
     }
   } catch (error) {

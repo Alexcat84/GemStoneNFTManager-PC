@@ -964,19 +964,30 @@ class PostgresDatabase {
             const client = await this.pool.connect();
             let query, params;
             
+            console.log(`🔄 [QR DATABASE] updateProductStatus called - Product ID: ${id}, New status: ${status}`);
+            
             if (status === 'sold') {
                 // When marking as sold, also set the sold_date
+                console.log(`🔄 [QR DATABASE] Setting sold_date for product ${id}`);
                 query = 'UPDATE products SET status = $1, sold_date = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *';
                 params = [status, id];
             } else {
                 // For other status changes, clear sold_date if it exists
+                console.log(`🔄 [QR DATABASE] Clearing sold_date for product ${id} (status changed to ${status})`);
                 query = 'UPDATE products SET status = $1, sold_date = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *';
                 params = [status, id];
             }
             
             const result = await client.query(query, params);
             client.release();
-            return result.rows[0];
+            
+            if (result.rows.length > 0) {
+                console.log(`✅ [QR DATABASE] Product ${id} status updated to ${status}. sold_date: ${result.rows[0].sold_date}`);
+                return result.rows[0];
+            } else {
+                console.log(`❌ [QR DATABASE] No product found with ID ${id}`);
+                return null;
+            }
         } catch (error) {
             console.error('Error updating product status:', error);
             throw error;
