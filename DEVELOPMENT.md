@@ -494,6 +494,31 @@ vercel build
 vercel env ls
 ```
 
+#### 5. Vercel Branch Synchronization Issues
+**Problem**: Deployments failing with "Root Directory does not exist"
+**Quick Fix**:
+```bash
+# Check branch status
+git branch -a
+git log --oneline -3
+
+# Force synchronization
+git checkout main
+echo "# Force deployment" > force-deploy.txt
+git add force-deploy.txt
+git commit -m "Force new deployment - trigger Vercel with current structure"
+git push origin main
+
+# Sync master branch
+git checkout master
+git merge main
+git push origin master
+git checkout main
+
+# Verify both branches point to same commit
+git ls-remote --heads origin
+```
+
 ## 📚 Resources
 
 ### Documentation

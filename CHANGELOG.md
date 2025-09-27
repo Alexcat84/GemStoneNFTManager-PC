@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2025-01-27
+
+### Fixed
+- **Vercel Branch Synchronization Issues**
+  - Resolved "Root Directory does not exist" deployment errors
+  - Fixed deployments using outdated commits from `master` branch
+  - Synchronized `main` and `master` branches to ensure consistent deployments
+  - Added comprehensive troubleshooting documentation for branch synchronization issues
+
+### Documentation
+- **Troubleshooting Guide Updates**
+  - Added detailed solution for Vercel branch synchronization problems
+  - Included step-by-step commands for fixing deployment issues
+  - Added prevention strategies for future branch conflicts
+  - Updated both README.md and DEVELOPMENT.md with new troubleshooting section
+
 ## [1.0.0] - 2025-01-25
 
 ### Added

@@ -398,6 +398,60 @@ echo "JWT_SECRET=your_secret_here" >> .env
 - Verify file system permissions
 - Ensure proper URL encoding
 
+#### 6. Vercel Branch Synchronization Issues
+**Problem**: Deployments failing with "Root Directory does not exist" error
+**Symptoms**:
+- Vercel shows "Build Failed" status
+- Error: "The specified Root Directory '05-nft-qr-generator' does not exist"
+- Deployments using old commits instead of current code
+- Multiple failed deployments in a row
+
+**Root Cause**: 
+Vercel is configured to deploy from `master` branch, but the current code is in `main` branch, causing it to use outdated commits with different directory structure.
+
+**Solution**:
+1. **Check current branch status**:
+   ```bash
+   git branch -a
+   git log --oneline -3
+   ```
+
+2. **Synchronize both branches**:
+   ```bash
+   # Ensure you're on main branch
+   git checkout main
+   
+   # Create a trigger commit
+   echo "# Force deployment" > force-deploy.txt
+   git add force-deploy.txt
+   git commit -m "Force new deployment - trigger Vercel with current structure"
+   git push origin main
+   
+   # Update master branch with current code
+   git checkout master
+   git merge main
+   git push origin master
+   
+   # Return to main
+   git checkout main
+   ```
+
+3. **Verify synchronization**:
+   ```bash
+   git ls-remote --heads origin
+   # Both main and master should point to the same commit
+   ```
+
+4. **Monitor Vercel deployments**:
+   - Check Vercel dashboard for new deployments
+   - Verify deployments use the latest commit
+   - Confirm "Ready" status instead of "Error"
+
+**Prevention**:
+- Always keep `main` and `master` branches synchronized
+- Use consistent branch naming across all tools
+- Consider configuring Vercel to use `main` branch instead of `master`
+
 ### Debug Commands
 ```bash
 # Check database connection
