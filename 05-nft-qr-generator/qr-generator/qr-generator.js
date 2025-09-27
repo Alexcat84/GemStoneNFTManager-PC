@@ -124,8 +124,7 @@ class QRGenerator {
         const client = await this.pool.connect();
         try {
             const result = await client.query(`
-                SELECT qr_id as id, url, status, nft_url, estimated_ready_date, notes, qr_data, created_at,
-                       to_char(created_at, 'YYYY-MM-DD HH24:MI:SS') as timestamp
+                SELECT qr_id as id, url, status, nft_url, estimated_ready_date, notes, qr_data, created_at
                 FROM qr_codes 
                 ORDER BY created_at DESC
             `);
@@ -139,8 +138,7 @@ class QRGenerator {
         const client = await this.pool.connect();
         try {
             const result = await client.query(`
-                SELECT qr_id as id, url, status, nft_url, estimated_ready_date, notes, qr_data, created_at,
-                       to_char(created_at, 'YYYY-MM-DD HH24:MI:SS') as timestamp
+                SELECT qr_id as id, url, status, nft_url, estimated_ready_date, notes, qr_data, created_at
                 FROM qr_codes 
                 WHERE qr_id = $1
             `, [qrId]);
