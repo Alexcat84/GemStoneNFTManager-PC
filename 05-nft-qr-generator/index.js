@@ -491,7 +491,8 @@ app.get('/api/admin/products', requireAuth, async (req, res) => {
       personality_target: product.personality_target,
       is_featured: product.is_featured,
       is_archived: product.is_archived,
-      created_at: product.created_at
+      created_at: product.created_at,
+      sold_date: product.sold_date // ✅ FIXED: Include sold_date in response
     }));
     
     res.json({ success: true, products: transformedProducts });
