@@ -692,7 +692,7 @@ app.delete('/api/admin/products/:productId', requireAuth, async (req, res) => {
 app.put('/api/admin/products/:productId/mark-sold', requireAuth, async (req, res) => {
   try {
     const { productId } = req.params;
-    console.log(`💰 [WEBSITE ADMIN] Marking product ${productId} as sold...`);
+    console.log(`💰 [WEBSITE ADMIN] Marking product ${productId} as sold... (v2)`);
     
     const result = await nftDatabase.updateProductStatus(productId, 'sold');
     
