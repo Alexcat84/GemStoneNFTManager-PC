@@ -218,9 +218,9 @@
                     successMessage.textContent = 'Inicio de sesión exitoso. Redirigiendo...';
                     successMessage.style.display = 'block';
                     
-                    // Redirect to dashboard
+                    // Redirect to dashboard with token
                     setTimeout(() => {
-                        window.location.href = '/dashboard';
+                        window.location.href = `/dashboard?token=${data.token}`;
                     }, 1000);
                 } else {
                     errorMessage.textContent = data.message || 'Error al iniciar sesión';

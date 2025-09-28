@@ -52,6 +52,8 @@ const requireAuth = (req, res, next) => {
   
   console.log('Auth check - token:', token ? 'present' : 'missing');
   console.log('Auth check - URL:', req.url);
+  console.log('Auth check - headers:', req.headers.authorization ? 'present' : 'missing');
+  console.log('Auth check - query:', req.query.token ? 'present' : 'missing');
   
   if (!token) {
     console.log('No token provided');
