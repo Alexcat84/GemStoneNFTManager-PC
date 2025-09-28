@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GemStone NFT Reports - Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+
+        .nav-links a:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .tabs {
+            display: flex;
+            background: white;
+            border-radius: 10px 10px 0 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 1rem 2rem;
+            background: #f8f9fa;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab-button.active {
+            background: white;
+            border-bottom-color: #667eea;
+            color: #667eea;
+        }
+
+        .tab-button:hover {
+            background: #e9ecef;
+        }
+
+        .tab-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            min-height: 600px;
+        }
+
+        .tab-panel {
+            display: none;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        .reports-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .reports-title {
+            font-size: 1.5rem;
+            color: #333;
+        }
+
+        .export-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.3s;
+        }
+
+        .export-btn:hover {
+            background: #218838;
+        }
+
+        .filters {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .filter-group label {
+            font-weight: 500;
+            color: #555;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #555;
+            position: sticky;
+            top: 0;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-ready {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-available {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .status-sold {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .featured-badge {
+            background: #ffc107;
+            color: #212529;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 2rem;
+        }
+
+        .pagination button {
+            padding: 0.5rem 1rem;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+
+        .pagination button:hover {
+            background: #f8f9fa;
+        }
+
+        .pagination button.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+
+        .no-data-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .nav-links {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .container {
+                padding: 0 1rem;
+            }
+
+            .filters {
+                flex-direction: column;
+            }
+
+            .reports-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div class="logo">📊 GemStone NFT Reports</div>
+            <div class="nav-links">
+                <a href="#" onclick="changePassword()">Cambiar Contraseña</a>
+                <a href="#" onclick="logout()">Cerrar Sesión</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="tabs">
+            <button class="tab-button active" onclick="switchTab('qr-reports')">
+                📱 QR Codes Report
+            </button>
+            <button class="tab-button" onclick="switchTab('codes-reports')">
+                🔢 Generated Codes Report
+            </button>
+            <button class="tab-button" onclick="switchTab('products-reports')">
+                💎 Products Report
+            </button>
+        </div>
+
+        <div class="tab-content">
+            <!-- QR Codes Report -->
+            <div id="qr-reports" class="tab-panel active">
+                <div class="reports-header">
+                    <h2 class="reports-title">QR Codes Report</h2>
+                    <button class="export-btn" onclick="exportQRCSV()">Exportar CSV</button>
+                </div>
+                
+                <div class="filters">
+                    <div class="filter-group">
+                        <label for="qrSearch">Buscar:</label>
+                        <input type="text" id="qrSearch" placeholder="Buscar por URL o ID..." onkeyup="filterQRReports()">
+                    </div>
+                    <div class="filter-group">
+                        <label for="qrStatusFilter">Estado:</label>
+                        <select id="qrStatusFilter" onchange="filterQRReports()">
+                            <option value="">Todos</option>
+                            <option value="pending">Pending</option>
+                            <option value="ready">Ready</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>URL</th>
+                                <th>Redirect To</th>
+                                <th>Estado</th>
+                                <th>Fecha Creación</th>
+                                <th>Notas</th>
+                            </tr>
+                        </thead>
+                        <tbody id="qrReportsTableBody">
+                            <tr>
+                                <td colspan="6" class="loading">
+                                    <div class="spinner"></div>
+                                    Cargando datos...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="pagination" id="qrPagination"></div>
+            </div>
+
+            <!-- Generated Codes Report -->
+            <div id="codes-reports" class="tab-panel">
+                <div class="reports-header">
+                    <h2 class="reports-title">Generated Codes Report</h2>
+                    <button class="export-btn" onclick="exportCodesCSV()">Exportar CSV</button>
+                </div>
+                
+                <div class="filters">
+                    <div class="filter-group">
+                        <label for="codesSearch">Buscar:</label>
+                        <input type="text" id="codesSearch" placeholder="Buscar por código o gemstone..." onkeyup="filterCodesReports()">
+                    </div>
+                    <div class="filter-group">
+                        <label for="codesLocationFilter">Ubicación:</label>
+                        <select id="codesLocationFilter" onchange="filterCodesReports()">
+                            <option value="">Todas</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Código Completo</th>
+                                <th>Gemstones</th>
+                                <th>Ubicación</th>
+                                <th>Mes/Año</th>
+                                <th>Número Pieza</th>
+                                <th>Fecha Generación</th>
+                                <th>Notas</th>
+                            </tr>
+                        </thead>
+                        <tbody id="codesReportsTableBody">
+                            <tr>
+                                <td colspan="8" class="loading">
+                                    <div class="spinner"></div>
+                                    Cargando datos...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="pagination" id="codesPagination"></div>
+            </div>
+
+            <!-- Products Report -->
+            <div id="products-reports" class="tab-panel">
+                <div class="reports-header">
+                    <h2 class="reports-title">Products Report</h2>
+                    <button class="export-btn" onclick="exportProductsCSV()">Exportar CSV</button>
+                </div>
+                
+                <div class="filters">
+                    <div class="filter-group">
+                        <label for="productsSearch">Buscar:</label>
+                        <input type="text" id="productsSearch" placeholder="Buscar por nombre o tipo..." onkeyup="filterProductsReports()">
+                    </div>
+                    <div class="filter-group">
+                        <label for="productsStatusFilter">Estado:</label>
+                        <select id="productsStatusFilter" onchange="filterProductsReports()">
+                            <option value="">Todos</option>
+                            <option value="available">Available</option>
+                            <option value="sold">Sold</option>
+                            <option value="reserved">Reserved</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="productsFeaturedFilter">Featured:</label>
+                        <select id="productsFeaturedFilter" onchange="filterProductsReports()">
+                            <option value="">Todos</option>
+                            <option value="true">Featured</option>
+                            <option value="false">Not Featured</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre</th>
+                                <th>Precio</th>
+                                <th>Estado</th>
+                                <th>Featured</th>
+                                <th>Tipo Cristal</th>
+                                <th>Rareza</th>
+                                <th>Fecha Creación</th>
+                                <th>Fecha Venta</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productsReportsTableBody">
+                            <tr>
+                                <td colspan="9" class="loading">
+                                    <div class="spinner"></div>
+                                    Cargando datos...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="pagination" id="productsPagination"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let qrReportsData = [];
+        let codesReportsData = [];
+        let productsReportsData = [];
+        
+        let qrReportsFiltered = [];
+        let codesReportsFiltered = [];
+        let productsReportsFiltered = [];
+        
+        let qrCurrentPage = 1;
+        let codesCurrentPage = 1;
+        let productsCurrentPage = 1;
+        const pageSize = 50;
+
+        // Check authentication on page load
+        window.addEventListener('load', function() {
+            const token = localStorage.getItem('adminToken');
+            if (!token) {
+                window.location.href = '/';
+                return;
+            }
+            
+            // Load initial data
+            loadQRReports();
+            loadCodesReports();
+            loadProductsReports();
+        });
+
+        // Tab switching
+        function switchTab(tabName) {
+            // Remove active class from all tabs and panels
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+            
+            // Add active class to selected tab and panel
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+
+        // QR Reports Functions
+        async function loadQRReports() {
+            try {
+                const response = await fetch('/api/reports/qrs', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    qrReportsData = data.qrs || [];
+                    qrReportsFiltered = [...qrReportsData];
+                    renderQRReports();
+                } else {
+                    throw new Error('Failed to load QR reports');
+                }
+            } catch (error) {
+                console.error('Error loading QR reports:', error);
+                document.getElementById('qrReportsTableBody').innerHTML = 
+                    '<tr><td colspan="6" class="no-data"><div class="no-data-icon">❌</div>Error cargando datos</td></tr>';
+            }
+        }
+
+        function renderQRReports() {
+            const tbody = document.getElementById('qrReportsTableBody');
+            const startIndex = (qrCurrentPage - 1) * pageSize;
+            const endIndex = startIndex + pageSize;
+            const pageData = qrReportsFiltered.slice(startIndex, endIndex);
+            
+            if (pageData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="no-data"><div class="no-data-icon">📱</div>No hay datos de QR codes</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = pageData.map(qr => `
+                <tr>
+                    <td>${qr.id}</td>
+                    <td>${qr.url}</td>
+                    <td>${qr.nft_url || 'N/A'}</td>
+                    <td><span class="status-badge status-${qr.status}">${qr.status}</span></td>
+                    <td>${new Date(qr.created_at).toLocaleString()}</td>
+                    <td>${qr.notes || 'N/A'}</td>
+                </tr>
+            `).join('');
+            
+            renderPagination('qrPagination', qrCurrentPage, Math.ceil(qrReportsFiltered.length / pageSize), 'qr');
+        }
+
+        function filterQRReports() {
+            const search = document.getElementById('qrSearch').value.toLowerCase();
+            const statusFilter = document.getElementById('qrStatusFilter').value;
+            
+            qrReportsFiltered = qrReportsData.filter(qr => {
+                const matchesSearch = !search || 
+                    qr.url.toLowerCase().includes(search) || 
+                    qr.id.toString().includes(search);
+                const matchesStatus = !statusFilter || qr.status === statusFilter;
+                
+                return matchesSearch && matchesStatus;
+            });
+            
+            qrCurrentPage = 1;
+            renderQRReports();
+        }
+
+        function exportQRCSV() {
+            const headers = ['ID', 'URL', 'Redirect To', 'Estado', 'Fecha Creación', 'Notas'];
+            const csvContent = [
+                headers.join(','),
+                ...qrReportsFiltered.map(qr => [
+                    qr.id,
+                    `"${qr.url}"`,
+                    `"${qr.nft_url || 'N/A'}"`,
+                    qr.status,
+                    new Date(qr.created_at).toLocaleString(),
+                    `"${qr.notes || 'N/A'}"`
+                ].join(','))
+            ].join('\n');
+            
+            downloadCSV(csvContent, 'qr-codes-report.csv');
+        }
+
+        // Codes Reports Functions
+        async function loadCodesReports() {
+            try {
+                const response = await fetch('/api/reports/codes', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    codesReportsData = data.codes || [];
+                    codesReportsFiltered = [...codesReportsData];
+                    renderCodesReports();
+                    populateLocationFilter();
+                } else {
+                    throw new Error('Failed to load codes reports');
+                }
+            } catch (error) {
+                console.error('Error loading codes reports:', error);
+                document.getElementById('codesReportsTableBody').innerHTML = 
+                    '<tr><td colspan="8" class="no-data"><div class="no-data-icon">❌</div>Error cargando datos</td></tr>';
+            }
+        }
+
+        function renderCodesReports() {
+            const tbody = document.getElementById('codesReportsTableBody');
+            const startIndex = (codesCurrentPage - 1) * pageSize;
+            const endIndex = startIndex + pageSize;
+            const pageData = codesReportsFiltered.slice(startIndex, endIndex);
+            
+            if (pageData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="no-data"><div class="no-data-icon">🔢</div>No hay datos de códigos generados</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = pageData.map(code => `
+                <tr>
+                    <td>${code.id}</td>
+                    <td>${code.full_code}</td>
+                    <td>${JSON.parse(code.gemstone_names).join(', ')}</td>
+                    <td>${code.region}, ${code.country}</td>
+                    <td>${code.month}/${code.year}</td>
+                    <td>${code.piece_number}</td>
+                    <td>${new Date(code.generation_date).toLocaleString()}</td>
+                    <td>${code.notes || 'N/A'}</td>
+                </tr>
+            `).join('');
+            
+            renderPagination('codesPagination', codesCurrentPage, Math.ceil(codesReportsFiltered.length / pageSize), 'codes');
+        }
+
+        function filterCodesReports() {
+            const search = document.getElementById('codesSearch').value.toLowerCase();
+            const locationFilter = document.getElementById('codesLocationFilter').value;
+            
+            codesReportsFiltered = codesReportsData.filter(code => {
+                const matchesSearch = !search || 
+                    code.full_code.toLowerCase().includes(search) || 
+                    code.gemstone_names.toLowerCase().includes(search);
+                const matchesLocation = !locationFilter || 
+                    `${code.region}, ${code.country}` === locationFilter;
+                
+                return matchesSearch && matchesLocation;
+            });
+            
+            codesCurrentPage = 1;
+            renderCodesReports();
+        }
+
+        function populateLocationFilter() {
+            const select = document.getElementById('codesLocationFilter');
+            const locations = [...new Set(codesReportsData.map(code => `${code.region}, ${code.country}`))].sort();
+            
+            select.innerHTML = '<option value="">Todas</option>' +
+                locations.map(location => `<option value="${location}">${location}</option>`).join('');
+        }
+
+        function exportCodesCSV() {
+            const headers = ['ID', 'Código Completo', 'Gemstones', 'Ubicación', 'Mes/Año', 'Número Pieza', 'Fecha Generación', 'Notas'];
+            const csvContent = [
+                headers.join(','),
+                ...codesReportsFiltered.map(code => [
+                    code.id,
+                    code.full_code,
+                    `"${JSON.parse(code.gemstone_names).join(', ')}"`,
+                    `"${code.region}, ${code.country}"`,
+                    `${code.month}/${code.year}`,
+                    code.piece_number,
+                    new Date(code.generation_date).toLocaleString(),
+                    `"${code.notes || 'N/A'}"`
+                ].join(','))
+            ].join('\n');
+            
+            downloadCSV(csvContent, 'generated-codes-report.csv');
+        }
+
+        // Products Reports Functions
+        async function loadProductsReports() {
+            try {
+                const response = await fetch('/api/reports/products', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    productsReportsData = data.products || [];
+                    productsReportsFiltered = [...productsReportsData];
+                    renderProductsReports();
+                } else {
+                    throw new Error('Failed to load products reports');
+                }
+            } catch (error) {
+                console.error('Error loading products reports:', error);
+                document.getElementById('productsReportsTableBody').innerHTML = 
+                    '<tr><td colspan="9" class="no-data"><div class="no-data-icon">❌</div>Error cargando datos</td></tr>';
+            }
+        }
+
+        function renderProductsReports() {
+            const tbody = document.getElementById('productsReportsTableBody');
+            const startIndex = (productsCurrentPage - 1) * pageSize;
+            const endIndex = startIndex + pageSize;
+            const pageData = productsReportsFiltered.slice(startIndex, endIndex);
+            
+            if (pageData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" class="no-data"><div class="no-data-icon">💎</div>No hay datos de productos</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = pageData.map(product => `
+                <tr>
+                    <td>${product.id}</td>
+                    <td>${product.name}</td>
+                    <td>$${product.price}</td>
+                    <td><span class="status-badge status-${product.status}">${product.status}</span></td>
+                    <td>${product.is_featured ? '<span class="featured-badge">Featured</span>' : 'No'}</td>
+                    <td>${product.crystal_type || 'N/A'}</td>
+                    <td>${product.rarity || 'N/A'}</td>
+                    <td>${new Date(product.created_at).toLocaleString()}</td>
+                    <td>${product.sold_date ? new Date(product.sold_date).toLocaleString() : 'N/A'}</td>
+                </tr>
+            `).join('');
+            
+            renderPagination('productsPagination', productsCurrentPage, Math.ceil(productsReportsFiltered.length / pageSize), 'products');
+        }
+
+        function filterProductsReports() {
+            const search = document.getElementById('productsSearch').value.toLowerCase();
+            const statusFilter = document.getElementById('productsStatusFilter').value;
+            const featuredFilter = document.getElementById('productsFeaturedFilter').value;
+            
+            productsReportsFiltered = productsReportsData.filter(product => {
+                const matchesSearch = !search || 
+                    product.name.toLowerCase().includes(search) || 
+                    (product.crystal_type && product.crystal_type.toLowerCase().includes(search));
+                const matchesStatus = !statusFilter || product.status === statusFilter;
+                const matchesFeatured = featuredFilter === '' || 
+                    (featuredFilter === 'true' && product.is_featured) ||
+                    (featuredFilter === 'false' && !product.is_featured);
+                
+                return matchesSearch && matchesStatus && matchesFeatured;
+            });
+            
+            productsCurrentPage = 1;
+            renderProductsReports();
+        }
+
+        function exportProductsCSV() {
+            const headers = ['ID', 'Nombre', 'Precio', 'Estado', 'Featured', 'Tipo Cristal', 'Rareza', 'Fecha Creación', 'Fecha Venta'];
+            const csvContent = [
+                headers.join(','),
+                ...productsReportsFiltered.map(product => [
+                    product.id,
+                    `"${product.name}"`,
+                    product.price,
+                    product.status,
+                    product.is_featured ? 'Yes' : 'No',
+                    `"${product.crystal_type || 'N/A'}"`,
+                    `"${product.rarity || 'N/A'}"`,
+                    new Date(product.created_at).toLocaleString(),
+                    product.sold_date ? new Date(product.sold_date).toLocaleString() : 'N/A'
+                ].join(','))
+            ].join('\n');
+            
+            downloadCSV(csvContent, 'products-report.csv');
+        }
+
+        // Utility Functions
+        function renderPagination(containerId, currentPage, totalPages, type) {
+            const container = document.getElementById(containerId);
+            if (totalPages <= 1) {
+                container.innerHTML = '';
+                return;
+            }
+            
+            let paginationHTML = '';
+            
+            // Previous button
+            paginationHTML += `<button ${currentPage === 1 ? 'disabled' : ''} onclick="changePage('${type}', ${currentPage - 1})">Anterior</button>`;
+            
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+                    paginationHTML += `<button class="${i === currentPage ? 'active' : ''}" onclick="changePage('${type}', ${i})">${i}</button>`;
+                } else if (i === currentPage - 3 || i === currentPage + 3) {
+                    paginationHTML += '<span>...</span>';
+                }
+            }
+            
+            // Next button
+            paginationHTML += `<button ${currentPage === totalPages ? 'disabled' : ''} onclick="changePage('${type}', ${currentPage + 1})">Siguiente</button>`;
+            
+            container.innerHTML = paginationHTML;
+        }
+
+        function changePage(type, page) {
+            if (type === 'qr') {
+                qrCurrentPage = page;
+                renderQRReports();
+            } else if (type === 'codes') {
+                codesCurrentPage = page;
+                renderCodesReports();
+            } else if (type === 'products') {
+                productsCurrentPage = page;
+                renderProductsReports();
+            }
+        }
+
+        function downloadCSV(content, filename) {
+            const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', filename);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Authentication Functions
+        function logout() {
+            localStorage.removeItem('adminToken');
+            localStorage.removeItem('adminUser');
+            localStorage.removeItem('sessionId');
+            window.location.href = '/';
+        }
+
+        function changePassword() {
+            const newPassword = prompt('Ingresa tu nueva contraseña (mínimo 8 caracteres):');
+            if (newPassword && newPassword.length >= 8) {
+                // Implement password change functionality
+                alert('Funcionalidad de cambio de contraseña en desarrollo');
+            } else if (newPassword) {
+                alert('La contraseña debe tener al menos 8 caracteres');
+            }
+        }
+    </script>
+</body>
+</html>

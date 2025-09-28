@@ -1,0 +1,32 @@
+{
+  "name": "nft-reports",
+  "version": "1.0.0",
+  "description": "Sistema de Reportes para GemStone NFT Manager",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "build": "echo 'No build step required for this project'"
+  },
+  "keywords": [
+    "nft",
+    "reports",
+    "gemstone",
+    "dashboard",
+    "analytics"
+  ],
+  "author": "GemStone NFT Manager",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "express-rate-limit": "^7.1.5",
+    "pg": "^8.11.3"
+  },
+  "engines": {
+    "node": "18.x"
+  }
+}
