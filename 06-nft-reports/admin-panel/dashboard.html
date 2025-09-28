@@ -521,7 +521,9 @@
         // Check authentication on page load
         window.addEventListener('load', function() {
             const token = localStorage.getItem('adminToken');
+            console.log('Dashboard loaded, token:', token);
             if (!token) {
+                console.log('No token found, redirecting to login');
                 window.location.href = '/';
                 return;
             }

@@ -207,9 +207,13 @@
                 
                 if (data.success) {
                     // Store token and user info
+                    console.log('Storing token:', data.token);
                     localStorage.setItem('adminToken', data.token);
                     localStorage.setItem('adminUser', JSON.stringify(data.user));
                     localStorage.setItem('sessionId', data.sessionId);
+                    
+                    // Verify token was stored
+                    console.log('Token stored:', localStorage.getItem('adminToken'));
                     
                     successMessage.textContent = 'Inicio de sesión exitoso. Redirigiendo...';
                     successMessage.style.display = 'block';
