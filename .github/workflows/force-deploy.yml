@@ -1,0 +1,30 @@
+name: Force Deploy to Vercel
+
+on:
+  workflow_dispatch:  # Permite ejecutar manualmente
+  push:
+    branches: [ main ]
+    paths:
+      - '05-nft-qr-generator/**'
+      - '04-main-website/**'
+
+jobs:
+  deploy-qr-generator:
+    runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.message, 'force-deploy') || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Deploy QR Generator
+        run: |
+          curl -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_QR }}"
+        env:
+          VERCEL_DEPLOY_HOOK_QR: ${{ secrets.VERCEL_DEPLOY_HOOK_QR }}
+
+  deploy-main-website:
+    runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.message, 'force-deploy') || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Deploy Main Website
+        run: |
+          curl -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_MAIN }}"
+        env:
+          VERCEL_DEPLOY_HOOK_MAIN: ${{ secrets.VERCEL_DEPLOY_HOOK_MAIN }}
