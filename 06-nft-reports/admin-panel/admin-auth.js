@@ -26,37 +26,45 @@ class AdminAuth {
     }
 
     async createAdminTable() {
-        const client = await this.pool.connect();
+        if (!this.pool) {
+            console.log('⚠️ [AUTH] Database pool not available, skipping table creation');
+            return;
+        }
+        
         try {
-            const createTableQuery = `
-                CREATE TABLE IF NOT EXISTS admin_users (
-                    id SERIAL PRIMARY KEY,
-                    username VARCHAR(50) UNIQUE NOT NULL,
-                    password_hash TEXT NOT NULL,
-                    role VARCHAR(20) DEFAULT 'admin',
-                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-                )
-            `;
+            const client = await this.pool.connect();
+            try {
+                const createTableQuery = `
+                    CREATE TABLE IF NOT EXISTS admin_users (
+                        id SERIAL PRIMARY KEY,
+                        username VARCHAR(50) UNIQUE NOT NULL,
+                        password_hash TEXT NOT NULL,
+                        role VARCHAR(20) DEFAULT 'admin',
+                        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                    )
+                `;
 
-            await client.query(createTableQuery);
-            
-            // Insert default admin if not exists
-            const checkAdmin = await client.query('SELECT * FROM admin_users WHERE username = $1', ['admin']);
-            if (checkAdmin.rows.length === 0) {
-                const defaultPassword = process.env.ADMIN_PASSWORD_HASH || '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi';
-                await client.query(
-                    'INSERT INTO admin_users (username, password_hash, role) VALUES ($1, $2, $3)',
-                    ['admin', defaultPassword, 'admin']
-                );
-                console.log('Default admin user created');
+                await client.query(createTableQuery);
+                
+                // Insert default admin if not exists
+                const checkAdmin = await client.query('SELECT * FROM admin_users WHERE username = $1', ['admin']);
+                if (checkAdmin.rows.length === 0) {
+                    const defaultPassword = process.env.ADMIN_PASSWORD_HASH || '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi';
+                    await client.query(
+                        'INSERT INTO admin_users (username, password_hash, role) VALUES ($1, $2, $3)',
+                        ['admin', defaultPassword, 'admin']
+                    );
+                    console.log('Default admin user created');
+                }
+                
+                console.log('Admin users table ready');
+            } finally {
+                client.release();
             }
-            
-            console.log('Admin users table ready');
         } catch (err) {
             console.error('Error creating admin_users table:', err);
-        } finally {
-            client.release();
+            // Don't throw, just log the error and continue
         }
     }
 
@@ -92,6 +100,34 @@ class AdminAuth {
     async login(username, password) {
         try {
             console.log('Login attempt:', { username, passwordLength: password ? password.length : 0 });
+            
+            // Fallback authentication if database is not available
+            if (!this.pool) {
+                console.log('⚠️ [AUTH] Database not available, using fallback authentication');
+                if (username === 'admin' && password === 'Cotecnet@@sal!') {
+                    const user = { id: 1, username: 'admin', role: 'admin' };
+                    const token = this.generateToken(user);
+                    
+                    const sessionId = crypto.randomUUID();
+                    this.sessions.set(sessionId, {
+                        userId: 1,
+                        username: username,
+                        role: 'admin',
+                        loginTime: new Date(),
+                        lastActivity: new Date(),
+                        token: token
+                    });
+
+                    return {
+                        token: token,
+                        sessionId: sessionId,
+                        user: user
+                    };
+                } else {
+                    console.log('Invalid credentials in fallback mode');
+                    return null;
+                }
+            }
             
             // Get user from database
             const client = await this.pool.connect();
