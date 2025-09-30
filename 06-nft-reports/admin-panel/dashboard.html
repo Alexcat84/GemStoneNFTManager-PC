@@ -699,6 +699,8 @@
             const dateFrom = document.getElementById('qrDateFromFilter').value;
             const dateTo = document.getElementById('qrDateToFilter').value;
             
+            console.log('🔍 QR Filter Debug:', { dateFrom, dateTo });
+            
             qrReportsFiltered = qrReportsData.filter(qr => {
                 const matchesSearch = !search || 
                     qr.url.toLowerCase().includes(search) || 
@@ -713,11 +715,17 @@
                     
                     if (dateFrom) {
                         const fromDate = new Date(dateFrom);
-                        matchesDate = matchesDate && qrDateOnly >= fromDate;
+                        const fromDateOnly = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate());
+                        const dateMatch = qrDateOnly >= fromDateOnly;
+                        console.log(`📅 QR Date Check: ${qrDateOnly.toDateString()} >= ${fromDateOnly.toDateString()} = ${dateMatch}`);
+                        matchesDate = matchesDate && dateMatch;
                     }
                     if (dateTo) {
                         const toDate = new Date(dateTo);
-                        matchesDate = matchesDate && qrDateOnly <= toDate;
+                        const toDateOnly = new Date(toDate.getFullYear(), toDate.getMonth(), toDate.getDate());
+                        const dateMatch = qrDateOnly <= toDateOnly;
+                        console.log(`📅 QR Date Check: ${qrDateOnly.toDateString()} <= ${toDateOnly.toDateString()} = ${dateMatch}`);
+                        matchesDate = matchesDate && dateMatch;
                     }
                 }
                 
@@ -842,11 +850,13 @@
                     
                     if (dateFrom) {
                         const fromDate = new Date(dateFrom);
-                        matchesDate = matchesDate && codeDateOnly >= fromDate;
+                        const fromDateOnly = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate());
+                        matchesDate = matchesDate && codeDateOnly >= fromDateOnly;
                     }
                     if (dateTo) {
                         const toDate = new Date(dateTo);
-                        matchesDate = matchesDate && codeDateOnly <= toDate;
+                        const toDateOnly = new Date(toDate.getFullYear(), toDate.getMonth(), toDate.getDate());
+                        matchesDate = matchesDate && codeDateOnly <= toDateOnly;
                     }
                 }
                 
@@ -997,11 +1007,13 @@
                     
                     if (creationDateFrom) {
                         const fromDate = new Date(creationDateFrom);
-                        matchesCreationDate = matchesCreationDate && productCreationDateOnly >= fromDate;
+                        const fromDateOnly = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate());
+                        matchesCreationDate = matchesCreationDate && productCreationDateOnly >= fromDateOnly;
                     }
                     if (creationDateTo) {
                         const toDate = new Date(creationDateTo);
-                        matchesCreationDate = matchesCreationDate && productCreationDateOnly <= toDate;
+                        const toDateOnly = new Date(toDate.getFullYear(), toDate.getMonth(), toDate.getDate());
+                        matchesCreationDate = matchesCreationDate && productCreationDateOnly <= toDateOnly;
                     }
                 }
                 
@@ -1014,11 +1026,13 @@
                         
                         if (saleDateFrom) {
                             const fromDate = new Date(saleDateFrom);
-                            matchesSaleDate = matchesSaleDate && productSaleDateOnly >= fromDate;
+                            const fromDateOnly = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate());
+                            matchesSaleDate = matchesSaleDate && productSaleDateOnly >= fromDateOnly;
                         }
                         if (saleDateTo) {
                             const toDate = new Date(saleDateTo);
-                            matchesSaleDate = matchesSaleDate && productSaleDateOnly <= toDate;
+                            const toDateOnly = new Date(toDate.getFullYear(), toDate.getMonth(), toDate.getDate());
+                            matchesSaleDate = matchesSaleDate && productSaleDateOnly <= toDateOnly;
                         }
                     } else {
                         // If no sale date but filters are set, exclude this product
