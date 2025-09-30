@@ -524,12 +524,20 @@
                         </select>
                     </div>
                     <div class="filter-group">
-                        <label for="productsDateFromFilter">From Date:</label>
-                        <input type="date" id="productsDateFromFilter" onchange="filterProductsReports()">
+                        <label for="productsCreationDateFromFilter">Creation From Date:</label>
+                        <input type="date" id="productsCreationDateFromFilter" onchange="filterProductsReports()">
                     </div>
                     <div class="filter-group">
-                        <label for="productsDateToFilter">To Date:</label>
-                        <input type="date" id="productsDateToFilter" onchange="filterProductsReports()">
+                        <label for="productsCreationDateToFilter">Creation To Date:</label>
+                        <input type="date" id="productsCreationDateToFilter" onchange="filterProductsReports()">
+                    </div>
+                    <div class="filter-group">
+                        <label for="productsSaleDateFromFilter">Sale From Date:</label>
+                        <input type="date" id="productsSaleDateFromFilter" onchange="filterProductsReports()">
+                    </div>
+                    <div class="filter-group">
+                        <label for="productsSaleDateToFilter">Sale To Date:</label>
+                        <input type="date" id="productsSaleDateToFilter" onchange="filterProductsReports()">
                     </div>
                     <button class="clear-filters-btn" onclick="clearProductsFilters()">Clear Filters</button>
                 </div>
@@ -677,7 +685,7 @@
                         minute: '2-digit',
                         second: '2-digit',
                         hour12: true
-                    })}</td>
+                    }).replace(',', '')}</td>
                     <td>${qr.notes || 'N/A'}</td>
                 </tr>
             `).join('');
@@ -701,14 +709,15 @@
                 let matchesDate = true;
                 if (dateFrom || dateTo) {
                     const qrDate = new Date(qr.created_at);
+                    const qrDateOnly = new Date(qrDate.getFullYear(), qrDate.getMonth(), qrDate.getDate());
+                    
                     if (dateFrom) {
                         const fromDate = new Date(dateFrom);
-                        matchesDate = matchesDate && qrDate >= fromDate;
+                        matchesDate = matchesDate && qrDateOnly >= fromDate;
                     }
                     if (dateTo) {
                         const toDate = new Date(dateTo);
-                        toDate.setHours(23, 59, 59, 999); // End of day
-                        matchesDate = matchesDate && qrDate <= toDate;
+                        matchesDate = matchesDate && qrDateOnly <= toDate;
                     }
                 }
                 
@@ -801,7 +810,7 @@
                         minute: '2-digit',
                         second: '2-digit',
                         hour12: true
-                    })}</td>
+                    }).replace(',', '')}</td>
                     <td>${code.notes || 'N/A'}</td>
                 </tr>
             `).join('');
@@ -829,14 +838,15 @@
                 let matchesDate = true;
                 if (dateFrom || dateTo) {
                     const codeDate = new Date(code.generation_date);
+                    const codeDateOnly = new Date(codeDate.getFullYear(), codeDate.getMonth(), codeDate.getDate());
+                    
                     if (dateFrom) {
                         const fromDate = new Date(dateFrom);
-                        matchesDate = matchesDate && codeDate >= fromDate;
+                        matchesDate = matchesDate && codeDateOnly >= fromDate;
                     }
                     if (dateTo) {
                         const toDate = new Date(dateTo);
-                        toDate.setHours(23, 59, 59, 999); // End of day
-                        matchesDate = matchesDate && codeDate <= toDate;
+                        matchesDate = matchesDate && codeDateOnly <= toDate;
                     }
                 }
                 
@@ -939,7 +949,7 @@
                         minute: '2-digit',
                         second: '2-digit',
                         hour12: true
-                    })}</td>
+                    }).replace(',', '')}</td>
                     <td>${product.sold_date ? new Date(product.sold_date).toLocaleString('en-US', {
                         year: 'numeric',
                         month: '2-digit',
@@ -948,7 +958,7 @@
                         minute: '2-digit',
                         second: '2-digit',
                         hour12: true
-                    }) : 'N/A'}</td>
+                    }).replace(',', '') : 'N/A'}</td>
                 </tr>
             `).join('');
             
@@ -961,8 +971,10 @@
             const featuredFilter = document.getElementById('productsFeaturedFilter').value;
             const crystalTypeFilter = document.getElementById('productsCrystalTypeFilter').value;
             const rarityFilter = document.getElementById('productsRarityFilter').value;
-            const dateFrom = document.getElementById('productsDateFromFilter').value;
-            const dateTo = document.getElementById('productsDateToFilter').value;
+            const creationDateFrom = document.getElementById('productsCreationDateFromFilter').value;
+            const creationDateTo = document.getElementById('productsCreationDateToFilter').value;
+            const saleDateFrom = document.getElementById('productsSaleDateFromFilter').value;
+            const saleDateTo = document.getElementById('productsSaleDateToFilter').value;
             
             productsReportsFiltered = productsReportsData.filter(product => {
                 const matchesSearch = !search || 
@@ -977,22 +989,44 @@
                 const matchesRarity = !rarityFilter || 
                     (product.rarity && product.rarity === rarityFilter);
                 
-                // Date filtering (using creation date)
-                let matchesDate = true;
-                if (dateFrom || dateTo) {
-                    const productDate = new Date(product.created_at);
-                    if (dateFrom) {
-                        const fromDate = new Date(dateFrom);
-                        matchesDate = matchesDate && productDate >= fromDate;
+                // Creation date filtering
+                let matchesCreationDate = true;
+                if (creationDateFrom || creationDateTo) {
+                    const productCreationDate = new Date(product.created_at);
+                    const productCreationDateOnly = new Date(productCreationDate.getFullYear(), productCreationDate.getMonth(), productCreationDate.getDate());
+                    
+                    if (creationDateFrom) {
+                        const fromDate = new Date(creationDateFrom);
+                        matchesCreationDate = matchesCreationDate && productCreationDateOnly >= fromDate;
                     }
-                    if (dateTo) {
-                        const toDate = new Date(dateTo);
-                        toDate.setHours(23, 59, 59, 999); // End of day
-                        matchesDate = matchesDate && productDate <= toDate;
+                    if (creationDateTo) {
+                        const toDate = new Date(creationDateTo);
+                        matchesCreationDate = matchesCreationDate && productCreationDateOnly <= toDate;
                     }
                 }
                 
-                return matchesSearch && matchesStatus && matchesFeatured && matchesCrystalType && matchesRarity && matchesDate;
+                // Sale date filtering
+                let matchesSaleDate = true;
+                if (saleDateFrom || saleDateTo) {
+                    if (product.sold_date) {
+                        const productSaleDate = new Date(product.sold_date);
+                        const productSaleDateOnly = new Date(productSaleDate.getFullYear(), productSaleDate.getMonth(), productSaleDate.getDate());
+                        
+                        if (saleDateFrom) {
+                            const fromDate = new Date(saleDateFrom);
+                            matchesSaleDate = matchesSaleDate && productSaleDateOnly >= fromDate;
+                        }
+                        if (saleDateTo) {
+                            const toDate = new Date(saleDateTo);
+                            matchesSaleDate = matchesSaleDate && productSaleDateOnly <= toDate;
+                        }
+                    } else {
+                        // If no sale date but filters are set, exclude this product
+                        matchesSaleDate = false;
+                    }
+                }
+                
+                return matchesSearch && matchesStatus && matchesFeatured && matchesCrystalType && matchesRarity && matchesCreationDate && matchesSaleDate;
             });
             
             productsCurrentPage = 1;
@@ -1120,8 +1154,10 @@
             document.getElementById('productsFeaturedFilter').value = '';
             document.getElementById('productsCrystalTypeFilter').value = '';
             document.getElementById('productsRarityFilter').value = '';
-            document.getElementById('productsDateFromFilter').value = '';
-            document.getElementById('productsDateToFilter').value = '';
+            document.getElementById('productsCreationDateFromFilter').value = '';
+            document.getElementById('productsCreationDateToFilter').value = '';
+            document.getElementById('productsSaleDateFromFilter').value = '';
+            document.getElementById('productsSaleDateToFilter').value = '';
             filterProductsReports();
         }
 
