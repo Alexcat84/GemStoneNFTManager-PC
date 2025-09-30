@@ -135,19 +135,6 @@
             background: #218838;
         }
 
-        .global-filters {
-            background: white;
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-        .filters-header h3 {
-            margin-bottom: 1rem;
-            color: #667eea;
-            font-size: 1.2rem;
-        }
 
         .filters {
             display: flex;
@@ -372,45 +359,6 @@
             </button>
         </div>
 
-        <!-- Global Search Filters -->
-        <div class="global-filters">
-            <div class="filters-header">
-                <h3>🔍 Search & Filter</h3>
-            </div>
-            <div class="filters">
-                <div class="filter-group">
-                    <label for="globalSearch">Search:</label>
-                    <input type="text" id="globalSearch" placeholder="Search by name, code, ID, or URL..." onkeyup="applyGlobalFilters()">
-                </div>
-                <div class="filter-group">
-                    <label for="crystalTypeFilter">Crystal Type:</label>
-                    <select id="crystalTypeFilter" onchange="applyGlobalFilters()">
-                        <option value="">All Types</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label for="rarityFilter">Rarity:</label>
-                    <select id="rarityFilter" onchange="applyGlobalFilters()">
-                        <option value="">All Rarities</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label for="statusFilter">Status:</label>
-                    <select id="statusFilter" onchange="applyGlobalFilters()">
-                        <option value="">All Status</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label for="dateFromFilter">From Date:</label>
-                    <input type="date" id="dateFromFilter" onchange="applyGlobalFilters()">
-                </div>
-                <div class="filter-group">
-                    <label for="dateToFilter">To Date:</label>
-                    <input type="date" id="dateToFilter" onchange="applyGlobalFilters()">
-                </div>
-                <button class="clear-filters-btn" onclick="clearGlobalFilters()">Clear All Filters</button>
-            </div>
-        </div>
 
         <div class="tab-content">
             <!-- QR Codes Report -->
@@ -434,6 +382,15 @@
                             <option value="custom">Custom</option>
                         </select>
                     </div>
+                    <div class="filter-group">
+                        <label for="qrDateFromFilter">From Date:</label>
+                        <input type="date" id="qrDateFromFilter" onchange="filterQRReports()">
+                    </div>
+                    <div class="filter-group">
+                        <label for="qrDateToFilter">To Date:</label>
+                        <input type="date" id="qrDateToFilter" onchange="filterQRReports()">
+                    </div>
+                    <button class="clear-filters-btn" onclick="clearQRFilters()">Clear Filters</button>
                 </div>
 
                 <div class="table-container">
@@ -480,6 +437,21 @@
                             <option value="">All Locations</option>
                         </select>
                     </div>
+                    <div class="filter-group">
+                        <label for="codesGemstoneFilter">Gemstone Type:</label>
+                        <select id="codesGemstoneFilter" onchange="filterCodesReports()">
+                            <option value="">All Gemstones</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="codesDateFromFilter">From Date:</label>
+                        <input type="date" id="codesDateFromFilter" onchange="filterCodesReports()">
+                    </div>
+                    <div class="filter-group">
+                        <label for="codesDateToFilter">To Date:</label>
+                        <input type="date" id="codesDateToFilter" onchange="filterCodesReports()">
+                    </div>
+                    <button class="clear-filters-btn" onclick="clearCodesFilters()">Clear Filters</button>
                 </div>
 
                 <div class="table-container">
@@ -539,6 +511,27 @@
                             <option value="false">Not Featured</option>
                         </select>
                     </div>
+                    <div class="filter-group">
+                        <label for="productsCrystalTypeFilter">Crystal Type:</label>
+                        <select id="productsCrystalTypeFilter" onchange="filterProductsReports()">
+                            <option value="">All Types</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="productsRarityFilter">Rarity:</label>
+                        <select id="productsRarityFilter" onchange="filterProductsReports()">
+                            <option value="">All Rarities</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="productsDateFromFilter">From Date:</label>
+                        <input type="date" id="productsDateFromFilter" onchange="filterProductsReports()">
+                    </div>
+                    <div class="filter-group">
+                        <label for="productsDateToFilter">To Date:</label>
+                        <input type="date" id="productsDateToFilter" onchange="filterProductsReports()">
+                    </div>
+                    <button class="clear-filters-btn" onclick="clearProductsFilters()">Clear Filters</button>
                 </div>
 
                 <div class="table-container">
@@ -616,9 +609,11 @@
             loadCodesReports();
             loadProductsReports();
             
-            // Populate global filters after data is loaded
+            // Populate filters after data is loaded
             setTimeout(() => {
-                populateGlobalFilters();
+                populateLocationFilter();
+                populateCodesGemstoneFilter();
+                populateProductsFilters();
             }, 2000);
         });
 
@@ -693,6 +688,8 @@
         function filterQRReports() {
             const search = document.getElementById('qrSearch').value.toLowerCase();
             const statusFilter = document.getElementById('qrStatusFilter').value;
+            const dateFrom = document.getElementById('qrDateFromFilter').value;
+            const dateTo = document.getElementById('qrDateToFilter').value;
             
             qrReportsFiltered = qrReportsData.filter(qr => {
                 const matchesSearch = !search || 
@@ -700,7 +697,22 @@
                     qr.id.toString().includes(search);
                 const matchesStatus = !statusFilter || qr.status === statusFilter;
                 
-                return matchesSearch && matchesStatus;
+                // Date filtering
+                let matchesDate = true;
+                if (dateFrom || dateTo) {
+                    const qrDate = new Date(qr.created_at);
+                    if (dateFrom) {
+                        const fromDate = new Date(dateFrom);
+                        matchesDate = matchesDate && qrDate >= fromDate;
+                    }
+                    if (dateTo) {
+                        const toDate = new Date(dateTo);
+                        toDate.setHours(23, 59, 59, 999); // End of day
+                        matchesDate = matchesDate && qrDate <= toDate;
+                    }
+                }
+                
+                return matchesSearch && matchesStatus && matchesDate;
             });
             
             qrCurrentPage = 1;
@@ -712,7 +724,7 @@
             const csvContent = [
                 headers.join(','),
                 ...qrReportsFiltered.map(qr => {
-                    // Combine date and time into single field with proper encoding
+                    // Combine date and time into single field without commas for Excel compatibility
                     const dateTime = qr.created_at ? new Date(qr.created_at).toLocaleString('en-US', {
                         year: 'numeric',
                         month: '2-digit',
@@ -721,7 +733,7 @@
                         minute: '2-digit',
                         second: '2-digit',
                         hour12: true
-                    }) : 'N/A';
+                    }).replace(',', '') : 'N/A';
                     
                     return [
                         qr.id,
@@ -800,6 +812,9 @@
         function filterCodesReports() {
             const search = document.getElementById('codesSearch').value.toLowerCase();
             const locationFilter = document.getElementById('codesLocationFilter').value;
+            const gemstoneFilter = document.getElementById('codesGemstoneFilter').value;
+            const dateFrom = document.getElementById('codesDateFromFilter').value;
+            const dateTo = document.getElementById('codesDateToFilter').value;
             
             codesReportsFiltered = codesReportsData.filter(code => {
                 const matchesSearch = !search || 
@@ -807,8 +822,25 @@
                     code.gemstone_names.toLowerCase().includes(search);
                 const matchesLocation = !locationFilter || 
                     `${code.region}, ${code.country}` === locationFilter;
+                const matchesGemstone = !gemstoneFilter || 
+                    code.gemstone_names.toLowerCase().includes(gemstoneFilter.toLowerCase());
                 
-                return matchesSearch && matchesLocation;
+                // Date filtering
+                let matchesDate = true;
+                if (dateFrom || dateTo) {
+                    const codeDate = new Date(code.generation_date);
+                    if (dateFrom) {
+                        const fromDate = new Date(dateFrom);
+                        matchesDate = matchesDate && codeDate >= fromDate;
+                    }
+                    if (dateTo) {
+                        const toDate = new Date(dateTo);
+                        toDate.setHours(23, 59, 59, 999); // End of day
+                        matchesDate = matchesDate && codeDate <= toDate;
+                    }
+                }
+                
+                return matchesSearch && matchesLocation && matchesGemstone && matchesDate;
             });
             
             codesCurrentPage = 1;
@@ -828,7 +860,7 @@
             const csvContent = [
                 headers.join(','),
                 ...codesReportsFiltered.map(code => {
-                    // Combine date and time into single field with proper encoding
+                    // Combine date and time into single field without commas for Excel compatibility
                     const dateTime = code.generation_date ? new Date(code.generation_date).toLocaleString('en-US', {
                         year: 'numeric',
                         month: '2-digit',
@@ -837,7 +869,7 @@
                         minute: '2-digit',
                         second: '2-digit',
                         hour12: true
-                    }) : 'N/A';
+                    }).replace(',', '') : 'N/A';
                     
                     return [
                         code.id,
@@ -927,6 +959,10 @@
             const search = document.getElementById('productsSearch').value.toLowerCase();
             const statusFilter = document.getElementById('productsStatusFilter').value;
             const featuredFilter = document.getElementById('productsFeaturedFilter').value;
+            const crystalTypeFilter = document.getElementById('productsCrystalTypeFilter').value;
+            const rarityFilter = document.getElementById('productsRarityFilter').value;
+            const dateFrom = document.getElementById('productsDateFromFilter').value;
+            const dateTo = document.getElementById('productsDateToFilter').value;
             
             productsReportsFiltered = productsReportsData.filter(product => {
                 const matchesSearch = !search || 
@@ -936,8 +972,27 @@
                 const matchesFeatured = featuredFilter === '' || 
                     (featuredFilter === 'true' && product.is_featured) ||
                     (featuredFilter === 'false' && !product.is_featured);
+                const matchesCrystalType = !crystalTypeFilter || 
+                    (product.crystal_type && product.crystal_type === crystalTypeFilter);
+                const matchesRarity = !rarityFilter || 
+                    (product.rarity && product.rarity === rarityFilter);
                 
-                return matchesSearch && matchesStatus && matchesFeatured;
+                // Date filtering (using creation date)
+                let matchesDate = true;
+                if (dateFrom || dateTo) {
+                    const productDate = new Date(product.created_at);
+                    if (dateFrom) {
+                        const fromDate = new Date(dateFrom);
+                        matchesDate = matchesDate && productDate >= fromDate;
+                    }
+                    if (dateTo) {
+                        const toDate = new Date(dateTo);
+                        toDate.setHours(23, 59, 59, 999); // End of day
+                        matchesDate = matchesDate && productDate <= toDate;
+                    }
+                }
+                
+                return matchesSearch && matchesStatus && matchesFeatured && matchesCrystalType && matchesRarity && matchesDate;
             });
             
             productsCurrentPage = 1;
@@ -949,7 +1004,7 @@
             const csvContent = [
                 headers.join(','),
                 ...productsReportsFiltered.map(product => {
-                    // Combine creation date and time into single field
+                    // Combine creation date and time into single field without commas for Excel compatibility
                     const creationDateTime = product.created_at ? new Date(product.created_at).toLocaleString('en-US', {
                         year: 'numeric',
                         month: '2-digit',
@@ -958,9 +1013,9 @@
                         minute: '2-digit',
                         second: '2-digit',
                         hour12: true
-                    }) : 'N/A';
+                    }).replace(',', '') : 'N/A';
                     
-                    // Combine sale date and time into single field
+                    // Combine sale date and time into single field without commas for Excel compatibility
                     const saleDateTime = product.sold_date ? new Date(product.sold_date).toLocaleString('en-US', {
                         year: 'numeric',
                         month: '2-digit',
@@ -969,7 +1024,7 @@
                         minute: '2-digit',
                         second: '2-digit',
                         hour12: true
-                    }) : 'N/A';
+                    }).replace(',', '') : 'N/A';
                     
                     return [
                         product.id,
@@ -1041,69 +1096,55 @@
             document.body.removeChild(link);
         }
 
-        // Global Filters Functions
-        function applyGlobalFilters() {
-            const searchTerm = document.getElementById('globalSearch').value.toLowerCase();
-            const crystalType = document.getElementById('crystalTypeFilter').value;
-            const rarity = document.getElementById('rarityFilter').value;
-            const status = document.getElementById('statusFilter').value;
-            const dateFrom = document.getElementById('dateFromFilter').value;
-            const dateTo = document.getElementById('dateToFilter').value;
-
-            // Apply filters to all reports
-            filterQRReports();
-            filterCodesReports();
-            filterProductsReports();
-        }
-
-        function clearGlobalFilters() {
-            document.getElementById('globalSearch').value = '';
-            document.getElementById('crystalTypeFilter').value = '';
-            document.getElementById('rarityFilter').value = '';
-            document.getElementById('statusFilter').value = '';
-            document.getElementById('dateFromFilter').value = '';
-            document.getElementById('dateToFilter').value = '';
-            
-            // Clear individual filters too
+        // Clear Filters Functions
+        function clearQRFilters() {
             document.getElementById('qrSearch').value = '';
             document.getElementById('qrStatusFilter').value = '';
+            document.getElementById('qrDateFromFilter').value = '';
+            document.getElementById('qrDateToFilter').value = '';
+            filterQRReports();
+        }
+
+        function clearCodesFilters() {
             document.getElementById('codesSearch').value = '';
             document.getElementById('codesLocationFilter').value = '';
+            document.getElementById('codesGemstoneFilter').value = '';
+            document.getElementById('codesDateFromFilter').value = '';
+            document.getElementById('codesDateToFilter').value = '';
+            filterCodesReports();
+        }
+
+        function clearProductsFilters() {
             document.getElementById('productsSearch').value = '';
             document.getElementById('productsStatusFilter').value = '';
             document.getElementById('productsFeaturedFilter').value = '';
-            
-            // Reload all data
-            loadQRReports();
-            loadCodesReports();
-            loadProductsReports();
+            document.getElementById('productsCrystalTypeFilter').value = '';
+            document.getElementById('productsRarityFilter').value = '';
+            document.getElementById('productsDateFromFilter').value = '';
+            document.getElementById('productsDateToFilter').value = '';
+            filterProductsReports();
         }
 
-        function populateGlobalFilters() {
+        // Populate Filter Options
+        function populateCodesGemstoneFilter() {
+            const select = document.getElementById('codesGemstoneFilter');
+            const gemstones = [...new Set(codesReportsData.flatMap(code => JSON.parse(code.gemstone_names)))].sort();
+            select.innerHTML = '<option value="">All Gemstones</option>' +
+                gemstones.map(gemstone => `<option value="${gemstone}">${gemstone}</option>`).join('');
+        }
+
+        function populateProductsFilters() {
             // Populate crystal types
-            const crystalTypes = [...new Set([
-                ...productsReports.map(p => p.crystal_type).filter(Boolean),
-                ...codesReports.map(c => JSON.parse(c.gemstone_names)).flat().filter(Boolean)
-            ])];
-            
-            const crystalTypeSelect = document.getElementById('crystalTypeFilter');
+            const crystalTypes = [...new Set(productsReportsData.map(p => p.crystal_type).filter(Boolean))].sort();
+            const crystalTypeSelect = document.getElementById('productsCrystalTypeFilter');
             crystalTypeSelect.innerHTML = '<option value="">All Types</option>' +
                 crystalTypes.map(type => `<option value="${type}">${type}</option>`).join('');
 
             // Populate rarities
-            const rarities = [...new Set(productsReports.map(p => p.rarity).filter(Boolean))];
-            const raritySelect = document.getElementById('rarityFilter');
+            const rarities = [...new Set(productsReportsData.map(p => p.rarity).filter(Boolean))].sort();
+            const raritySelect = document.getElementById('productsRarityFilter');
             raritySelect.innerHTML = '<option value="">All Rarities</option>' +
                 rarities.map(rarity => `<option value="${rarity}">${rarity}</option>`).join('');
-
-            // Populate statuses
-            const statuses = [...new Set([
-                ...qrReports.map(q => q.status),
-                ...productsReports.map(p => p.status)
-            ])];
-            const statusSelect = document.getElementById('statusFilter');
-            statusSelect.innerHTML = '<option value="">All Status</option>' +
-                statuses.map(status => `<option value="${status}">${status}</option>`).join('');
         }
 
         // Authentication Functions
