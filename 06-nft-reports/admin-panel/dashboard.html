@@ -833,6 +833,8 @@
             const dateFrom = document.getElementById('codesDateFromFilter').value;
             const dateTo = document.getElementById('codesDateToFilter').value;
             
+            console.log('🔍 Codes Filter Debug:', { dateFrom, dateTo });
+            
             codesReportsFiltered = codesReportsData.filter(code => {
                 const matchesSearch = !search || 
                     code.full_code.toLowerCase().includes(search) || 
@@ -851,12 +853,16 @@
                     if (dateFrom) {
                         const fromDate = new Date(dateFrom);
                         const fromDateOnly = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate());
-                        matchesDate = matchesDate && codeDateOnly >= fromDateOnly;
+                        const dateMatch = codeDateOnly >= fromDateOnly;
+                        console.log(`📅 Codes Date Check: ${codeDateOnly.toDateString()} >= ${fromDateOnly.toDateString()} = ${dateMatch}`);
+                        matchesDate = matchesDate && dateMatch;
                     }
                     if (dateTo) {
                         const toDate = new Date(dateTo);
                         const toDateOnly = new Date(toDate.getFullYear(), toDate.getMonth(), toDate.getDate());
-                        matchesDate = matchesDate && codeDateOnly <= toDateOnly;
+                        const dateMatch = codeDateOnly <= toDateOnly;
+                        console.log(`📅 Codes Date Check: ${codeDateOnly.toDateString()} <= ${toDateOnly.toDateString()} = ${dateMatch}`);
+                        matchesDate = matchesDate && dateMatch;
                     }
                 }
                 
@@ -986,6 +992,13 @@
             const saleDateFrom = document.getElementById('productsSaleDateFromFilter').value;
             const saleDateTo = document.getElementById('productsSaleDateToFilter').value;
             
+            console.log('🔍 Products Filter Debug:', { 
+                creationDateFrom, 
+                creationDateTo, 
+                saleDateFrom, 
+                saleDateTo 
+            });
+            
             productsReportsFiltered = productsReportsData.filter(product => {
                 const matchesSearch = !search || 
                     product.name.toLowerCase().includes(search) || 
@@ -1008,12 +1021,16 @@
                     if (creationDateFrom) {
                         const fromDate = new Date(creationDateFrom);
                         const fromDateOnly = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate());
-                        matchesCreationDate = matchesCreationDate && productCreationDateOnly >= fromDateOnly;
+                        const dateMatch = productCreationDateOnly >= fromDateOnly;
+                        console.log(`📅 Products Creation Date Check: ${productCreationDateOnly.toDateString()} >= ${fromDateOnly.toDateString()} = ${dateMatch}`);
+                        matchesCreationDate = matchesCreationDate && dateMatch;
                     }
                     if (creationDateTo) {
                         const toDate = new Date(creationDateTo);
                         const toDateOnly = new Date(toDate.getFullYear(), toDate.getMonth(), toDate.getDate());
-                        matchesCreationDate = matchesCreationDate && productCreationDateOnly <= toDateOnly;
+                        const dateMatch = productCreationDateOnly <= toDateOnly;
+                        console.log(`📅 Products Creation Date Check: ${productCreationDateOnly.toDateString()} <= ${toDateOnly.toDateString()} = ${dateMatch}`);
+                        matchesCreationDate = matchesCreationDate && dateMatch;
                     }
                 }
                 
@@ -1027,15 +1044,20 @@
                         if (saleDateFrom) {
                             const fromDate = new Date(saleDateFrom);
                             const fromDateOnly = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate());
-                            matchesSaleDate = matchesSaleDate && productSaleDateOnly >= fromDateOnly;
+                            const dateMatch = productSaleDateOnly >= fromDateOnly;
+                            console.log(`📅 Products Sale Date Check: ${productSaleDateOnly.toDateString()} >= ${fromDateOnly.toDateString()} = ${dateMatch}`);
+                            matchesSaleDate = matchesSaleDate && dateMatch;
                         }
                         if (saleDateTo) {
                             const toDate = new Date(saleDateTo);
                             const toDateOnly = new Date(toDate.getFullYear(), toDate.getMonth(), toDate.getDate());
-                            matchesSaleDate = matchesSaleDate && productSaleDateOnly <= toDateOnly;
+                            const dateMatch = productSaleDateOnly <= toDateOnly;
+                            console.log(`📅 Products Sale Date Check: ${productSaleDateOnly.toDateString()} <= ${toDateOnly.toDateString()} = ${dateMatch}`);
+                            matchesSaleDate = matchesSaleDate && dateMatch;
                         }
                     } else {
                         // If no sale date but filters are set, exclude this product
+                        console.log(`📅 Products Sale Date Check: No sale date but filters set = false`);
                         matchesSaleDate = false;
                     }
                 }
