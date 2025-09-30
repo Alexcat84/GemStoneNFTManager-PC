@@ -135,11 +135,40 @@
             background: #218838;
         }
 
+        .global-filters {
+            background: white;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .filters-header h3 {
+            margin-bottom: 1rem;
+            color: #667eea;
+            font-size: 1.2rem;
+        }
+
         .filters {
             display: flex;
             gap: 1rem;
             margin-bottom: 2rem;
             flex-wrap: wrap;
+        }
+
+        .clear-filters-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.3s;
+        }
+
+        .clear-filters-btn:hover {
+            background: #c82333;
         }
 
         .filter-group {
@@ -324,8 +353,8 @@
         <div class="header-content">
             <div class="logo">📊 GemStone NFT Reports</div>
             <div class="nav-links">
-                <a href="#" onclick="changePassword()">Cambiar Contraseña</a>
-                <a href="#" onclick="logout()">Cerrar Sesión</a>
+                <a href="#" onclick="changePassword()">Change Password</a>
+                <a href="#" onclick="logout()">Logout</a>
             </div>
         </div>
     </div>
@@ -343,23 +372,63 @@
             </button>
         </div>
 
+        <!-- Global Search Filters -->
+        <div class="global-filters">
+            <div class="filters-header">
+                <h3>🔍 Search & Filter</h3>
+            </div>
+            <div class="filters">
+                <div class="filter-group">
+                    <label for="globalSearch">Search:</label>
+                    <input type="text" id="globalSearch" placeholder="Search by name, code, ID, or URL..." onkeyup="applyGlobalFilters()">
+                </div>
+                <div class="filter-group">
+                    <label for="crystalTypeFilter">Crystal Type:</label>
+                    <select id="crystalTypeFilter" onchange="applyGlobalFilters()">
+                        <option value="">All Types</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="rarityFilter">Rarity:</label>
+                    <select id="rarityFilter" onchange="applyGlobalFilters()">
+                        <option value="">All Rarities</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="statusFilter">Status:</label>
+                    <select id="statusFilter" onchange="applyGlobalFilters()">
+                        <option value="">All Status</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="dateFromFilter">From Date:</label>
+                    <input type="date" id="dateFromFilter" onchange="applyGlobalFilters()">
+                </div>
+                <div class="filter-group">
+                    <label for="dateToFilter">To Date:</label>
+                    <input type="date" id="dateToFilter" onchange="applyGlobalFilters()">
+                </div>
+                <button class="clear-filters-btn" onclick="clearGlobalFilters()">Clear All Filters</button>
+            </div>
+        </div>
+
         <div class="tab-content">
             <!-- QR Codes Report -->
             <div id="qr-reports" class="tab-panel active">
                 <div class="reports-header">
                     <h2 class="reports-title">QR Codes Report</h2>
-                    <button class="export-btn" onclick="exportQRCSV()">Exportar CSV</button>
+                    <button class="export-btn" onclick="exportQRCSV()">Export CSV</button>
                 </div>
                 
                 <div class="filters">
                     <div class="filter-group">
-                        <label for="qrSearch">Buscar:</label>
-                        <input type="text" id="qrSearch" placeholder="Buscar por URL o ID..." onkeyup="filterQRReports()">
+                        <label for="qrSearch">Search:</label>
+                        <input type="text" id="qrSearch" placeholder="Search by URL or ID..." onkeyup="filterQRReports()">
                     </div>
                     <div class="filter-group">
-                        <label for="qrStatusFilter">Estado:</label>
+                        <label for="qrStatusFilter">Status:</label>
                         <select id="qrStatusFilter" onchange="filterQRReports()">
-                            <option value="">Todos</option>
+                            <option value="">All</option>
                             <option value="pending">Pending</option>
                             <option value="ready">Ready</option>
                             <option value="custom">Custom</option>
@@ -374,16 +443,16 @@
                                 <th>ID</th>
                                 <th>URL</th>
                                 <th>Redirect To</th>
-                                <th>Estado</th>
-                                <th>Fecha Creación</th>
-                                <th>Notas</th>
+                                <th>Status</th>
+                                <th>Creation Date & Time</th>
+                                <th>Notes</th>
                             </tr>
                         </thead>
                         <tbody id="qrReportsTableBody">
                             <tr>
                                 <td colspan="6" class="loading">
                                     <div class="spinner"></div>
-                                    Cargando datos...
+                                    Loading data...
                                 </td>
                             </tr>
                         </tbody>
@@ -397,18 +466,18 @@
             <div id="codes-reports" class="tab-panel">
                 <div class="reports-header">
                     <h2 class="reports-title">Generated Codes Report</h2>
-                    <button class="export-btn" onclick="exportCodesCSV()">Exportar CSV</button>
+                    <button class="export-btn" onclick="exportCodesCSV()">Export CSV</button>
                 </div>
                 
                 <div class="filters">
                     <div class="filter-group">
-                        <label for="codesSearch">Buscar:</label>
-                        <input type="text" id="codesSearch" placeholder="Buscar por código o gemstone..." onkeyup="filterCodesReports()">
+                        <label for="codesSearch">Search:</label>
+                        <input type="text" id="codesSearch" placeholder="Search by code or gemstone..." onkeyup="filterCodesReports()">
                     </div>
                     <div class="filter-group">
-                        <label for="codesLocationFilter">Ubicación:</label>
+                        <label for="codesLocationFilter">Location:</label>
                         <select id="codesLocationFilter" onchange="filterCodesReports()">
-                            <option value="">Todas</option>
+                            <option value="">All Locations</option>
                         </select>
                     </div>
                 </div>
@@ -418,20 +487,20 @@
                         <thead>
                             <tr>
                                 <th>ID</th>
-                                <th>Código Completo</th>
+                                <th>Complete Code</th>
                                 <th>Gemstones</th>
-                                <th>Ubicación</th>
-                                <th>Mes/Año</th>
-                                <th>Número Pieza</th>
-                                <th>Fecha Generación</th>
-                                <th>Notas</th>
+                                <th>Location</th>
+                                <th>Month/Year</th>
+                                <th>Piece Number</th>
+                                <th>Generation Date & Time</th>
+                                <th>Notes</th>
                             </tr>
                         </thead>
                         <tbody id="codesReportsTableBody">
                             <tr>
                                 <td colspan="8" class="loading">
                                     <div class="spinner"></div>
-                                    Cargando datos...
+                                    Loading data...
                                 </td>
                             </tr>
                         </tbody>
@@ -445,18 +514,18 @@
             <div id="products-reports" class="tab-panel">
                 <div class="reports-header">
                     <h2 class="reports-title">Products Report</h2>
-                    <button class="export-btn" onclick="exportProductsCSV()">Exportar CSV</button>
+                    <button class="export-btn" onclick="exportProductsCSV()">Export CSV</button>
                 </div>
                 
                 <div class="filters">
                     <div class="filter-group">
-                        <label for="productsSearch">Buscar:</label>
-                        <input type="text" id="productsSearch" placeholder="Buscar por nombre o tipo..." onkeyup="filterProductsReports()">
+                        <label for="productsSearch">Search:</label>
+                        <input type="text" id="productsSearch" placeholder="Search by name or type..." onkeyup="filterProductsReports()">
                     </div>
                     <div class="filter-group">
-                        <label for="productsStatusFilter">Estado:</label>
+                        <label for="productsStatusFilter">Status:</label>
                         <select id="productsStatusFilter" onchange="filterProductsReports()">
-                            <option value="">Todos</option>
+                            <option value="">All</option>
                             <option value="available">Available</option>
                             <option value="sold">Sold</option>
                             <option value="reserved">Reserved</option>
@@ -465,7 +534,7 @@
                     <div class="filter-group">
                         <label for="productsFeaturedFilter">Featured:</label>
                         <select id="productsFeaturedFilter" onchange="filterProductsReports()">
-                            <option value="">Todos</option>
+                            <option value="">All</option>
                             <option value="true">Featured</option>
                             <option value="false">Not Featured</option>
                         </select>
@@ -477,21 +546,21 @@
                         <thead>
                             <tr>
                                 <th>ID</th>
-                                <th>Nombre</th>
-                                <th>Precio</th>
-                                <th>Estado</th>
+                                <th>Name</th>
+                                <th>Price</th>
+                                <th>Status</th>
                                 <th>Featured</th>
-                                <th>Tipo Cristal</th>
-                                <th>Rareza</th>
-                                <th>Fecha Creación</th>
-                                <th>Fecha Venta</th>
+                                <th>Crystal Type</th>
+                                <th>Rarity</th>
+                                <th>Creation Date & Time</th>
+                                <th>Sale Date & Time</th>
                             </tr>
                         </thead>
                         <tbody id="productsReportsTableBody">
                             <tr>
                                 <td colspan="9" class="loading">
                                     <div class="spinner"></div>
-                                    Cargando datos...
+                                    Loading data...
                                 </td>
                             </tr>
                         </tbody>
@@ -546,6 +615,11 @@
             loadQRReports();
             loadCodesReports();
             loadProductsReports();
+            
+            // Populate global filters after data is loaded
+            setTimeout(() => {
+                populateGlobalFilters();
+            }, 2000);
         });
 
         // Tab switching
@@ -600,7 +674,15 @@
                     <td>${qr.url}</td>
                     <td>${qr.nft_url || 'N/A'}</td>
                     <td><span class="status-badge status-${qr.status}">${qr.status}</span></td>
-                    <td>${new Date(qr.created_at).toLocaleString()}</td>
+                    <td>${new Date(qr.created_at).toLocaleString('en-US', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: true
+                    })}</td>
                     <td>${qr.notes || 'N/A'}</td>
                 </tr>
             `).join('');
@@ -626,17 +708,30 @@
         }
 
         function exportQRCSV() {
-            const headers = ['ID', 'URL', 'Redirect To', 'Estado', 'Fecha Creación', 'Notas'];
+            const headers = ['ID', 'URL', 'Redirect To', 'Status', 'Creation Date & Time', 'Notes'];
             const csvContent = [
                 headers.join(','),
-                ...qrReportsFiltered.map(qr => [
-                    qr.id,
-                    `"${qr.url}"`,
-                    `"${qr.nft_url || 'N/A'}"`,
-                    qr.status,
-                    new Date(qr.created_at).toLocaleString(),
-                    `"${qr.notes || 'N/A'}"`
-                ].join(','))
+                ...qrReportsFiltered.map(qr => {
+                    // Combine date and time into single field with proper encoding
+                    const dateTime = qr.created_at ? new Date(qr.created_at).toLocaleString('en-US', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: true
+                    }) : 'N/A';
+                    
+                    return [
+                        qr.id,
+                        `"${qr.url}"`,
+                        `"${qr.nft_url || 'N/A'}"`,
+                        qr.status,
+                        `"${dateTime}"`,
+                        `"${qr.notes || 'N/A'}"`
+                    ].join(',');
+                })
             ].join('\n');
             
             downloadCSV(csvContent, 'qr-codes-report.csv');
@@ -686,7 +781,15 @@
                     <td>${code.region}, ${code.country}</td>
                     <td>${code.month}/${code.year}</td>
                     <td>${code.piece_number}</td>
-                    <td>${new Date(code.generation_date).toLocaleString()}</td>
+                    <td>${new Date(code.generation_date).toLocaleString('en-US', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: true
+                    })}</td>
                     <td>${code.notes || 'N/A'}</td>
                 </tr>
             `).join('');
@@ -721,19 +824,32 @@
         }
 
         function exportCodesCSV() {
-            const headers = ['ID', 'Código Completo', 'Gemstones', 'Ubicación', 'Mes/Año', 'Número Pieza', 'Fecha Generación', 'Notas'];
+            const headers = ['ID', 'Complete Code', 'Gemstones', 'Location', 'Month/Year', 'Piece Number', 'Generation Date & Time', 'Notes'];
             const csvContent = [
                 headers.join(','),
-                ...codesReportsFiltered.map(code => [
-                    code.id,
-                    code.full_code,
-                    `"${JSON.parse(code.gemstone_names).join(', ')}"`,
-                    `"${code.region}, ${code.country}"`,
-                    `${code.month}/${code.year}`,
-                    code.piece_number,
-                    new Date(code.generation_date).toLocaleString(),
-                    `"${code.notes || 'N/A'}"`
-                ].join(','))
+                ...codesReportsFiltered.map(code => {
+                    // Combine date and time into single field with proper encoding
+                    const dateTime = code.generation_date ? new Date(code.generation_date).toLocaleString('en-US', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: true
+                    }) : 'N/A';
+                    
+                    return [
+                        code.id,
+                        code.full_code,
+                        `"${JSON.parse(code.gemstone_names).join(', ')}"`,
+                        `"${code.region}, ${code.country}"`,
+                        `${code.month}/${code.year}`,
+                        code.piece_number,
+                        `"${dateTime}"`,
+                        `"${code.notes || 'N/A'}"`
+                    ].join(',');
+                })
             ].join('\n');
             
             downloadCSV(csvContent, 'generated-codes-report.csv');
@@ -783,8 +899,24 @@
                     <td>${product.is_featured ? '<span class="featured-badge">Featured</span>' : 'No'}</td>
                     <td>${product.crystal_type || 'N/A'}</td>
                     <td>${product.rarity || 'N/A'}</td>
-                    <td>${new Date(product.created_at).toLocaleString()}</td>
-                    <td>${product.sold_date ? new Date(product.sold_date).toLocaleString() : 'N/A'}</td>
+                    <td>${new Date(product.created_at).toLocaleString('en-US', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: true
+                    })}</td>
+                    <td>${product.sold_date ? new Date(product.sold_date).toLocaleString('en-US', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: true
+                    }) : 'N/A'}</td>
                 </tr>
             `).join('');
             
@@ -813,20 +945,44 @@
         }
 
         function exportProductsCSV() {
-            const headers = ['ID', 'Nombre', 'Precio', 'Estado', 'Featured', 'Tipo Cristal', 'Rareza', 'Fecha Creación', 'Fecha Venta'];
+            const headers = ['ID', 'Name', 'Price', 'Status', 'Featured', 'Crystal Type', 'Rarity', 'Creation Date & Time', 'Sale Date & Time'];
             const csvContent = [
                 headers.join(','),
-                ...productsReportsFiltered.map(product => [
-                    product.id,
-                    `"${product.name}"`,
-                    product.price,
-                    product.status,
-                    product.is_featured ? 'Yes' : 'No',
-                    `"${product.crystal_type || 'N/A'}"`,
-                    `"${product.rarity || 'N/A'}"`,
-                    new Date(product.created_at).toLocaleString(),
-                    product.sold_date ? new Date(product.sold_date).toLocaleString() : 'N/A'
-                ].join(','))
+                ...productsReportsFiltered.map(product => {
+                    // Combine creation date and time into single field
+                    const creationDateTime = product.created_at ? new Date(product.created_at).toLocaleString('en-US', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: true
+                    }) : 'N/A';
+                    
+                    // Combine sale date and time into single field
+                    const saleDateTime = product.sold_date ? new Date(product.sold_date).toLocaleString('en-US', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: true
+                    }) : 'N/A';
+                    
+                    return [
+                        product.id,
+                        `"${product.name}"`,
+                        product.price,
+                        product.status,
+                        product.is_featured ? 'Yes' : 'No',
+                        `"${product.crystal_type || 'N/A'}"`,
+                        `"${product.rarity || 'N/A'}"`,
+                        `"${creationDateTime}"`,
+                        `"${saleDateTime}"`
+                    ].join(',');
+                })
             ].join('\n');
             
             downloadCSV(csvContent, 'products-report.csv');
@@ -883,6 +1039,71 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+        }
+
+        // Global Filters Functions
+        function applyGlobalFilters() {
+            const searchTerm = document.getElementById('globalSearch').value.toLowerCase();
+            const crystalType = document.getElementById('crystalTypeFilter').value;
+            const rarity = document.getElementById('rarityFilter').value;
+            const status = document.getElementById('statusFilter').value;
+            const dateFrom = document.getElementById('dateFromFilter').value;
+            const dateTo = document.getElementById('dateToFilter').value;
+
+            // Apply filters to all reports
+            filterQRReports();
+            filterCodesReports();
+            filterProductsReports();
+        }
+
+        function clearGlobalFilters() {
+            document.getElementById('globalSearch').value = '';
+            document.getElementById('crystalTypeFilter').value = '';
+            document.getElementById('rarityFilter').value = '';
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('dateFromFilter').value = '';
+            document.getElementById('dateToFilter').value = '';
+            
+            // Clear individual filters too
+            document.getElementById('qrSearch').value = '';
+            document.getElementById('qrStatusFilter').value = '';
+            document.getElementById('codesSearch').value = '';
+            document.getElementById('codesLocationFilter').value = '';
+            document.getElementById('productsSearch').value = '';
+            document.getElementById('productsStatusFilter').value = '';
+            document.getElementById('productsFeaturedFilter').value = '';
+            
+            // Reload all data
+            loadQRReports();
+            loadCodesReports();
+            loadProductsReports();
+        }
+
+        function populateGlobalFilters() {
+            // Populate crystal types
+            const crystalTypes = [...new Set([
+                ...productsReports.map(p => p.crystal_type).filter(Boolean),
+                ...codesReports.map(c => JSON.parse(c.gemstone_names)).flat().filter(Boolean)
+            ])];
+            
+            const crystalTypeSelect = document.getElementById('crystalTypeFilter');
+            crystalTypeSelect.innerHTML = '<option value="">All Types</option>' +
+                crystalTypes.map(type => `<option value="${type}">${type}</option>`).join('');
+
+            // Populate rarities
+            const rarities = [...new Set(productsReports.map(p => p.rarity).filter(Boolean))];
+            const raritySelect = document.getElementById('rarityFilter');
+            raritySelect.innerHTML = '<option value="">All Rarities</option>' +
+                rarities.map(rarity => `<option value="${rarity}">${rarity}</option>`).join('');
+
+            // Populate statuses
+            const statuses = [...new Set([
+                ...qrReports.map(q => q.status),
+                ...productsReports.map(p => p.status)
+            ])];
+            const statusSelect = document.getElementById('statusFilter');
+            statusSelect.innerHTML = '<option value="">All Status</option>' +
+                statuses.map(status => `<option value="${status}">${status}</option>`).join('');
         }
 
         // Authentication Functions
