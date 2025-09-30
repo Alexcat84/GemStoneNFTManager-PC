@@ -714,15 +714,17 @@
                     const qrDateOnly = new Date(qrDate.getFullYear(), qrDate.getMonth(), qrDate.getDate());
                     
                     if (dateFrom) {
-                        const fromDate = new Date(dateFrom);
-                        const fromDateOnly = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate());
+                        // Parse date string directly to avoid timezone issues
+                        const [year, month, day] = dateFrom.split('-').map(Number);
+                        const fromDateOnly = new Date(year, month - 1, day);
                         const dateMatch = qrDateOnly >= fromDateOnly;
                         console.log(`📅 QR Date Check: ${qrDateOnly.toDateString()} >= ${fromDateOnly.toDateString()} = ${dateMatch}`);
                         matchesDate = matchesDate && dateMatch;
                     }
                     if (dateTo) {
-                        const toDate = new Date(dateTo);
-                        const toDateOnly = new Date(toDate.getFullYear(), toDate.getMonth(), toDate.getDate());
+                        // Parse date string directly to avoid timezone issues
+                        const [year, month, day] = dateTo.split('-').map(Number);
+                        const toDateOnly = new Date(year, month - 1, day);
                         const dateMatch = qrDateOnly <= toDateOnly;
                         console.log(`📅 QR Date Check: ${qrDateOnly.toDateString()} <= ${toDateOnly.toDateString()} = ${dateMatch}`);
                         matchesDate = matchesDate && dateMatch;
@@ -851,15 +853,17 @@
                     const codeDateOnly = new Date(codeDate.getFullYear(), codeDate.getMonth(), codeDate.getDate());
                     
                     if (dateFrom) {
-                        const fromDate = new Date(dateFrom);
-                        const fromDateOnly = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate());
+                        // Parse date string directly to avoid timezone issues
+                        const [year, month, day] = dateFrom.split('-').map(Number);
+                        const fromDateOnly = new Date(year, month - 1, day);
                         const dateMatch = codeDateOnly >= fromDateOnly;
                         console.log(`📅 Codes Date Check: ${codeDateOnly.toDateString()} >= ${fromDateOnly.toDateString()} = ${dateMatch}`);
                         matchesDate = matchesDate && dateMatch;
                     }
                     if (dateTo) {
-                        const toDate = new Date(dateTo);
-                        const toDateOnly = new Date(toDate.getFullYear(), toDate.getMonth(), toDate.getDate());
+                        // Parse date string directly to avoid timezone issues
+                        const [year, month, day] = dateTo.split('-').map(Number);
+                        const toDateOnly = new Date(year, month - 1, day);
                         const dateMatch = codeDateOnly <= toDateOnly;
                         console.log(`📅 Codes Date Check: ${codeDateOnly.toDateString()} <= ${toDateOnly.toDateString()} = ${dateMatch}`);
                         matchesDate = matchesDate && dateMatch;
@@ -1019,15 +1023,17 @@
                     const productCreationDateOnly = new Date(productCreationDate.getFullYear(), productCreationDate.getMonth(), productCreationDate.getDate());
                     
                     if (creationDateFrom) {
-                        const fromDate = new Date(creationDateFrom);
-                        const fromDateOnly = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate());
+                        // Parse date string directly to avoid timezone issues
+                        const [year, month, day] = creationDateFrom.split('-').map(Number);
+                        const fromDateOnly = new Date(year, month - 1, day);
                         const dateMatch = productCreationDateOnly >= fromDateOnly;
                         console.log(`📅 Products Creation Date Check: ${productCreationDateOnly.toDateString()} >= ${fromDateOnly.toDateString()} = ${dateMatch}`);
                         matchesCreationDate = matchesCreationDate && dateMatch;
                     }
                     if (creationDateTo) {
-                        const toDate = new Date(creationDateTo);
-                        const toDateOnly = new Date(toDate.getFullYear(), toDate.getMonth(), toDate.getDate());
+                        // Parse date string directly to avoid timezone issues
+                        const [year, month, day] = creationDateTo.split('-').map(Number);
+                        const toDateOnly = new Date(year, month - 1, day);
                         const dateMatch = productCreationDateOnly <= toDateOnly;
                         console.log(`📅 Products Creation Date Check: ${productCreationDateOnly.toDateString()} <= ${toDateOnly.toDateString()} = ${dateMatch}`);
                         matchesCreationDate = matchesCreationDate && dateMatch;
@@ -1042,15 +1048,17 @@
                         const productSaleDateOnly = new Date(productSaleDate.getFullYear(), productSaleDate.getMonth(), productSaleDate.getDate());
                         
                         if (saleDateFrom) {
-                            const fromDate = new Date(saleDateFrom);
-                            const fromDateOnly = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate());
+                            // Parse date string directly to avoid timezone issues
+                            const [year, month, day] = saleDateFrom.split('-').map(Number);
+                            const fromDateOnly = new Date(year, month - 1, day);
                             const dateMatch = productSaleDateOnly >= fromDateOnly;
                             console.log(`📅 Products Sale Date Check: ${productSaleDateOnly.toDateString()} >= ${fromDateOnly.toDateString()} = ${dateMatch}`);
                             matchesSaleDate = matchesSaleDate && dateMatch;
                         }
                         if (saleDateTo) {
-                            const toDate = new Date(saleDateTo);
-                            const toDateOnly = new Date(toDate.getFullYear(), toDate.getMonth(), toDate.getDate());
+                            // Parse date string directly to avoid timezone issues
+                            const [year, month, day] = saleDateTo.split('-').map(Number);
+                            const toDateOnly = new Date(year, month - 1, day);
                             const dateMatch = productSaleDateOnly <= toDateOnly;
                             console.log(`📅 Products Sale Date Check: ${productSaleDateOnly.toDateString()} <= ${toDateOnly.toDateString()} = ${dateMatch}`);
                             matchesSaleDate = matchesSaleDate && dateMatch;
