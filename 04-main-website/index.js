@@ -940,7 +940,10 @@ app.get('/api/admin/products', requireAuth, async (req, res) => {
 });
 
 app.post('/api/admin/products', requireAuth, upload.fields([
-  { name: 'images', maxCount: 4 },
+  { name: 'image1', maxCount: 1 },
+  { name: 'image2', maxCount: 1 },
+  { name: 'image3', maxCount: 1 },
+  { name: 'image4', maxCount: 1 },
   { name: 'nftImage', maxCount: 1 }
 ]), async (req, res) => {
   try {
@@ -948,11 +951,16 @@ app.post('/api/admin/products', requireAuth, upload.fields([
     console.log('📦 [ADD PRODUCT] Files received:', req.files ? Object.keys(req.files) : 'No files');
     console.log('📦 [ADD PRODUCT] Body data:', req.body);
     
-    // Process multiple images
+    // Process images in specific order
     const imageUrls = [];
-    if (req.files && req.files.images) {
-      console.log('📦 [ADD PRODUCT] Processing images:', req.files.images.length);
-      req.files.images.forEach(file => {
+    const imageOrder = ['image1', 'image2', 'image3', 'image4'];
+    
+    console.log('📦 [ADD PRODUCT] Processing images in order...');
+    imageOrder.forEach((imageField, index) => {
+      if (req.files && req.files[imageField] && req.files[imageField][0]) {
+        const file = req.files[imageField][0];
+        console.log(`📦 [ADD PRODUCT] Processing ${imageField}:`, file.filename);
+        
         // Store as base64 for Vercel, or file path for local
         if (process.env.VERCEL) {
           const fs = require('fs');
@@ -962,8 +970,10 @@ app.post('/api/admin/products', requireAuth, upload.fields([
         } else {
           imageUrls.push(`/uploads/${file.filename}`);
         }
-      });
-    }
+      }
+    });
+    
+    console.log('📦 [ADD PRODUCT] Final imageUrls:', imageUrls);
 
     // Process NFT image
     let nftImageUrl = null;
@@ -1017,7 +1027,10 @@ app.post('/api/admin/products', requireAuth, upload.fields([
 });
 
 app.put('/api/admin/products/:id', requireAuth, upload.fields([
-  { name: 'images', maxCount: 4 },
+  { name: 'image1', maxCount: 1 },
+  { name: 'image2', maxCount: 1 },
+  { name: 'image3', maxCount: 1 },
+  { name: 'image4', maxCount: 1 },
   { name: 'nftImage', maxCount: 1 }
 ]), async (req, res) => {
   try {
@@ -1051,20 +1064,32 @@ app.put('/api/admin/products/:id', requireAuth, upload.fields([
       }
     }
     
-    // Process multiple images
+    // Process images in specific order
     let imageUrls = [];
-    if (req.files && req.files.images) {
-      // New images uploaded - use them
-      console.log('🔄 [EDIT PRODUCT] Processing new images:', req.files.images.length);
-      req.files.images.forEach(file => {
-        // Store as base64 for Vercel, or file path for local
-        if (process.env.VERCEL) {
-          const fs = require('fs');
-          const imageBuffer = fs.readFileSync(file.path);
-          const base64Image = imageBuffer.toString('base64');
-          imageUrls.push(`data:${file.mimetype};base64,${base64Image}`);
-        } else {
-          imageUrls.push(`/uploads/${file.filename}`);
+    const imageOrder = ['image1', 'image2', 'image3', 'image4'];
+    
+    // Check if there are new images uploaded
+    const hasNewImages = imageOrder.some(field => 
+      req.files && req.files[field] && req.files[field][0]
+    );
+    
+    if (hasNewImages) {
+      // New images uploaded - process them in order
+      console.log('🔄 [EDIT PRODUCT] Processing new images in order...');
+      imageOrder.forEach((imageField, index) => {
+        if (req.files && req.files[imageField] && req.files[imageField][0]) {
+          const file = req.files[imageField][0];
+          console.log(`🔄 [EDIT PRODUCT] Processing ${imageField}:`, file.filename);
+          
+          // Store as base64 for Vercel, or file path for local
+          if (process.env.VERCEL) {
+            const fs = require('fs');
+            const imageBuffer = fs.readFileSync(file.path);
+            const base64Image = imageBuffer.toString('base64');
+            imageUrls.push(`data:${file.mimetype};base64,${base64Image}`);
+          } else {
+            imageUrls.push(`/uploads/${file.filename}`);
+          }
         }
       });
     } else if (req.body.existing_images) {
