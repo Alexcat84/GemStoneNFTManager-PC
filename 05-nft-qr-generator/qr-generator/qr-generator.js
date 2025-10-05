@@ -22,6 +22,11 @@ class QRGenerator {
     }
 
     initializeDatabase() {
+        if (!process.env.DATABASE_URL) {
+            console.log('⚠️ QRGenerator: No DATABASE_URL found, running without database');
+            this.pool = null;
+            return;
+        }
         this.pool = new Pool({
             connectionString: process.env.DATABASE_URL,
             ssl: {
@@ -32,6 +37,10 @@ class QRGenerator {
     }
 
     async createTable() {
+        if (!this.pool) {
+            console.log('⚠️ QRGenerator: No database pool available, skipping table creation');
+            return;
+        }
         const client = await this.pool.connect();
         try {
             const createTableQuery = `
