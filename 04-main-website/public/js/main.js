@@ -285,7 +285,14 @@ function showProductModal(product) {
                 <div class="product-modal-content">
                     <div class="product-modal-images">
                         ${product.images && product.images.length > 0 ? 
-                            product.images.map(img => `<img src="${img}" alt="${product.name}" loading="lazy">`).join('') :
+                            product.images.map((img, index) => `
+                                <div class="product-image-container" onclick="openImageGallery(${index}, '${product.name}')">
+                                    <img src="${img}" alt="${product.name}" loading="lazy" class="product-image">
+                                    <div class="image-overlay">
+                                        <i class="fas fa-search-plus"></i>
+                                    </div>
+                                </div>
+                            `).join('') :
                             '<img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjhmYWZjIi8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pgo8L3N2Zz4K" alt="No image available">'
                         }
                     </div>
@@ -932,3 +939,326 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// Image Gallery Functions
+let currentProductImages = [];
+let currentImageIndex = 0;
+
+function openImageGallery(imageIndex, productName) {
+    // Get current product images from the modal
+    const productModal = document.querySelector('.product-modal');
+    if (!productModal) return;
+    
+    const imageContainers = productModal.querySelectorAll('.product-image-container img');
+    currentProductImages = Array.from(imageContainers).map(img => img.src);
+    currentImageIndex = imageIndex;
+    
+    // Create gallery modal
+    const galleryHTML = `
+        <div class="image-gallery-overlay" onclick="closeImageGallery()">
+            <div class="image-gallery-modal" onclick="event.stopPropagation()">
+                <div class="gallery-header">
+                    <h3>${productName}</h3>
+                    <button class="gallery-close" onclick="closeImageGallery()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="gallery-content">
+                    <button class="gallery-nav gallery-prev" onclick="previousImage()" ${currentImageIndex === 0 ? 'disabled' : ''}>
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <div class="gallery-image-container">
+                        <img id="gallery-main-image" src="${currentProductImages[currentImageIndex]}" alt="${productName}" class="gallery-main-image">
+                    </div>
+                    <button class="gallery-nav gallery-next" onclick="nextImage()" ${currentImageIndex === currentProductImages.length - 1 ? 'disabled' : ''}>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+                <div class="gallery-footer">
+                    <div class="gallery-counter">
+                        ${currentImageIndex + 1} / ${currentProductImages.length}
+                    </div>
+                    <div class="gallery-thumbnails">
+                        ${currentProductImages.map((img, index) => `
+                            <img src="${img}" alt="Thumbnail ${index + 1}" 
+                                 class="gallery-thumbnail ${index === currentImageIndex ? 'active' : ''}"
+                                 onclick="goToImage(${index})">
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Add gallery styles if not already added
+    if (!document.querySelector('#gallery-styles')) {
+        const galleryStyles = `
+            <style id="gallery-styles">
+                .image-gallery-overlay {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.95);
+                    z-index: 10000;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    backdrop-filter: blur(5px);
+                }
+                
+                .image-gallery-modal {
+                    position: relative;
+                    max-width: 90vw;
+                    max-height: 90vh;
+                    background: white;
+                    border-radius: 12px;
+                    overflow: hidden;
+                    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+                }
+                
+                .gallery-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 1rem 1.5rem;
+                    background: #f8f9fa;
+                    border-bottom: 1px solid #e9ecef;
+                }
+                
+                .gallery-header h3 {
+                    margin: 0;
+                    color: #333;
+                    font-size: 1.2rem;
+                }
+                
+                .gallery-close {
+                    background: none;
+                    border: none;
+                    font-size: 1.5rem;
+                    color: #666;
+                    cursor: pointer;
+                    padding: 0.5rem;
+                    border-radius: 50%;
+                    transition: all 0.3s ease;
+                }
+                
+                .gallery-close:hover {
+                    background: #e9ecef;
+                    color: #333;
+                }
+                
+                .gallery-content {
+                    position: relative;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    min-height: 400px;
+                    background: #f8f9fa;
+                }
+                
+                .gallery-nav {
+                    position: absolute;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    background: rgba(255, 255, 255, 0.9);
+                    border: none;
+                    width: 50px;
+                    height: 50px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                    font-size: 1.2rem;
+                    color: #333;
+                    transition: all 0.3s ease;
+                    z-index: 10;
+                }
+                
+                .gallery-nav:hover:not(:disabled) {
+                    background: white;
+                    transform: translateY(-50%) scale(1.1);
+                }
+                
+                .gallery-nav:disabled {
+                    opacity: 0.3;
+                    cursor: not-allowed;
+                }
+                
+                .gallery-prev {
+                    left: 20px;
+                }
+                
+                .gallery-next {
+                    right: 20px;
+                }
+                
+                .gallery-image-container {
+                    max-width: 80%;
+                    max-height: 70vh;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                
+                .gallery-main-image {
+                    max-width: 100%;
+                    max-height: 100%;
+                    object-fit: contain;
+                    border-radius: 8px;
+                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+                    transition: transform 0.3s ease;
+                }
+                
+                .gallery-main-image:hover {
+                    transform: scale(1.02);
+                }
+                
+                .gallery-footer {
+                    padding: 1rem 1.5rem;
+                    background: #f8f9fa;
+                    border-top: 1px solid #e9ecef;
+                }
+                
+                .gallery-counter {
+                    text-align: center;
+                    color: #666;
+                    font-size: 0.9rem;
+                    margin-bottom: 1rem;
+                }
+                
+                .gallery-thumbnails {
+                    display: flex;
+                    justify-content: center;
+                    gap: 0.5rem;
+                    flex-wrap: wrap;
+                }
+                
+                .gallery-thumbnail {
+                    width: 60px;
+                    height: 60px;
+                    object-fit: cover;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    border: 2px solid transparent;
+                    transition: all 0.3s ease;
+                }
+                
+                .gallery-thumbnail:hover {
+                    border-color: #667eea;
+                    transform: scale(1.05);
+                }
+                
+                .gallery-thumbnail.active {
+                    border-color: #667eea;
+                    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.3);
+                }
+                
+                @media (max-width: 768px) {
+                    .image-gallery-modal {
+                        max-width: 95vw;
+                        max-height: 95vh;
+                    }
+                    
+                    .gallery-nav {
+                        width: 40px;
+                        height: 40px;
+                        font-size: 1rem;
+                    }
+                    
+                    .gallery-prev {
+                        left: 10px;
+                    }
+                    
+                    .gallery-next {
+                        right: 10px;
+                    }
+                    
+                    .gallery-thumbnail {
+                        width: 50px;
+                        height: 50px;
+                    }
+                }
+            </style>
+        `;
+        document.head.insertAdjacentHTML('beforeend', galleryStyles);
+    }
+    
+    // Add gallery to page
+    document.body.insertAdjacentHTML('beforeend', galleryHTML);
+    
+    // Add keyboard navigation
+    document.addEventListener('keydown', handleGalleryKeydown);
+}
+
+function closeImageGallery() {
+    const gallery = document.querySelector('.image-gallery-overlay');
+    if (gallery) {
+        gallery.remove();
+    }
+    document.removeEventListener('keydown', handleGalleryKeydown);
+}
+
+function previousImage() {
+    if (currentImageIndex > 0) {
+        currentImageIndex--;
+        updateGalleryImage();
+    }
+}
+
+function nextImage() {
+    if (currentImageIndex < currentProductImages.length - 1) {
+        currentImageIndex++;
+        updateGalleryImage();
+    }
+}
+
+function goToImage(index) {
+    currentImageIndex = index;
+    updateGalleryImage();
+}
+
+function updateGalleryImage() {
+    const mainImage = document.getElementById('gallery-main-image');
+    const counter = document.querySelector('.gallery-counter');
+    const thumbnails = document.querySelectorAll('.gallery-thumbnail');
+    const prevBtn = document.querySelector('.gallery-prev');
+    const nextBtn = document.querySelector('.gallery-next');
+    
+    if (mainImage) {
+        mainImage.src = currentProductImages[currentImageIndex];
+    }
+    
+    if (counter) {
+        counter.textContent = `${currentImageIndex + 1} / ${currentProductImages.length}`;
+    }
+    
+    // Update thumbnails
+    thumbnails.forEach((thumb, index) => {
+        thumb.classList.toggle('active', index === currentImageIndex);
+    });
+    
+    // Update navigation buttons
+    if (prevBtn) {
+        prevBtn.disabled = currentImageIndex === 0;
+    }
+    if (nextBtn) {
+        nextBtn.disabled = currentImageIndex === currentProductImages.length - 1;
+    }
+}
+
+function handleGalleryKeydown(event) {
+    switch(event.key) {
+        case 'Escape':
+            closeImageGallery();
+            break;
+        case 'ArrowLeft':
+            previousImage();
+            break;
+        case 'ArrowRight':
+            nextImage();
+            break;
+    }
+}
