@@ -1199,6 +1199,12 @@ function closeImageGallery() {
         gallery.remove();
     }
     document.removeEventListener('keydown', handleGalleryKeydown);
+    
+    // Clean up gallery styles to prevent page corruption
+    const galleryStyles = document.querySelector('#gallery-styles');
+    if (galleryStyles) {
+        galleryStyles.remove();
+    }
 }
 
 function previousImage() {
