@@ -2685,9 +2685,9 @@
                     }
                 }
                 
-                // Add ordered images to FormData
+                // Add ordered images to FormData with specific field names
                 orderedImages.forEach((file, index) => {
-                    formData.append('images', file);
+                    formData.append(`image${index + 1}`, file);
                 });
                 
                 if (product) {
