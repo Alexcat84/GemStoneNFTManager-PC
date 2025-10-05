@@ -19,8 +19,19 @@ class AdminAuth {
         this.pool = new Pool({
             connectionString: process.env.DATABASE_URL,
             ssl: {
-                rejectUnauthorized: false
-            }
+                rejectUnauthorized: false,
+                require: true
+            },
+            connectionTimeoutMillis: 60000, // 60 seconds
+            idleTimeoutMillis: 300000, // 5 minutes
+            max: 3, // Maximum number of clients in the pool
+            min: 0, // Minimum number of clients in the pool
+            allowExitOnIdle: false, // Don't exit on idle
+            keepAlive: true,
+            keepAliveInitialDelayMillis: 0,
+            statement_timeout: 30000, // 30 seconds
+            query_timeout: 30000, // 30 seconds
+            application_name: 'qr-generator'
         });
         this.createAdminTable();
     }
