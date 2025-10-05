@@ -828,6 +828,166 @@
             background: #059669;
         }
 
+        /* Image Preview and Reordering Styles */
+        .image-preview-container {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 1rem;
+            background: #f9f9f9;
+            margin-top: 0.5rem;
+        }
+
+        .image-preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .image-preview-item {
+            position: relative;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: move;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .image-preview-item:hover {
+            border-color: #3b82f6;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .image-preview-item.dragging {
+            opacity: 0.5;
+            transform: rotate(5deg);
+        }
+
+        .image-preview-item.main-image {
+            border-color: #f59e0b;
+            border-width: 3px;
+            box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+        }
+
+        .image-preview-item img {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .image-preview-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .image-preview-item:hover .image-preview-overlay {
+            opacity: 1;
+        }
+
+        .image-preview-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .image-preview-btn {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .image-preview-btn:hover {
+            background: white;
+            transform: scale(1.1);
+        }
+
+        .image-preview-btn.main-btn {
+            color: #f59e0b;
+        }
+
+        .image-preview-btn.main-btn.active {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .image-preview-btn.remove-btn {
+            color: #ef4444;
+        }
+
+        .image-preview-btn.remove-btn:hover {
+            background: #ef4444;
+            color: white;
+        }
+
+        .image-preview-number {
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .image-preview-main-badge {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: #f59e0b;
+            color: white;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .image-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #ddd;
+        }
+
+        .drag-placeholder {
+            border: 2px dashed #3b82f6;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 8px;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #3b82f6;
+            font-weight: 500;
+        }
+
         @media (max-width: 768px) {
             .main-content {
                 grid-template-columns: 1fr;
@@ -2549,6 +2709,22 @@
                                 <small>Select multiple images for this product</small>
                             </div>
                             
+                            <!-- Image Preview and Reordering Section -->
+                            <div class="form-group" id="image-preview-section" style="display: none;">
+                                <label>Image Order & Main Selection</label>
+                                <div class="image-preview-container">
+                                    <div class="image-preview-grid" id="image-preview-grid">
+                                        <!-- Images will be dynamically added here -->
+                                    </div>
+                                    <div class="image-controls">
+                                        <button type="button" class="btn btn-secondary" id="clear-images">Clear All Images</button>
+                                        <small class="form-help">Drag images to reorder • Click star to set as main image</small>
+                                    </div>
+                                </div>
+                                <input type="hidden" id="main_image_index" name="main_image_index" value="0">
+                                <input type="hidden" id="image_order" name="image_order" value="">
+                            </div>
+                            
                             <div class="form-group">
                                 <label for="nftImage">NFT Image</label>
                                 <input type="file" id="nftImage" name="nft_image" accept="image/*">
@@ -2635,6 +2811,213 @@
                     submitBtn.disabled = false;
                 }
             }
+
+        // Image Preview and Reordering System
+        let imagePreviewData = [];
+        let mainImageIndex = 0;
+
+        function initializeImagePreview() {
+            const previewSection = document.getElementById('image-preview-section');
+            if (!previewSection) return;
+
+            // Load existing images if editing
+            if (window.currentProduct && window.currentProduct.image_urls) {
+                imagePreviewData = window.currentProduct.image_urls.map((url, index) => ({
+                    url: url,
+                    index: index,
+                    isMain: index === (window.currentProduct.main_image_index || 0)
+                }));
+                mainImageIndex = window.currentProduct.main_image_index || 0;
+                renderImagePreview();
+                previewSection.style.display = 'block';
+            }
+        }
+
+        function handleImageUpload(event) {
+            const files = Array.from(event.target.files);
+            if (files.length === 0) return;
+
+            // Convert files to preview data
+            files.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    imagePreviewData.push({
+                        url: e.target.result,
+                        index: imagePreviewData.length,
+                        isMain: imagePreviewData.length === 0, // First image is main by default
+                        file: file
+                    });
+                    
+                    if (imagePreviewData.length === 1) {
+                        mainImageIndex = 0;
+                    }
+                    
+                    renderImagePreview();
+                    updateHiddenFields();
+                };
+                reader.readAsDataURL(file);
+            });
+
+            // Show preview section
+            const previewSection = document.getElementById('image-preview-section');
+            if (previewSection) {
+                previewSection.style.display = 'block';
+            }
+        }
+
+        function renderImagePreview() {
+            const grid = document.getElementById('image-preview-grid');
+            if (!grid) return;
+
+            grid.innerHTML = '';
+
+            imagePreviewData.forEach((imageData, index) => {
+                const item = document.createElement('div');
+                item.className = `image-preview-item ${imageData.isMain ? 'main-image' : ''}`;
+                item.draggable = true;
+                item.dataset.index = index;
+
+                item.innerHTML = `
+                    <img src="${imageData.url}" alt="Preview ${index + 1}">
+                    <div class="image-preview-number">${index + 1}</div>
+                    ${imageData.isMain ? '<div class="image-preview-main-badge">MAIN</div>' : ''}
+                    <div class="image-preview-overlay">
+                        <div class="image-preview-controls">
+                            <button type="button" class="image-preview-btn main-btn ${imageData.isMain ? 'active' : ''}" 
+                                    onclick="setMainImage(${index})" title="Set as main image">
+                                ⭐
+                            </button>
+                            <button type="button" class="image-preview-btn remove-btn" 
+                                    onclick="removeImage(${index})" title="Remove image">
+                                ✕
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                // Add drag and drop event listeners
+                item.addEventListener('dragstart', handleDragStart);
+                item.addEventListener('dragover', handleDragOver);
+                item.addEventListener('drop', handleDrop);
+                item.addEventListener('dragend', handleDragEnd);
+
+                grid.appendChild(item);
+            });
+        }
+
+        function setMainImage(index) {
+            // Remove main status from all images
+            imagePreviewData.forEach(img => img.isMain = false);
+            
+            // Set new main image
+            imagePreviewData[index].isMain = true;
+            mainImageIndex = index;
+            
+            renderImagePreview();
+            updateHiddenFields();
+        }
+
+        function removeImage(index) {
+            imagePreviewData.splice(index, 1);
+            
+            // Adjust main image index if necessary
+            if (mainImageIndex >= index) {
+                mainImageIndex = Math.max(0, mainImageIndex - 1);
+            }
+            
+            // If we removed the main image, set first image as main
+            if (imagePreviewData.length > 0 && !imagePreviewData.some(img => img.isMain)) {
+                imagePreviewData[0].isMain = true;
+                mainImageIndex = 0;
+            }
+            
+            renderImagePreview();
+            updateHiddenFields();
+        }
+
+        function clearAllImages() {
+            imagePreviewData = [];
+            mainImageIndex = 0;
+            renderImagePreview();
+            updateHiddenFields();
+            
+            // Clear file input
+            const fileInput = document.getElementById('productImages');
+            if (fileInput) {
+                fileInput.value = '';
+            }
+        }
+
+        function updateHiddenFields() {
+            const mainIndexField = document.getElementById('main_image_index');
+            const orderField = document.getElementById('image_order');
+            
+            if (mainIndexField) {
+                mainIndexField.value = mainImageIndex;
+            }
+            
+            if (orderField) {
+                orderField.value = JSON.stringify(imagePreviewData.map(img => img.url));
+            }
+        }
+
+        // Drag and Drop functionality
+        let draggedElement = null;
+
+        function handleDragStart(e) {
+            draggedElement = this;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            
+            if (draggedElement && draggedElement !== this) {
+                const draggedIndex = parseInt(draggedElement.dataset.index);
+                const targetIndex = parseInt(this.dataset.index);
+                
+                // Swap images in array
+                const draggedImage = imagePreviewData[draggedIndex];
+                imagePreviewData.splice(draggedIndex, 1);
+                imagePreviewData.splice(targetIndex, 0, draggedImage);
+                
+                // Update main image index if necessary
+                if (mainImageIndex === draggedIndex) {
+                    mainImageIndex = targetIndex;
+                } else if (mainImageIndex === targetIndex) {
+                    mainImageIndex = draggedIndex;
+                }
+                
+                renderImagePreview();
+                updateHiddenFields();
+            }
+        }
+
+        function handleDragEnd(e) {
+            this.classList.remove('dragging');
+            draggedElement = null;
+        }
+
+        // Initialize image preview system when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle file input changes
+            const fileInput = document.getElementById('productImages');
+            if (fileInput) {
+                fileInput.addEventListener('change', handleImageUpload);
+            }
+            
+            // Handle clear images button
+            const clearBtn = document.getElementById('clear-images');
+            if (clearBtn) {
+                clearBtn.addEventListener('click', clearAllImages);
+            }
+        });
     </script>
 
     <style>

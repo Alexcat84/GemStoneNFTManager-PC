@@ -479,6 +479,7 @@ app.get('/api/admin/products', requireAuth, async (req, res) => {
       status: product.status,
       image_url: product.image_urls && product.image_urls.length > 0 ? product.image_urls[0] : '/images/placeholder-gem.jpg',
       image_urls: product.image_urls || [], // Include full array for editing
+      main_image_index: product.main_image_index || 0, // Include main image index
       nft_image_url: product.nft_image_url || '', // Include NFT image URL
       nft_url: product.nft_url || '', // Include NFT URL
       description: product.description,
@@ -549,6 +550,7 @@ app.post('/api/admin/products', requireAuth, upload.fields([
       is_featured: req.body.is_featured === 'true',
       is_archived: req.body.is_archived === 'true',
       image_urls: imageUrls,
+      main_image_index: parseInt(req.body.main_image_index) || 0,
       nft_url: req.body.nft_url,
       nft_image_url: nftImageUrl
     };
@@ -655,6 +657,7 @@ app.put('/api/admin/products/:productId', requireAuth, upload.fields([
       is_featured: req.body.is_featured === 'true',
       is_archived: req.body.is_archived === 'true',
       image_urls: imageUrls,
+      main_image_index: parseInt(req.body.main_image_index) || 0,
       nft_url: nftUrl,
       nft_image_url: nftImageUrl
     };
