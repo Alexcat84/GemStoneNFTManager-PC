@@ -2669,11 +2669,19 @@
 
             async function submitProductForm(product = null) {
                 const form = document.getElementById('productForm');
-                const formData = new FormData(form);
+                const formData = new FormData();
                 
                 // Validate images if it's a new product
                 if (!product && !validateImages()) {
                     return;
+                }
+                
+                // Add form fields manually (excluding file inputs)
+                const formElements = form.elements;
+                for (let element of formElements) {
+                    if (element.type !== 'file' && element.name && element.value) {
+                        formData.append(element.name, element.value);
+                    }
                 }
                 
                 // Process images in specific order
