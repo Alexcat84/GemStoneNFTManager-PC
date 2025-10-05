@@ -66,21 +66,78 @@ app.use(limiter);
 // Initialize database and services
 let nftDatabase, qrGenerator, adminAuth, codeGenerator;
 
-try {
-  console.log('🔄 Initializing services...');
-  nftDatabase = new PostgresDatabase();
-  qrGenerator = new QRGenerator();
-  adminAuth = new AdminAuth();
-  codeGenerator = new CodeGenerator();
-  console.log('✅ Services initialized successfully');
-} catch (error) {
-  console.error('❌ Error initializing services:', error);
-  // Continue without services for now
-}
+// Initialize services with retry mechanism
+const initializeServices = async () => {
+  const maxRetries = 3;
+  let retryCount = 0;
+  
+  while (retryCount < maxRetries) {
+    try {
+      console.log(`🔄 Initializing services... (attempt ${retryCount + 1}/${maxRetries})`);
+      
+      nftDatabase = new PostgresDatabase();
+      qrGenerator = new QRGenerator();
+      adminAuth = new AdminAuth();
+      codeGenerator = new CodeGenerator();
+      
+      console.log('✅ Services initialized successfully');
+      return true;
+    } catch (error) {
+      retryCount++;
+      console.error(`❌ Error initializing services (attempt ${retryCount}):`, error.message);
+      
+      if (retryCount < maxRetries) {
+        console.log(`⏳ Retrying in 5 seconds...`);
+        await new Promise(resolve => setTimeout(resolve, 5000));
+      } else {
+        console.log('⚠️ Services initialization failed, continuing with limited functionality...');
+        nftDatabase = null;
+        qrGenerator = null;
+        adminAuth = null;
+        codeGenerator = null;
+        return false;
+      }
+    }
+  }
+};
+
+// Initialize services
+initializeServices();
+
+// Middleware to check service availability
+const requireServices = (req, res, next) => {
+  if (!nftDatabase || !adminAuth) {
+    return res.status(503).json({ 
+      success: false, 
+      message: 'Database services are temporarily unavailable. Please try again later.' 
+    });
+  }
+  next();
+};
 
 // Routes
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'admin-panel', 'login.html'));
+});
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  const services = {
+    database: nftDatabase ? 'connected' : 'disconnected',
+    qrGenerator: qrGenerator ? 'available' : 'unavailable',
+    adminAuth: adminAuth ? 'available' : 'unavailable',
+    codeGenerator: codeGenerator ? 'available' : 'unavailable'
+  };
+  
+  const allServicesAvailable = Object.values(services).every(status => 
+    status === 'connected' || status === 'available'
+  );
+  
+  res.status(allServicesAvailable ? 200 : 503).json({
+    status: allServicesAvailable ? 'healthy' : 'degraded',
+    services,
+    timestamp: new Date().toISOString()
+  });
 });
 
 // Middleware to check authentication
