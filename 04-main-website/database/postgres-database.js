@@ -82,7 +82,6 @@ class PostgresDatabase {
                     description TEXT,
                     price DECIMAL(10,2) NOT NULL,
                     image_urls TEXT[], -- Array of image URLs
-                    main_image_index INTEGER DEFAULT 0, -- Index of main image (0 = first image)
                     nft_url TEXT,
                     nft_image_url TEXT, -- NFT image
                     status VARCHAR(50) DEFAULT 'available',
@@ -294,20 +293,20 @@ class PostgresDatabase {
             try {
                 client = await this.pool.connect();
                 const {
-                    name, description, price, image_urls, main_image_index, nft_url, nft_image_url,
+                    name, description, price, image_urls, nft_url, nft_image_url,
                     status, category, dimensions, weight, crystal_type, rarity,
                     energy_properties, personality_target, stock_quantity, is_featured, is_archived
                 } = productData;
 
                 const result = await client.query(`
                     INSERT INTO products (
-                        name, description, price, image_urls, main_image_index, nft_url, nft_image_url,
+                        name, description, price, image_urls, nft_url, nft_image_url,
                         status, category, dimensions, weight, crystal_type, rarity,
                         energy_properties, personality_target, stock_quantity, is_featured, is_archived
-                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
                     RETURNING id, created_at
                 `, [
-                    name, description, price, image_urls || [], main_image_index || 0, nft_url, nft_image_url,
+                    name, description, price, image_urls || [], nft_url, nft_image_url,
                     status || 'available', category, dimensions, weight, crystal_type, rarity,
                     energy_properties, personality_target, stock_quantity || 1, is_featured || false, is_archived || false
                 ]);
@@ -348,22 +347,22 @@ class PostgresDatabase {
             try {
                 client = await this.pool.connect();
                 const {
-                    name, description, price, image_urls, main_image_index, nft_url, nft_image_url,
+                    name, description, price, image_urls, nft_url, nft_image_url,
                     status, category, dimensions, weight, crystal_type, rarity,
                     energy_properties, personality_target, stock_quantity, is_featured, is_archived
                 } = productData;
 
                 const result = await client.query(`
                     UPDATE products SET
-                        name = $1, description = $2, price = $3, image_urls = $4, main_image_index = $5,
-                        nft_url = $6, nft_image_url = $7, status = $8, category = $9,
-                        dimensions = $10, weight = $11, crystal_type = $12, rarity = $13,
-                        energy_properties = $14, personality_target = $15, stock_quantity = $16, 
-                        is_featured = $17, is_archived = $18, updated_at = CURRENT_TIMESTAMP
-                    WHERE id = $19
+                        name = $1, description = $2, price = $3, image_urls = $4,
+                        nft_url = $5, nft_image_url = $6, status = $7, category = $8,
+                        dimensions = $9, weight = $10, crystal_type = $11, rarity = $12,
+                        energy_properties = $13, personality_target = $14, stock_quantity = $15, 
+                        is_featured = $16, is_archived = $17, updated_at = CURRENT_TIMESTAMP
+                    WHERE id = $18
                     RETURNING *
                 `, [
-                    name, description, price, image_urls, main_image_index || 0, nft_url, nft_image_url,
+                    name, description, price, image_urls, nft_url, nft_image_url,
                     status, category, dimensions, weight, crystal_type, rarity,
                     energy_properties, personality_target, stock_quantity, is_featured, is_archived, id
                 ]);

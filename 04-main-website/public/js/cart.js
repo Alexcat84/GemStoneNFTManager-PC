@@ -77,8 +77,7 @@ class ShoppingCart {
                 variantId: selectedVariant ? selectedVariant.id : null,
                 name: product.name,
                 price: selectedVariant ? parseFloat(selectedVariant.price) : parseFloat(product.price),
-                image: product.images && product.images.length > 0 ? 
-                    (product.images[product.main_image_index || 0] || product.images[0]) : '/images/default-gemspot.jpg',
+                image: product.images && product.images[0] ? product.images[0] : '/images/default-gemspot.jpg',
                 crystal_type: product.crystal_type || 'Crystal',
                 rarity: product.rarity || 'Common',
                 quantity: 1,
