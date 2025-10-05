@@ -75,7 +75,6 @@ try {
   console.log('✅ Services initialized successfully');
 } catch (error) {
   console.error('❌ Error initializing services:', error);
-  console.error('❌ Database connection failed. Please check DATABASE_URL environment variable.');
   // Continue without services for now
 }
 
@@ -468,15 +467,6 @@ app.delete('/api/codes/:codeId', requireAuth, async (req, res) => {
 // Website Admin API Routes
 app.get('/api/admin/products', requireAuth, async (req, res) => {
   try {
-    // Check if database is available
-    if (!nftDatabase || !nftDatabase.pool) {
-      console.error('❌ [WEBSITE ADMIN] Database not available');
-      return res.status(500).json({ 
-        success: false, 
-        message: 'Database connection not available. Please check server configuration.' 
-      });
-    }
-
     console.log('🔍 [WEBSITE ADMIN] Loading products from database...');
     
     const products = await nftDatabase.getAllProducts();
@@ -518,15 +508,6 @@ app.post('/api/admin/products', requireAuth, upload.fields([
   { name: 'nft_image', maxCount: 1 }
 ]), async (req, res) => {
   try {
-    // Check if database is available
-    if (!nftDatabase || !nftDatabase.pool) {
-      console.error('❌ [WEBSITE ADMIN] Database not available');
-      return res.status(500).json({ 
-        success: false, 
-        message: 'Database connection not available. Please check server configuration.' 
-      });
-    }
-
     console.log('➕ [WEBSITE ADMIN] Creating new product...');
     console.log('📦 [DEBUG] Request body:', req.body);
     console.log('📦 [DEBUG] Request files:', req.files);
@@ -589,15 +570,6 @@ app.put('/api/admin/products/:productId', requireAuth, upload.fields([
   { name: 'nft_image', maxCount: 1 }
 ]), async (req, res) => {
   try {
-    // Check if database is available
-    if (!nftDatabase || !nftDatabase.pool) {
-      console.error('❌ [WEBSITE ADMIN] Database not available');
-      return res.status(500).json({ 
-        success: false, 
-        message: 'Database connection not available. Please check server configuration.' 
-      });
-    }
-
     const { productId } = req.params;
     console.log(`✏️ [WEBSITE ADMIN] Updating product ${productId}...`);
     
