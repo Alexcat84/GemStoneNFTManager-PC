@@ -503,7 +503,10 @@ app.get('/api/admin/products', requireAuth, async (req, res) => {
 });
 
 app.post('/api/admin/products', requireAuth, upload.fields([
-  { name: 'images', maxCount: 4 },
+  { name: 'image1', maxCount: 1 },
+  { name: 'image2', maxCount: 1 },
+  { name: 'image3', maxCount: 1 },
+  { name: 'image4', maxCount: 1 },
   { name: 'nft_image', maxCount: 1 }
 ]), async (req, res) => {
   try {
@@ -511,19 +514,20 @@ app.post('/api/admin/products', requireAuth, upload.fields([
     console.log('📦 [DEBUG] Request body:', req.body);
     console.log('📦 [DEBUG] Request files:', req.files);
     
-    // Process uploaded images
+    // Process uploaded images in order
     let imageUrls = [];
     let nftImageUrl = null;
     
     if (req.files) {
-      // Process product images
-      if (req.files.images && req.files.images.length > 0) {
-        imageUrls = req.files.images.map(file => {
-          // For now, store as base64 data URLs (in production, upload to cloud storage)
+      // Process product images in specific order
+      const imageOrder = ['image1', 'image2', 'image3', 'image4'];
+      imageOrder.forEach(imageField => {
+        if (req.files[imageField] && req.files[imageField][0]) {
+          const file = req.files[imageField][0];
           const base64 = file.buffer.toString('base64');
-          return `data:${file.mimetype};base64,${base64}`;
-        });
-      }
+          imageUrls.push(`data:${file.mimetype};base64,${base64}`);
+        }
+      });
       
       // Process NFT image
       if (req.files.nft_image && req.files.nft_image.length > 0) {
@@ -564,7 +568,10 @@ app.post('/api/admin/products', requireAuth, upload.fields([
 });
 
 app.put('/api/admin/products/:productId', requireAuth, upload.fields([
-  { name: 'images', maxCount: 4 },
+  { name: 'image1', maxCount: 1 },
+  { name: 'image2', maxCount: 1 },
+  { name: 'image3', maxCount: 1 },
+  { name: 'image4', maxCount: 1 },
   { name: 'nft_image', maxCount: 1 }
 ]), async (req, res) => {
   try {
@@ -589,19 +596,20 @@ app.put('/api/admin/products/:productId', requireAuth, upload.fields([
       console.log('🔄 [EDIT PRODUCT] Error getting current product:', error.message);
     }
     
-    // Process uploaded images
+    // Process uploaded images in order
     let imageUrls = [];
     let nftImageUrl = null;
     
     if (req.files) {
-      // Process product images
-      if (req.files.images && req.files.images.length > 0) {
-        imageUrls = req.files.images.map(file => {
-          // For now, store as base64 data URLs (in production, upload to cloud storage)
+      // Process product images in specific order
+      const imageOrder = ['image1', 'image2', 'image3', 'image4'];
+      imageOrder.forEach(imageField => {
+        if (req.files[imageField] && req.files[imageField][0]) {
+          const file = req.files[imageField][0];
           const base64 = file.buffer.toString('base64');
-          return `data:${file.mimetype};base64,${base64}`;
-        });
-      }
+          imageUrls.push(`data:${file.mimetype};base64,${base64}`);
+        }
+      });
       
       // Process NFT image
       if (req.files.nft_image && req.files.nft_image.length > 0) {
