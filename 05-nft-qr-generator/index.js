@@ -75,7 +75,6 @@ try {
   console.log('✅ Services initialized successfully');
 } catch (error) {
   console.error('❌ Error initializing services:', error);
-  console.log('⚠️ Continuing without database connection...');
   // Continue without services for now
 }
 

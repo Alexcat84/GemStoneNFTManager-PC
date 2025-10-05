@@ -15,11 +15,6 @@ class AdminAuth {
     }
 
     initializeDatabase() {
-        if (!process.env.DATABASE_URL) {
-            console.log('⚠️ AdminAuth: No DATABASE_URL found, running without database');
-            this.pool = null;
-            return;
-        }
         const { Pool } = require('pg');
         this.pool = new Pool({
             connectionString: process.env.DATABASE_URL,
@@ -31,10 +26,6 @@ class AdminAuth {
     }
 
     async createAdminTable() {
-        if (!this.pool) {
-            console.log('⚠️ AdminAuth: No database pool available, skipping table creation');
-            return;
-        }
         const client = await this.pool.connect();
         try {
             const createTableQuery = `

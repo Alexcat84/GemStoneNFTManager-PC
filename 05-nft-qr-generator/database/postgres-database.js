@@ -4,7 +4,7 @@ const CodeGenerator = require('../src/utils/code-generator');
 class PostgresDatabase {
     constructor() {
         if (!process.env.DATABASE_URL && !process.env.POSTGRES_URL) {
-            console.log('⚠️ [DATABASE] DATABASE_URL not found in environment variables - running without database');
+            console.error('❌ [DATABASE] DATABASE_URL not found in environment variables');
             this.pool = null;
             return;
         }
