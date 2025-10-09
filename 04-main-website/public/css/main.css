@@ -2123,6 +2123,26 @@ p {
     .blockchain-section {
         padding: var(--spacing-md);
     }
+    
+    .warning-box {
+        padding: 15px;
+        margin-bottom: 20px;
+        gap: 10px;
+    }
+    
+    .warning-box i {
+        font-size: 1.2rem;
+    }
+    
+    .warning-box h4 {
+        font-size: 1rem;
+        margin-bottom: 6px;
+    }
+    
+    .warning-box p {
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
 }
 
 /* Back to Home Button Styles */
