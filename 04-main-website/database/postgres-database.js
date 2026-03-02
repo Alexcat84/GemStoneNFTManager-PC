@@ -11,15 +11,27 @@ class PostgresDatabase {
         console.log('🔍 [DATABASE] DATABASE_URL found:', process.env.DATABASE_URL.substring(0, 50) + '...');
         
         try {
+            // Parse PostgreSQL connection string manually (same as before when gallery worked)
             const connectionString = process.env.DATABASE_URL;
-            console.log('🔍 [DATABASE] Connecting with DATABASE_URL (first 50 chars):', connectionString.substring(0, 50) + '...');
+            console.log('🔍 [DATABASE] Raw connection string:', connectionString.substring(0, 50) + '...');
             
-            // Use connection string directly so pg handles encoding (e.g. passwords with : or @)
+            const match = connectionString.match(/^postgres(ql)?:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/([^?]+)(\?.*)?$/);
+            
+            if (!match) {
+                throw new Error('Invalid PostgreSQL connection string format');
+            }
+            
+            const [, , username, password, hostname, port, database] = match;
+            
+            console.log('🔍 [DATABASE] Parsed components:', { hostname, port: parseInt(port), database, username, hasPassword: !!password });
+            
             this.pool = new Pool({
-                connectionString,
-                ssl: connectionString.includes('sslmode=require') || connectionString.includes('ssl=true')
-                    ? { rejectUnauthorized: false }
-                    : false,
+                host: hostname,
+                port: parseInt(port),
+                database: database,
+                user: username,
+                password: password,
+                ssl: { rejectUnauthorized: false },
                 connectionTimeoutMillis: 30000,
                 idleTimeoutMillis: 60000,
                 max: 5,
