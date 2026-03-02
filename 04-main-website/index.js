@@ -209,9 +209,9 @@ const requireAuth = (req, res, next) => {
 // API Routes for GemSpots data
 app.get('/api/gemspots', async (req, res) => {
   try {
-    if (!database) {
-      console.error('❌ [API] Database not initialized');
-      return res.status(500).json({ success: false, message: 'Database not available' });
+    if (!database || !database.pool) {
+      console.error('❌ [API] Database not initialized or pool unavailable');
+      return res.status(503).json({ success: false, message: 'Database not available' });
     }
     
     // Check if request is coming from gallery page

@@ -11,46 +11,23 @@ class PostgresDatabase {
         console.log('🔍 [DATABASE] DATABASE_URL found:', process.env.DATABASE_URL.substring(0, 50) + '...');
         
         try {
-            // Parse PostgreSQL connection string manually
             const connectionString = process.env.DATABASE_URL;
-            console.log('🔍 [DATABASE] Raw connection string:', connectionString.substring(0, 50) + '...');
+            console.log('🔍 [DATABASE] Connecting with DATABASE_URL (first 50 chars):', connectionString.substring(0, 50) + '...');
             
-            // Extract components using regex - handle both postgres:// and postgresql://
-            // Also handle query parameters like ?sslmode=require
-            const match = connectionString.match(/^postgres(ql)?:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/([^?]+)(\?.*)?$/);
-            
-            if (!match) {
-                throw new Error('Invalid PostgreSQL connection string format');
-            }
-            
-            const [, , username, password, hostname, port, database] = match;
-            
-            console.log('🔍 [DATABASE] Parsed components:', {
-                hostname,
-                port: parseInt(port),
-                database,
-                username,
-                hasPassword: !!password
-            });
-            
+            // Use connection string directly so pg handles encoding (e.g. passwords with : or @)
             this.pool = new Pool({
-                host: hostname,
-                port: parseInt(port),
-                database: database,
-                user: username,
-                password: password,
-                ssl: {
-                    rejectUnauthorized: false,
-                    require: true
-                },
-                connectionTimeoutMillis: 30000, // 30 seconds
-                idleTimeoutMillis: 60000, // 60 seconds
-                max: 5, // Maximum number of clients in the pool
+                connectionString,
+                ssl: connectionString.includes('sslmode=require') || connectionString.includes('ssl=true')
+                    ? { rejectUnauthorized: false }
+                    : false,
+                connectionTimeoutMillis: 30000,
+                idleTimeoutMillis: 60000,
+                max: 5,
                 allowExitOnIdle: true,
                 keepAlive: true,
                 keepAliveInitialDelayMillis: 10000
             });
-            console.log('✅ [DATABASE] Pool created successfully with regex parsing');
+            console.log('✅ [DATABASE] Pool created successfully');
         } catch (error) {
             console.error('❌ [DATABASE] Error creating pool:', error);
             console.error('❌ [DATABASE] Error details:', error.message);
