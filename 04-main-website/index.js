@@ -9,6 +9,8 @@ const PostgresDatabase = require('./database/postgres-database');
 const AdminAuth = require('./admin-panel/admin-auth');
 const StockManager = require('./database/stock-manager');
 
+const stripe = process.env.STRIPE_SECRET_KEY ? require('stripe')(process.env.STRIPE_SECRET_KEY) : null;
+
 const app = express();
 const PORT = process.env.PORT || 4000;
 
@@ -62,6 +64,46 @@ app.use(helmet({
   contentSecurityPolicy: false
 }));
 app.use(cors());
+// Stripe webhook needs raw body for signature verification (must be before express.json)
+app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), (req, res) => {
+  if (!stripe || !process.env.STRIPE_WEBHOOK_SECRET) {
+    return res.status(503).json({ error: 'Stripe not configured' });
+  }
+  const sig = req.headers['stripe-signature'];
+  let event;
+  try {
+    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+  } catch (err) {
+    console.error('❌ [Stripe webhook] Signature verification failed:', err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object;
+    (async () => {
+      try {
+        const order = await database.getOrderByStripeSessionId(session.id);
+        if (!order) {
+          console.error('❌ [Stripe webhook] Order not found for session:', session.id);
+          return;
+        }
+        if (order.status === 'paid') {
+          return; // Idempotent: already processed
+        }
+        await database.updateOrderPaid(order.id);
+        const items = order.items && (typeof order.items === 'string' ? JSON.parse(order.items) : order.items) || [];
+        const variantIds = items.filter(i => i.variantId).map(i => i.variantId);
+        const productId = items[0] && items[0].productId;
+        if (productId && variantIds.length > 0) {
+          await stockManager.updateStockAfterPurchase(productId, items.length, variantIds);
+        }
+        console.log('✅ [Stripe webhook] Order', order.id, 'marked paid and stock updated');
+      } catch (e) {
+        console.error('❌ [Stripe webhook] Fulfillment error:', e);
+      }
+    })();
+  }
+  res.sendStatus(200);
+});
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -124,6 +166,10 @@ app.get('/about', (req, res) => {
 
 app.get('/contact', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'contact.html'));
+});
+
+app.get('/order-success', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'order-success.html'));
 });
 
 // Admin routes
@@ -625,6 +671,82 @@ app.delete('/api/admin/variants/:variantId', requireAuth, async (req, res) => {
 });
 
 // Checkout API endpoint
+app.post('/api/checkout/create-session', async (req, res) => {
+  if (!stripe) {
+    return res.status(503).json({ success: false, message: 'Stripe is not configured' });
+  }
+  try {
+    const { items, shippingInfo } = req.body;
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ success: false, message: 'No items in cart' });
+    }
+    const variantIds = items.filter(i => i.variantId).map(i => i.variantId);
+    const productId = items[0] && items[0].productId;
+    if (productId && variantIds.length > 0) {
+      const stockUpdate = await stockManager.checkStock(productId, items.length);
+      if (!stockUpdate.available) {
+        return res.status(400).json({
+          success: false,
+          message: `Only ${stockUpdate.availableStock} units available`,
+          availableStock: stockUpdate.availableStock
+        });
+      }
+    }
+    const subtotal = items.reduce((sum, i) => sum + (Number(i.price) || 0) * (i.quantity || 1), 0);
+    const shippingCost = (shippingInfo && Number(shippingInfo.cost)) || 0;
+    const taxRate = 0.13;
+    const tax = (subtotal + shippingCost) * taxRate;
+    const total = subtotal + shippingCost + tax;
+    const orderData = {
+      status: 'pending',
+      total,
+      shipping_cost: shippingCost,
+      tax,
+      items: items.map(i => ({
+        productId: i.productId,
+        variantId: i.variantId,
+        name: i.name,
+        price: Number(i.price) || 0,
+        quantity: i.quantity || 1
+      })),
+      shipping_address: shippingInfo || null
+    };
+    const order = await database.createOrder(orderData);
+    const baseUrl = process.env.BASE_URL || (req.headers.origin || '').replace(/\/$/, '') || `http://localhost:${PORT}`;
+    const successUrl = `${baseUrl}/order-success?session_id={CHECKOUT_SESSION_ID}`;
+    const cancelUrl = `${baseUrl}/#gallery`;
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      line_items: items.map(item => {
+        const imageUrl = item.image && !item.image.startsWith('data:') && (item.image.startsWith('http') ? item.image : `${baseUrl}${item.image}`);
+        return {
+          price_data: {
+            currency: 'cad',
+            product_data: {
+              name: item.name,
+              ...(imageUrl ? { images: [imageUrl] } : {})
+            },
+            unit_amount: Math.round((Number(item.price) || 0) * 100)
+          },
+          quantity: item.quantity || 1
+        };
+      }),
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+      metadata: { orderId: String(order.id) }
+    });
+    await database.updateOrderStripeSessionId(order.id, session.id);
+    res.json({ success: true, sessionId: session.id, url: session.url });
+  } catch (error) {
+    console.error('Error creating checkout session:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Error creating checkout session'
+    });
+  }
+});
+
+// Checkout API endpoint (legacy: no real payment; keep for backward compatibility or remove later)
 app.post('/api/checkout', async (req, res) => {
     try {
         const { items, shippingInfo, paymentInfo } = req.body;

@@ -152,6 +152,21 @@ class PostgresDatabase {
                 );
             }
 
+            // Orders table (Stripe checkout: pending -> paid via webhook)
+            await client.query(`
+                CREATE TABLE IF NOT EXISTS orders (
+                    id SERIAL PRIMARY KEY,
+                    stripe_session_id VARCHAR(255) UNIQUE,
+                    status VARCHAR(20) DEFAULT 'pending',
+                    total DECIMAL(10,2) NOT NULL,
+                    shipping_cost DECIMAL(10,2) DEFAULT 0,
+                    tax DECIMAL(10,2) DEFAULT 0,
+                    items JSONB NOT NULL,
+                    shipping_address JSONB,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    paid_at TIMESTAMP WITH TIME ZONE
+                )
+            `);
 
             console.log('✅ Database tables initialized successfully');
         } catch (error) {
@@ -588,6 +603,70 @@ class PostgresDatabase {
         } catch (error) {
             console.error('Error getting products with variant counts:', error);
             return [];
+        }
+    }
+
+    // Orders (Stripe checkout)
+    async createOrder(data) {
+        if (!this.pool) throw new Error('Database not available');
+        const client = await this.pool.connect();
+        try {
+            const result = await client.query(`
+                INSERT INTO orders (stripe_session_id, status, total, shipping_cost, tax, items, shipping_address)
+                VALUES ($1, $2, $3, $4, $5, $6, $7)
+                RETURNING *
+            `, [
+                data.stripe_session_id || null,
+                data.status || 'pending',
+                data.total,
+                data.shipping_cost ?? 0,
+                data.tax ?? 0,
+                JSON.stringify(data.items),
+                data.shipping_address ? JSON.stringify(data.shipping_address) : null
+            ]);
+            return result.rows[0];
+        } finally {
+            client.release();
+        }
+    }
+
+    async updateOrderStripeSessionId(orderId, stripeSessionId) {
+        if (!this.pool) throw new Error('Database not available');
+        const client = await this.pool.connect();
+        try {
+            const result = await client.query(`
+                UPDATE orders SET stripe_session_id = $1 WHERE id = $2 RETURNING *
+            `, [stripeSessionId, orderId]);
+            return result.rows[0];
+        } finally {
+            client.release();
+        }
+    }
+
+    async getOrderByStripeSessionId(stripeSessionId) {
+        if (!this.pool) return null;
+        const client = await this.pool.connect();
+        try {
+            const result = await client.query(
+                'SELECT * FROM orders WHERE stripe_session_id = $1',
+                [stripeSessionId]
+            );
+            return result.rows[0] || null;
+        } finally {
+            client.release();
+        }
+    }
+
+    async updateOrderPaid(orderId, paidAt = new Date()) {
+        if (!this.pool) throw new Error('Database not available');
+        const client = await this.pool.connect();
+        try {
+            const result = await client.query(`
+                UPDATE orders SET status = 'paid', paid_at = $1 WHERE id = $2 RETURNING *
+            `, [paidAt, orderId]);
+            return result.rows[0];
+        } finally {
+            client.release();
         }
     }
 

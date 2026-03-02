@@ -317,48 +317,65 @@ class ShoppingCart {
         }
         
         try {
-            // Prepare checkout data
-            const checkoutData = {
+            const shippingCost = window.shippingCalculator ? (window.shippingCalculator.getSelectedShippingCost && window.shippingCalculator.getSelectedShippingCost()) : (this.getShipping ? this.getShipping() : 0);
+            const checkoutPayload = {
                 items: this.items,
                 shippingInfo: {
-                    selectedOption: window.shippingCalculator.selectedOption,
-                    cost: window.shippingCalculator.getSelectedShippingCost()
-                },
-                paymentInfo: {
-                    // This would be filled by payment form
-                    method: 'credit_card'
+                    selectedOption: window.shippingCalculator && window.shippingCalculator.selectedOption,
+                    cost: shippingCost
                 }
             };
             
-            console.log('🛒 Proceeding to checkout with data:', checkoutData);
-            this.showNotification('Processing your order...', 'info');
+            this.showNotification('Redirecting to secure checkout...', 'info');
             
-            // Send checkout request
-            const response = await fetch('/api/checkout', {
+            const createSessionUrl = (this.config.endpoints && this.config.endpoints.createCheckoutSession) || '/api/checkout/create-session';
+            const response = await fetch(createSessionUrl, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(checkoutData)
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(checkoutPayload)
             });
             
             const result = await response.json();
+            console.log('[Checkout] create-session status:', response.status, 'response:', result);
             
-            if (result.success) {
-                // Clear cart after successful checkout
+            if (result.success && result.url) {
+                console.log('[Checkout] Redirecting to Stripe:', result.url);
+                window.location.href = result.url;
+                return;
+            }
+            
+            if (!result.success && response.status === 503) {
+                this.showNotification('Payment is not available right now. Please try again later.', 'error');
+                return;
+            }
+            
+            if (!result.success && response.status === 400) {
+                this.showNotification(result.message || 'Cannot complete checkout', 'error');
+                return;
+            }
+            
+            console.warn('[Checkout] No Stripe URL received, using legacy checkout. Status:', response.status, 'Has url:', !!result.url);
+            // Fallback: legacy checkout (no Stripe)
+            const legacyResponse = await fetch('/api/checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    items: this.items,
+                    shippingInfo: checkoutPayload.shippingInfo,
+                    paymentInfo: { method: 'credit_card' }
+                })
+            });
+            const legacyResult = await legacyResponse.json();
+            
+            if (legacyResult.success) {
                 this.items = [];
                 this.saveCart();
                 this.updateCartDisplay();
                 this.hideCart();
-                
-                this.showNotification(`Order ${result.orderId} processed successfully!`, 'success');
-                
-                // Here you would typically redirect to a success page
-                console.log('✅ Checkout successful:', result);
+                this.showNotification(`Order ${legacyResult.orderId} processed successfully!`, 'success');
             } else {
-                this.showNotification(result.message || 'Checkout failed', 'error');
+                this.showNotification(legacyResult.message || 'Checkout failed', 'error');
             }
-            
         } catch (error) {
             console.error('Error during checkout:', error);
             this.showNotification('Error processing checkout', 'error');

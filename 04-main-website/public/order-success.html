@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thank You - GemSpots</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/cart.css">
+    <style>
+        .success-page { min-height: 60vh; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+        .success-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 3rem; border-radius: 16px; text-align: center; max-width: 480px; box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3); }
+        .success-card h1 { font-family: 'Playfair Display', serif; margin-bottom: 1rem; font-size: 1.75rem; }
+        .success-card p { opacity: 0.95; margin-bottom: 1.5rem; }
+        .success-card .btn { display: inline-block; background: rgba(255,255,255,0.2); color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; border: 1px solid rgba(255,255,255,0.3); margin-top: 0.5rem; transition: background 0.2s; }
+        .success-card .btn:hover { background: rgba(255,255,255,0.3); }
+    </style>
+</head>
+<body>
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <i class="fas fa-gem"></i>
+                <a href="/" style="color: inherit; text-decoration: none;"><span>GemSpots</span></a>
+            </div>
+            <ul class="nav-menu" id="nav-menu">
+                <li class="nav-item"><a href="/" class="nav-link">Home</a></li>
+                <li class="nav-item"><a href="/gallery" class="nav-link">Gallery</a></li>
+                <li class="nav-item"><a href="/#about" class="nav-link">About</a></li>
+                <li class="nav-item"><a href="/#contact" class="nav-link">Contact</a></li>
+                <li class="nav-item">
+                    <a href="/" class="cart-icon">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span>Cart</span>
+                        <span class="cart-count">0</span>
+                    </a>
+                </li>
+            </ul>
+            <div class="nav-toggle" id="nav-toggle"><span class="bar"></span><span class="bar"></span><span class="bar"></span></div>
+        </div>
+    </nav>
+
+    <main class="success-page">
+        <div class="success-card">
+            <i class="fas fa-check-circle" style="font-size: 4rem; margin-bottom: 1rem;"></i>
+            <h1>Thank you for your purchase</h1>
+            <p>Your order has been confirmed. You will receive an email confirmation shortly.</p>
+            <p>We hope you enjoy your GemSpot.</p>
+            <a href="/" class="btn">Continue shopping</a>
+        </div>
+    </main>
+
+    <script>
+        (function() {
+            var storageKey = 'gemspots_cart';
+            try {
+                if (window.CART_CONFIG && window.CART_CONFIG.storageKey) storageKey = window.CART_CONFIG.storageKey;
+            } catch (e) {}
+            localStorage.removeItem(storageKey);
+            var countEl = document.querySelector('.cart-count');
+            if (countEl) countEl.textContent = '0';
+        })();
+    </script>
+</body>
+</html>

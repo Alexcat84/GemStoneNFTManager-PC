@@ -25,7 +25,8 @@ const CART_CONFIG = {
     endpoints: {
         calculateShipping: '/api/shipping/calculate',
         processPayment: '/api/payment/process',
-        createOrder: '/api/orders/create'
+        createOrder: '/api/orders/create',
+        createCheckoutSession: '/api/checkout/create-session'
     }
 };
 
