@@ -418,6 +418,26 @@ class PostgresDatabase {
         }
     }
 
+    /** Reset all products and variants to available (for testing). */
+    async resetAllProductsToAvailable() {
+        if (!this.pool) throw new Error('Database not available');
+        const client = await this.pool.connect();
+        try {
+            const productsResult = await client.query(
+                `UPDATE products SET status = 'available', sold_date = NULL, updated_at = CURRENT_TIMESTAMP WHERE status != 'available' RETURNING id`
+            );
+            const variantsResult = await client.query(
+                `UPDATE product_variants SET status = 'available', updated_at = CURRENT_TIMESTAMP WHERE status != 'available' RETURNING id`
+            );
+            return {
+                productsUpdated: productsResult.rowCount,
+                variantsUpdated: variantsResult.rowCount
+            };
+        } finally {
+            client.release();
+        }
+    }
+
     async deleteProduct(id) {
         let client;
         let retries = 3;

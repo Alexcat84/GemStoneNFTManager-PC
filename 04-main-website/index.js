@@ -1323,6 +1323,25 @@ app.put('/api/admin/products/:id/mark-sold', requireAuth, async (req, res) => {
   }
 });
 
+/** Reset all products and variants to available (for testing). Requires admin auth. */
+app.post('/api/admin/reset-products-to-available', requireAuth, async (req, res) => {
+  try {
+    if (!database || !database.pool) {
+      return res.status(503).json({ success: false, message: 'Database not available' });
+    }
+    const result = await database.resetAllProductsToAvailable();
+    console.log('🔄 [Admin] Reset products to available:', result);
+    res.json({
+      success: true,
+      message: 'All products and variants set to available',
+      ...result
+    });
+  } catch (error) {
+    console.error('Error resetting products to available:', error);
+    res.status(500).json({ success: false, message: error.message || 'Error resetting products' });
+  }
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);

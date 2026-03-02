@@ -811,11 +811,16 @@
                 <!-- Products Section -->
                 <div class="card">
                     <div class="card-header">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
                             <h2 style="margin: 0;">Products Management</h2>
-                            <button class="btn" onclick="openAddProductModal()">
-                                + Add New Product
-                            </button>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn" type="button" onclick="resetAllProductsToAvailable()" style="background: #6c757d; color: white;" title="Set all products and variants to available (for testing)">
+                                    Reset all to available
+                                </button>
+                                <button class="btn" onclick="openAddProductModal()">
+                                    + Add New Product
+                                </button>
+                            </div>
                         </div>
                     </div>
                     <div class="card-body">
@@ -888,6 +893,28 @@
 
         function updateStats() {
             // Update statistics
+        }
+
+        async function resetAllProductsToAvailable() {
+            const token = localStorage.getItem('adminToken');
+            if (!token) { alert('Please log in first.'); return; }
+            if (!confirm('Set ALL products and variants to available? Use only for testing.')) return;
+            try {
+                const res = await fetch('/api/admin/reset-products-to-available', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('Done. Products: ' + (data.productsUpdated || 0) + ', Variants: ' + (data.variantsUpdated || 0) + ' set to available.');
+                    if (typeof loadProducts === 'function') loadProducts();
+                    if (typeof updateStats === 'function') updateStats();
+                } else {
+                    alert('Error: ' + (data.message || res.status));
+                }
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
         }
 
         function openAddProductModal() {

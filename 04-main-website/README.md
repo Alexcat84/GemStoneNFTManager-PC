@@ -58,6 +58,7 @@ The main e-commerce website for GemStone NFT Manager, featuring a public product
 - `POST /api/admin/products` - Create product
 - `PUT /api/admin/products/:id` - Update product
 - `PUT /api/admin/products/:id/mark-sold` - Mark as sold
+- `POST /api/admin/reset-products-to-available` - Set all products and variants to available (for testing; requires admin auth)
 - `DELETE /api/admin/products/:id` - Delete product
 
 ## 🗄️ Database Operations
