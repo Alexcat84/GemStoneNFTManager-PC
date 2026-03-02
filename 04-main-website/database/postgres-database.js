@@ -11,12 +11,27 @@ class PostgresDatabase {
         console.log('🔍 [DATABASE] DATABASE_URL found:', process.env.DATABASE_URL.substring(0, 50) + '...');
         
         try {
+            // Parse PostgreSQL connection string manually (same as before when gallery worked)
             const connectionString = process.env.DATABASE_URL;
-            const useSsl = /sslmode=require|ssl=true/i.test(connectionString);
-            // Use connection string as-is so Prisma URLs work (e.g. /?sslmode=require&pool=true)
+            console.log('🔍 [DATABASE] Raw connection string:', connectionString.substring(0, 50) + '...');
+            
+            const match = connectionString.match(/^postgres(ql)?:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/([^?]+)(\?.*)?$/);
+            
+            if (!match) {
+                throw new Error('Invalid PostgreSQL connection string format');
+            }
+            
+            const [, , username, password, hostname, port, database] = match;
+            
+            console.log('🔍 [DATABASE] Parsed components:', { hostname, port: parseInt(port), database, username, hasPassword: !!password });
+            
             this.pool = new Pool({
-                connectionString,
-                ssl: useSsl ? { rejectUnauthorized: false } : false,
+                host: hostname,
+                port: parseInt(port),
+                database: database,
+                user: username,
+                password: password,
+                ssl: { rejectUnauthorized: false },
                 connectionTimeoutMillis: 30000,
                 idleTimeoutMillis: 60000,
                 max: 5,
@@ -26,7 +41,8 @@ class PostgresDatabase {
             });
             console.log('✅ [DATABASE] Pool created successfully');
         } catch (error) {
-            console.error('❌ [DATABASE] Error creating pool:', error.message);
+            console.error('❌ [DATABASE] Error creating pool:', error);
+            console.error('❌ [DATABASE] Error details:', error.message);
             this.pool = null;
         }
         
