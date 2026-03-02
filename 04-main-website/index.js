@@ -712,10 +712,7 @@ app.post('/api/checkout/create-session', async (req, res) => {
       shipping_address: shippingInfo || null
     };
     const order = await database.createOrder(orderData);
-    const rawBase = process.env.BASE_URL || (req.headers.origin || '').replace(/\/$/, '') || `http://localhost:${PORT}`;
-    const baseUrl = (rawBase && !/^https?:\/\//i.test(rawBase))
-      ? (rawBase.startsWith('localhost') || rawBase.startsWith('127.0.0.1') ? `http://${rawBase}` : `https://${rawBase}`)
-      : rawBase;
+    const baseUrl = process.env.BASE_URL || (req.headers.origin || '').replace(/\/$/, '') || `http://localhost:${PORT}`;
     const successUrl = `${baseUrl}/order-success?session_id={CHECKOUT_SESSION_ID}`;
     const cancelUrl = `${baseUrl}/#gallery`;
     const session = await stripe.checkout.sessions.create({
