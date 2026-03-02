@@ -557,6 +557,22 @@ p {
     text-align: center;
 }
 
+.gallery-error,
+.gallery-empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: var(--spacing-2xl);
+    color: var(--text-secondary);
+}
+.gallery-error i,
+.gallery-empty i {
+    font-size: 3rem;
+    margin-bottom: var(--spacing-md);
+    opacity: 0.6;
+}
+.gallery-error { color: var(--color-warning, #856404); }
+.gallery-empty i { color: var(--color-primary, #667eea); }
+
 /* About Section */
 .about {
     padding: var(--spacing-2xl) 0;

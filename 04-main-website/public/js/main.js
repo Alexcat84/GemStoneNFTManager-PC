@@ -152,8 +152,12 @@ async function loadGallery() {
         const response = await fetch('/api/gemspots');
         const data = await response.json();
         
-        if (data.success) {
-            displayGallery(data.gemspots); // Show all featured products on homepage
+        if (data.success && Array.isArray(data.gemspots)) {
+            displayGallery(data.gemspots);
+        } else if (data.success && (!data.gemspots || data.gemspots.length === 0)) {
+            displayGalleryEmpty();
+        } else {
+            displayGalleryError();
         }
     } catch (error) {
         console.error('Error loading gallery:', error);
@@ -163,14 +167,19 @@ async function loadGallery() {
 
 // Display gallery items
 function displayGallery(gemspots) {
-    // Store products data globally for cart access
-    window.productsData = gemspots;
+    const list = Array.isArray(gemspots) ? gemspots : [];
+    window.productsData = list;
     console.log('🛒 Products data stored globally:', window.productsData);
     
     const galleryGrid = document.getElementById('gallery-grid');
     if (!galleryGrid) return;
 
-    galleryGrid.innerHTML = gemspots.map(gemspot => {
+    if (list.length === 0) {
+        displayGalleryEmpty();
+        return;
+    }
+
+    galleryGrid.innerHTML = list.map(gemspot => {
         // Get the first image or use a placeholder
         const firstImage = gemspot.images && gemspot.images.length > 0 ? gemspot.images[0] : null;
         const imageUrl = firstImage || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjhmYWZjIi8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pgo8L3N2Zz4K';
@@ -223,7 +232,7 @@ function displayGallery(gemspots) {
     }).join('');
 
     // Add hover effects
-    const galleryItems = document.querySelectorAll('.gallery-item');
+    const galleryItems = galleryGrid.querySelectorAll('.gallery-item');
     galleryItems.forEach(item => {
         item.addEventListener('mouseenter', () => {
             item.style.transform = 'translateY(-10px) scale(1.02)';
@@ -244,6 +253,20 @@ function displayGalleryError() {
         <div class="gallery-error">
             <i class="fas fa-exclamation-triangle"></i>
             <p>Unable to load gallery. Please try again later.</p>
+        </div>
+    `;
+}
+
+// Display empty gallery state (no products)
+function displayGalleryEmpty() {
+    const galleryGrid = document.getElementById('gallery-grid');
+    if (!galleryGrid) return;
+
+    window.productsData = [];
+    galleryGrid.innerHTML = `
+        <div class="gallery-empty">
+            <i class="fas fa-gem"></i>
+            <p>No products in the collection right now. Check back soon!</p>
         </div>
     `;
 }
