@@ -108,6 +108,7 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/admin-panel', express.static(path.join(__dirname, 'admin-panel')));
 
 // Error handling middleware for file uploads
 app.use((error, req, res, next) => {
