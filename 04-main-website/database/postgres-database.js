@@ -275,7 +275,8 @@ class PostgresDatabase {
     async getAvailableProducts() {
         try {
             const client = await this.pool.connect();
-            const result = await client.query('SELECT * FROM products WHERE status = \'available\' AND is_archived = false ORDER BY created_at DESC');
+            // Featured first, then newest. This ensures "featured" products appear at the front in the gallery UI.
+            const result = await client.query('SELECT * FROM products WHERE status = \'available\' AND is_archived = false ORDER BY is_featured DESC, created_at DESC');
             client.release();
             return result.rows;
         } catch (error) {
