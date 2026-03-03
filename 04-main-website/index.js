@@ -173,6 +173,11 @@ app.get('/order-success', (req, res) => {
 });
 
 // Admin routes
+app.get('/admin', (req, res) => {
+  // Simple entrypoint: always redirect to login; login.js se encarga de redirigir al dashboard si ya hay token válido
+  res.redirect('/admin/login');
+});
+
 app.get('/admin/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'admin-panel', 'login.html'));
 });
