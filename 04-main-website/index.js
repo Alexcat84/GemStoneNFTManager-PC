@@ -5,6 +5,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const compression = require('compression');
 const multer = require('multer');
+const QRCode = require('qrcode');
 const PostgresDatabase = require('./database/postgres-database');
 const AdminAuth = require('./admin-panel/admin-auth');
 const StockManager = require('./database/stock-manager');
@@ -1213,6 +1214,173 @@ app.delete('/api/admin/codes/:codeId', requireAuth, async (req, res) => {
   } catch (error) {
     console.error('Error deleting code:', error);
     res.status(500).json({ success: false, message: 'Error deleting code' });
+  }
+});
+
+// Admin QR Generator (migrated from 05-nft-qr-generator)
+app.post('/api/admin/qr/generate', requireAuth, async (req, res) => {
+  try {
+    const { url, status = 'ready', nft_url = null, estimated_ready_date = null, notes = null } = req.body;
+    if (!url) {
+      return res.status(400).json({ success: false, message: 'URL is required' });
+    }
+
+    const qrId = Date.now().toString();
+
+    // Build smart redirect URL pointing to this app
+    const rawBase = process.env.BASE_URL || (req.headers.origin || '').replace(/\/$/, '') || `http://localhost:${PORT}`;
+    const baseUrl = (rawBase && !/^https?:\/\//i.test(rawBase))
+      ? (rawBase.startsWith('localhost') || rawBase.startsWith('127.0.0.1') ? `http://${rawBase}` : `https://${rawBase}`)
+      : rawBase;
+    const qrRedirectUrl = `${baseUrl}/qr/${qrId}`;
+
+    // Generate QR as base64 (for Vercel) – similar config to 05
+    const qrCodeData = await QRCode.toDataURL(qrRedirectUrl, {
+      width: 1024,
+      margin: 4,
+      color: { dark: '#000000', light: '#FFFFFF' },
+      errorCorrectionLevel: 'H'
+    });
+
+    // Store QR info in database
+    await database.createQRCode({
+      qr_id: qrId,
+      url,
+      status,
+      nft_url,
+      estimated_ready_date,
+      notes,
+      qr_data: qrCodeData
+    });
+
+    res.json({
+      success: true,
+      message: 'QR code generated successfully',
+      qrId,
+      qrRedirectUrl
+    });
+  } catch (error) {
+    console.error('Error generating QR:', error);
+    res.status(500).json({ success: false, message: 'Error generating QR' });
+  }
+});
+
+app.get('/api/admin/qrs', requireAuth, async (req, res) => {
+  try {
+    const qrs = await database.getAllQRs();
+    res.json({ success: true, qrs: qrs || [] });
+  } catch (error) {
+    console.error('Error fetching QRs:', error);
+    res.status(500).json({ success: false, message: 'Error fetching QRs' });
+  }
+});
+
+app.get('/api/admin/qr/details/:qrId', requireAuth, async (req, res) => {
+  try {
+    const { qrId } = req.params;
+    const qr = await database.getQRCodeById(qrId);
+    if (!qr) {
+      return res.status(404).json({ success: false, message: 'QR code not found' });
+    }
+    res.json({ success: true, qr });
+  } catch (error) {
+    console.error('Error getting QR details:', error);
+    res.status(500).json({ success: false, message: 'Error getting QR details' });
+  }
+});
+
+app.put('/api/admin/qr/update/:qrId', requireAuth, async (req, res) => {
+  try {
+    const { qrId } = req.params;
+    const updates = req.body;
+    const result = await database.updateQRCode(qrId, updates);
+    if (result.changes > 0) {
+      res.json({ success: true, message: 'QR code updated successfully' });
+    } else {
+      res.status(404).json({ success: false, message: 'QR code not found' });
+    }
+  } catch (error) {
+    console.error('Error updating QR:', error);
+    res.status(500).json({ success: false, message: 'Error updating QR' });
+  }
+});
+
+// Public QR smart redirect
+app.get('/qr/:qrId', async (req, res) => {
+  try {
+    const { qrId } = req.params;
+    const qr = await database.getQRCodeById(qrId);
+    if (!qr) {
+      return res.status(404).send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>QR Code Not Found</title>
+          <style>
+            body { font-family: Arial, sans-serif; text-align: center; padding: 2rem; background: #f5f7fa; }
+            .container { max-width: 500px; margin: 0 auto; background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+            .error { color: #dc3545; font-size: 1.2rem; margin-bottom: 1rem; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="error">❌ QR Code Not Found</div>
+            <p>The QR code you scanned is not valid or has been removed.</p>
+          </div>
+        </body>
+        </html>
+      `);
+    }
+
+    if (qr.status === 'ready') {
+      return res.redirect(qr.url);
+    }
+
+    if (qr.status === 'pending') {
+      return res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>GemSpot Coming Soon</title>
+          <style>
+            body { font-family: Arial, sans-serif; text-align: center; padding: 2rem; background: #f5f7fa; }
+            .container { max-width: 500px; margin: 0 auto; background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+            .title { font-size: 1.5rem; margin-bottom: 1rem; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="title">💎 Your GemSpot is not ready yet</div>
+            <p>Please check back later.</p>
+          </div>
+        </body>
+        </html>
+      `);
+    }
+
+    // For any other status, show generic message
+    return res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>GemSpot Unavailable</title>
+        <style>
+          body { font-family: Arial, sans-serif; text-align: center; padding: 2rem; background: #f5f7fa; }
+          .container { max-width: 500px; margin: 0 auto; background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+          .title { font-size: 1.5rem; margin-bottom: 1rem; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="title">💎 This GemSpot is not available</div>
+          <p>Status: ${qr.status}</p>
+        </div>
+      </body>
+      </html>
+    `);
+  } catch (error) {
+    console.error('Error handling QR redirect:', error);
+    res.status(500).send('Error handling QR code');
   }
 });
 

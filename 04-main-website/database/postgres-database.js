@@ -157,6 +157,21 @@ class PostgresDatabase {
                 )
             `);
 
+            // QR codes table (for QR generator)
+            await client.query(`
+                CREATE TABLE IF NOT EXISTS qr_codes (
+                    id SERIAL PRIMARY KEY,
+                    qr_id VARCHAR(50) UNIQUE NOT NULL,
+                    url TEXT NOT NULL,
+                    status VARCHAR(20) DEFAULT 'ready',
+                    nft_url TEXT,
+                    estimated_ready_date TIMESTAMP WITH TIME ZONE,
+                    notes TEXT,
+                    qr_data TEXT,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                )
+            `);
+
             // Locations table (for Code Generator / QR)
             await client.query(`
                 CREATE TABLE IF NOT EXISTS locations (
@@ -281,7 +296,7 @@ class PostgresDatabase {
         }
     }
 
-    // Reports - QR Codes
+    // Reports / Admin - QR Codes
     async getAllQRs() {
         try {
             if (!this.pool) {
@@ -291,7 +306,7 @@ class PostgresDatabase {
 
             const client = await this.pool.connect();
             const result = await client.query(`
-                SELECT id, url, status, nft_url, estimated_ready_date, notes, created_at
+                SELECT qr_id, url, status, nft_url, estimated_ready_date, notes, qr_data, created_at
                 FROM qr_codes 
                 ORDER BY created_at DESC
             `);
@@ -457,6 +472,53 @@ class PostgresDatabase {
                 message: 'Code deleted successfully',
                 deletedCode: checkResult.rows[0].full_code
             };
+        } finally {
+            client.release();
+        }
+    }
+
+    // QR codes admin helpers
+    async createQRCode({ qr_id, url, status, nft_url, estimated_ready_date, notes, qr_data }) {
+        if (!this.pool) throw new Error('Database not available');
+        const client = await this.pool.connect();
+        try {
+            const result = await client.query(`
+                INSERT INTO qr_codes (qr_id, url, status, nft_url, estimated_ready_date, notes, qr_data)
+                VALUES ($1, $2, $3, $4, $5, $6, $7)
+                RETURNING qr_id, created_at
+            `, [qr_id, url, status || 'ready', nft_url, estimated_ready_date, notes, qr_data]);
+            return result.rows[0];
+        } finally {
+            client.release();
+        }
+    }
+
+    async getQRCodeById(qrId) {
+        if (!this.pool) throw new Error('Database not available');
+        const client = await this.pool.connect();
+        try {
+            const result = await client.query(`
+                SELECT qr_id, url, status, nft_url, estimated_ready_date, notes, qr_data, created_at
+                FROM qr_codes 
+                WHERE qr_id = $1
+            `, [qrId]);
+            return result.rows[0] || null;
+        } finally {
+            client.release();
+        }
+    }
+
+    async updateQRCode(qrId, updates) {
+        if (!this.pool) throw new Error('Database not available');
+        const client = await this.pool.connect();
+        try {
+            const { url, status, nft_url, estimated_ready_date, notes } = updates;
+            const result = await client.query(`
+                UPDATE qr_codes
+                SET url = $1, status = $2, nft_url = $3, estimated_ready_date = $4, notes = $5
+                WHERE qr_id = $6
+            `, [url, status, nft_url, estimated_ready_date, notes, qrId]);
+            return { changes: result.rowCount };
         } finally {
             client.release();
         }
