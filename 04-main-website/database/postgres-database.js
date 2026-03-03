@@ -253,6 +253,51 @@ class PostgresDatabase {
         }
     }
 
+    // Reports - QR Codes
+    async getAllQRs() {
+        try {
+            if (!this.pool) {
+                console.error('⚠️ [REPORTS] Database not available, returning empty QR data');
+                return [];
+            }
+
+            const client = await this.pool.connect();
+            const result = await client.query(`
+                SELECT id, url, status, nft_url, estimated_ready_date, notes, created_at
+                FROM qr_codes 
+                ORDER BY created_at DESC
+            `);
+            client.release();
+            return result.rows;
+        } catch (error) {
+            console.error('Error getting QR codes for reports:', error);
+            return [];
+        }
+    }
+
+    // Reports - Generated Codes
+    async getAllGeneratedCodes() {
+        try {
+            if (!this.pool) {
+                console.error('⚠️ [REPORTS] Database not available, returning empty codes data');
+                return [];
+            }
+
+            const client = await this.pool.connect();
+            const result = await client.query(`
+                SELECT gc.*, l.country, l.region
+                FROM generated_codes gc
+                LEFT JOIN locations l ON gc.location_id = l.id
+                ORDER BY gc.generation_date DESC
+            `);
+            client.release();
+            return result.rows;
+        } catch (error) {
+            console.error('Error getting generated codes for reports:', error);
+            return [];
+        }
+    }
+
     async getProductById(id) {
         if (!this.pool) {
             console.error('❌ [DATABASE] Cannot get product by ID - no database pool');

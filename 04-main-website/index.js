@@ -1064,6 +1064,43 @@ app.get('/api/admin/products', requireAuth, async (req, res) => {
   }
 });
 
+// Admin Reports (migrated from 06-nft-reports)
+app.get('/api/admin/reports/qrs', requireAuth, async (req, res) => {
+  try {
+    console.log('🔍 [REPORTS] Loading QR codes...');
+    const qrs = await database.getAllQRs();
+    console.log('🔍 [REPORTS] QR codes loaded:', Array.isArray(qrs) ? qrs.length : 0);
+    res.json({ success: true, qrs: qrs || [] });
+  } catch (error) {
+    console.error('Error fetching QR reports:', error);
+    res.status(500).json({ success: false, message: 'Error fetching QR reports' });
+  }
+});
+
+app.get('/api/admin/reports/codes', requireAuth, async (req, res) => {
+  try {
+    console.log('🔍 [REPORTS] Loading generated codes...');
+    const codes = await database.getAllGeneratedCodes();
+    console.log('🔍 [REPORTS] Generated codes loaded:', Array.isArray(codes) ? codes.length : 0);
+    res.json({ success: true, codes: codes || [] });
+  } catch (error) {
+    console.error('Error fetching codes reports:', error);
+    res.status(500).json({ success: false, message: 'Error fetching codes reports' });
+  }
+});
+
+app.get('/api/admin/reports/products', requireAuth, async (req, res) => {
+  try {
+    console.log('🔍 [REPORTS] Loading products for reports...');
+    const products = await database.getAllProducts();
+    console.log('🔍 [REPORTS] Products loaded:', Array.isArray(products) ? products.length : 0);
+    res.json({ success: true, products: products || [] });
+  } catch (error) {
+    console.error('Error fetching products reports:', error);
+    res.status(500).json({ success: false, message: 'Error fetching products reports' });
+  }
+});
+
 app.post('/api/admin/products', requireAuth, upload.fields([
   { name: 'image1', maxCount: 1 },
   { name: 'image2', maxCount: 1 },
