@@ -1537,13 +1537,12 @@ app.put('/api/admin/products/:id', requireAuth, upload.fields([
           }
         }
       });
-    } else if (req.body.existing_images) {
-      // No new images - keep existing ones from form data
+    } else if (req.body.existing_images && req.body.existing_images !== '[]' && String(req.body.existing_images).trim().length > 2) {
+      // No new images - keep existing ones from form data (only if not empty to avoid huge base64 in body)
       console.log('🔄 [EDIT PRODUCT] Using existing images from form data');
-      console.log('🔄 [EDIT PRODUCT] Raw existing_images string:', req.body.existing_images);
       try {
         imageUrls = JSON.parse(req.body.existing_images);
-        console.log('🔄 [EDIT PRODUCT] Parsed existing_images:', imageUrls);
+        console.log('🔄 [EDIT PRODUCT] Parsed existing_images:', imageUrls?.length);
       } catch (parseError) {
         console.error('🔄 [EDIT PRODUCT] Error parsing existing_images:', parseError);
         imageUrls = [];
@@ -1556,9 +1555,9 @@ app.put('/api/admin/products/:id', requireAuth, upload.fields([
     
     console.log('🔄 [EDIT PRODUCT] Final imageUrls:', imageUrls);
 
-    // Process NFT image
-    let nftImageUrl = req.body.existing_nft_image;
-    console.log('🔄 [EDIT PRODUCT] Initial nftImageUrl from form:', nftImageUrl);
+    // Process NFT image (if form sent empty existing_nft_image, keep from DB to avoid huge base64)
+    let nftImageUrl = req.body.existing_nft_image && String(req.body.existing_nft_image).trim() ? req.body.existing_nft_image : null;
+    console.log('🔄 [EDIT PRODUCT] Initial nftImageUrl from form:', nftImageUrl ? '(present)' : '(empty)');
     
     if (req.files && req.files.nftImage && req.files.nftImage[0]) {
       // New NFT image uploaded - use it
