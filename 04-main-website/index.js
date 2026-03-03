@@ -1479,8 +1479,10 @@ app.put('/api/admin/products/:id', requireAuth, upload.fields([
   { name: 'nftImage', maxCount: 1 }
 ]), async (req, res) => {
   try {
-    const productId = req.params.id;
-    
+    const productId = String(req.params.id || '').trim();
+    if (!productId) {
+      return res.status(400).json({ success: false, message: 'Product ID required' });
+    }
     console.log('🔄 [EDIT PRODUCT] Starting product update for ID:', productId);
     console.log('🔄 [EDIT PRODUCT] Files received:', req.files ? Object.keys(req.files) : 'No files');
     console.log('🔄 [EDIT PRODUCT] Body data:', req.body);
@@ -1489,24 +1491,13 @@ app.put('/api/admin/products/:id', requireAuth, upload.fields([
     console.log('🔄 [EDIT PRODUCT] existing_nft_url:', req.body.existing_nft_url);
     console.log('🔄 [EDIT PRODUCT] nft_url from form:', req.body.nft_url);
     
-    // Get existing product data if needed (for preserving images and NFT data)
+    // Always get existing product on update so we can preserve images/NFT when form sends empty (avoids huge base64)
     let existingProduct = null;
-    const needsExistingData = (!req.files || !req.files.images) && !req.body.existing_images;
-    const needsExistingNft = (!req.files || !req.files.nftImage) && !req.body.existing_nft_image;
-    const needsExistingNftUrl = !req.body.nft_url && !req.body.existing_nft_url;
-    
-    console.log('🔄 [EDIT PRODUCT] needsExistingData:', needsExistingData);
-    console.log('🔄 [EDIT PRODUCT] needsExistingNft:', needsExistingNft);
-    console.log('🔄 [EDIT PRODUCT] needsExistingNftUrl:', needsExistingNftUrl);
-    
-    if (needsExistingData || needsExistingNft || needsExistingNftUrl) {
+    try {
       existingProduct = await database.getProductById(productId);
       console.log('🔄 [EDIT PRODUCT] Retrieved existing product:', existingProduct ? 'Found' : 'Not found');
-      if (existingProduct) {
-        console.log('🔄 [EDIT PRODUCT] Existing image_urls:', existingProduct.image_urls);
-        console.log('🔄 [EDIT PRODUCT] Existing nft_image_url:', existingProduct.nft_image_url);
-        console.log('🔄 [EDIT PRODUCT] Existing nft_url:', existingProduct.nft_url);
-      }
+    } catch (e) {
+      console.error('🔄 [EDIT PRODUCT] getProductById failed:', e.message);
     }
     
     // Process images in specific order
@@ -1593,21 +1584,23 @@ app.put('/api/admin/products/:id', requireAuth, upload.fields([
     console.log('🔄 [EDIT PRODUCT] Final nftUrl:', nftUrl);
 
     const productData = {
-      name: req.body.name,
-      description: req.body.description,
-      price: parseFloat(req.body.price),
-      image_urls: imageUrls,
-      nft_url: nftUrl,
-      nft_image_url: nftImageUrl,
-      status: req.body.status,
-      category: req.body.category,
-      dimensions: req.body.dimensions,
-      weight: req.body.weight,
-      crystal_type: req.body.crystal_type,
-      rarity: req.body.rarity,
-      energy_properties: req.body.energy_properties,
-      personality_target: req.body.personality_target,
-      stock_quantity: parseInt(req.body.stock_quantity),
+      name: req.body.name || existingProduct?.name || '',
+      description: req.body.description ?? existingProduct?.description ?? '',
+      price: Number(req.body.price) || 0,
+      image_urls: Array.isArray(imageUrls) ? imageUrls : (existingProduct?.image_urls || []),
+      nft_url: nftUrl ?? existingProduct?.nft_url ?? null,
+      nft_image_url: nftImageUrl ?? existingProduct?.nft_image_url ?? null,
+      status: req.body.status || existingProduct?.status || 'available',
+      category: req.body.category ?? existingProduct?.category ?? null,
+      dimensions: req.body.dimensions ?? existingProduct?.dimensions ?? null,
+      weight: req.body.weight ?? existingProduct?.weight ?? null,
+      crystal_type: req.body.crystal_type ?? existingProduct?.crystal_type ?? null,
+      rarity: req.body.rarity ?? existingProduct?.rarity ?? null,
+      energy_properties: req.body.energy_properties ?? existingProduct?.energy_properties ?? null,
+      personality_target: req.body.personality_target ?? existingProduct?.personality_target ?? null,
+      stock_quantity: (typeof req.body.stock_quantity !== 'undefined' && req.body.stock_quantity !== '' && !isNaN(parseInt(req.body.stock_quantity, 10)))
+        ? parseInt(req.body.stock_quantity, 10)
+        : (existingProduct?.stock_quantity ?? 1),
       is_featured: req.body.is_featured === 'true',
       is_archived: req.body.is_archived === 'true'
     };
