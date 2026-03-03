@@ -180,12 +180,12 @@ app.get('/admin', (req, res) => {
 });
 
 app.get('/admin/login', (req, res) => {
-  res.type('html');
+  res.set('Content-Type', 'text/html; charset=utf-16');
   res.sendFile(path.join(__dirname, 'admin-panel', 'login.html'));
 });
 
 app.get('/admin/dashboard', (req, res) => {
-  res.type('html');
+  res.set('Content-Type', 'text/html; charset=utf-16');
   res.sendFile(path.join(__dirname, 'admin-panel', 'dashboard.html'));
 });
 
