@@ -157,6 +157,34 @@ class PostgresDatabase {
                 )
             `);
 
+            // Locations table (for Code Generator / QR)
+            await client.query(`
+                CREATE TABLE IF NOT EXISTS locations (
+                    id SERIAL PRIMARY KEY,
+                    country VARCHAR(50) NOT NULL,
+                    region VARCHAR(100) NOT NULL,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                )
+            `);
+
+            // Generated codes table (Code Generator)
+            await client.query(`
+                CREATE TABLE IF NOT EXISTS generated_codes (
+                    id SERIAL PRIMARY KEY,
+                    full_code VARCHAR(50) UNIQUE NOT NULL,
+                    gemstone_names TEXT NOT NULL,
+                    gemstone_codes TEXT NOT NULL,
+                    location_id INTEGER NOT NULL,
+                    piece_number INTEGER NOT NULL,
+                    generation_date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    month INTEGER NOT NULL,
+                    year INTEGER NOT NULL,
+                    checksum VARCHAR(10) NOT NULL,
+                    notes TEXT,
+                    FOREIGN KEY (location_id) REFERENCES locations(id)
+                )
+            `);
+
             console.log('✅ Database tables initialized successfully');
         } catch (error) {
             console.error('❌ Error initializing database:', error);
@@ -295,6 +323,142 @@ class PostgresDatabase {
         } catch (error) {
             console.error('Error getting generated codes for reports:', error);
             return [];
+        }
+    }
+
+    // Code Generator / Locations
+    async getAllLocations() {
+        try {
+            if (!this.pool) {
+                console.error('⚠️ [LOCATIONS] Database not available, returning empty list');
+                return [];
+            }
+
+            const client = await this.pool.connect();
+            // Use DISTINCT to avoid duplicates even if the table has repeated rows
+            const result = await client.query(`
+                SELECT MIN(id) AS id, country, region, MIN(created_at) AS created_at
+                FROM locations
+                GROUP BY country, region
+                ORDER BY country, region
+            `);
+            client.release();
+            return result.rows;
+        } catch (error) {
+            console.error('❌ [DB ERROR] Error getting all locations:', error);
+            return [];
+        }
+    }
+
+    async addLocation(country, region) {
+        if (!this.pool) throw new Error('Database not available');
+        const client = await this.pool.connect();
+        try {
+            const result = await client.query(`
+                INSERT INTO locations (country, region)
+                VALUES ($1, $2)
+                RETURNING id, created_at
+            `, [country, region]);
+            return {
+                id: result.rows[0].id,
+                country,
+                region,
+                created_at: result.rows[0].created_at
+            };
+        } finally {
+            client.release();
+        }
+    }
+
+    async addGeneratedCode(codeData) {
+        if (!this.pool) throw new Error('Database not available');
+        const client = await this.pool.connect();
+        try {
+            const result = await client.query(`
+                INSERT INTO generated_codes (
+                    full_code, gemstone_names, gemstone_codes, location_id, 
+                    piece_number, month, year, checksum, notes
+                )
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                RETURNING id, generation_date
+            `, [
+                codeData.full_code,
+                codeData.gemstone_names,
+                codeData.gemstone_codes,
+                codeData.location_id,
+                codeData.piece_number,
+                codeData.month,
+                codeData.year,
+                codeData.checksum,
+                codeData.notes || ''
+            ]);
+            return {
+                id: result.rows[0].id,
+                generation_date: result.rows[0].generation_date,
+                ...codeData
+            };
+        } finally {
+            client.release();
+        }
+    }
+
+    async getNextCorrelative(gemstoneNames, month, year) {
+        if (!this.pool) throw new Error('Database not available');
+        const client = await this.pool.connect();
+        try {
+            const gemstoneNamesStr = JSON.stringify(gemstoneNames);
+            const result = await client.query(`
+                SELECT MAX(piece_number) as max_number
+                FROM generated_codes
+                WHERE gemstone_names = $1 AND month = $2 AND year = $3
+            `, [gemstoneNamesStr, month, year]);
+            return (result.rows[0].max_number || 0) + 1;
+        } finally {
+            client.release();
+        }
+    }
+
+    async searchGeneratedCodes(query) {
+        if (!this.pool) throw new Error('Database not available');
+        const client = await this.pool.connect();
+        try {
+            const result = await client.query(`
+                SELECT gc.*, l.country, l.region
+                FROM generated_codes gc
+                LEFT JOIN locations l ON gc.location_id = l.id
+                WHERE gc.full_code ILIKE $1 
+                   OR gc.gemstone_names ILIKE $1 
+                   OR gc.notes ILIKE $1
+                ORDER BY gc.generation_date DESC
+            `, [`%${query}%`]);
+            return result.rows;
+        } finally {
+            client.release();
+        }
+    }
+
+    async deleteGeneratedCode(codeId) {
+        if (!this.pool) throw new Error('Database not available');
+        const client = await this.pool.connect();
+        try {
+            const checkResult = await client.query(
+                'SELECT id, full_code FROM generated_codes WHERE id = $1',
+                [codeId]
+            );
+            if (checkResult.rows.length === 0) {
+                return { success: false, message: 'Code not found' };
+            }
+            await client.query(
+                'DELETE FROM generated_codes WHERE id = $1',
+                [codeId]
+            );
+            return {
+                success: true,
+                message: 'Code deleted successfully',
+                deletedCode: checkResult.rows[0].full_code
+            };
+        } finally {
+            client.release();
         }
     }
 

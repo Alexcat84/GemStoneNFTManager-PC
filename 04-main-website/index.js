@@ -1101,6 +1101,113 @@ app.get('/api/admin/reports/products', requireAuth, async (req, res) => {
   }
 });
 
+// Admin Code Generator / Locations (migrated from 05-nft-qr-generator)
+app.get('/api/admin/locations', requireAuth, async (req, res) => {
+  try {
+    const locations = await database.getAllLocations();
+    res.json({ success: true, locations: locations || [] });
+  } catch (error) {
+    console.error('Error getting locations:', error);
+    res.status(500).json({ success: false, message: 'Error getting locations' });
+  }
+});
+
+app.post('/api/admin/locations', requireAuth, async (req, res) => {
+  try {
+    const { country, region } = req.body;
+    if (!country || !region) {
+      return res.status(400).json({ success: false, message: 'country and region are required' });
+    }
+    const location = await database.addLocation(country, region);
+    res.json({ success: true, location });
+  } catch (error) {
+    console.error('Error adding location:', error);
+    res.status(500).json({ success: false, message: 'Error adding location' });
+  }
+});
+
+app.get('/api/admin/codes', requireAuth, async (req, res) => {
+  try {
+    const codes = await database.getAllGeneratedCodes();
+    res.json({ success: true, codes: codes || [] });
+  } catch (error) {
+    console.error('Error getting codes:', error);
+    res.status(500).json({ success: false, message: 'Error getting codes' });
+  }
+});
+
+app.post('/api/admin/codes/generate', requireAuth, async (req, res) => {
+  try {
+    const { gemstoneNames, locationId, month, year, notes } = req.body;
+    if (!Array.isArray(gemstoneNames) || !gemstoneNames.length || !locationId || !month || !year) {
+      return res.status(400).json({ success: false, message: 'gemstoneNames, locationId, month and year are required' });
+    }
+
+    // Get next correlative number
+    const pieceNumber = await database.getNextCorrelative(gemstoneNames, month, year);
+
+    // Use same code generator logic as in 05 (imported util)
+    const CodeGenerator = require('../05-nft-qr-generator/src/utils/code-generator');
+    const codeGenerator = new CodeGenerator();
+
+    const fullCode = codeGenerator.generateCode(gemstoneNames, month, year, pieceNumber);
+    const checksum = codeGenerator.generateChecksum(gemstoneNames.join(','), month, year, pieceNumber);
+    const gemstoneCodes = gemstoneNames.map(name => codeGenerator.getGemstoneCode(name));
+
+    const codeData = {
+      full_code: fullCode,
+      gemstone_names: JSON.stringify(gemstoneNames),
+      gemstone_codes: JSON.stringify(gemstoneCodes),
+      location_id: locationId,
+      piece_number: pieceNumber,
+      month,
+      year,
+      checksum,
+      notes: notes || ''
+    };
+
+    const saved = await database.addGeneratedCode(codeData);
+
+    res.json({
+      success: true,
+      message: 'Code generated successfully',
+      fullCode,
+      pieceNumber,
+      gemstoneNames,
+      ...saved
+    });
+  } catch (error) {
+    console.error('Error generating code:', error);
+    res.status(500).json({ success: false, message: 'Error generating code' });
+  }
+});
+
+app.get('/api/admin/codes/search', requireAuth, async (req, res) => {
+  try {
+    const { query } = req.query;
+    const codes = await database.searchGeneratedCodes(query || '');
+    res.json({ success: true, codes: codes || [] });
+  } catch (error) {
+    console.error('Error searching codes:', error);
+    res.status(500).json({ success: false, message: 'Error searching codes' });
+  }
+});
+
+app.delete('/api/admin/codes/:codeId', requireAuth, async (req, res) => {
+  try {
+    const { codeId } = req.params;
+    const result = await database.deleteGeneratedCode(codeId);
+    if (result.success) {
+      res.json(result);
+    } else {
+      res.status(404).json(result);
+    }
+  } catch (error) {
+    console.error('Error deleting code:', error);
+    res.status(500).json({ success: false, message: 'Error deleting code' });
+  }
+});
+
 app.post('/api/admin/products', requireAuth, upload.fields([
   { name: 'image1', maxCount: 1 },
   { name: 'image2', maxCount: 1 },
