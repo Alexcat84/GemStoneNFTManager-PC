@@ -98,25 +98,11 @@ class AdminAuth {
         return jwt.sign(payload, this.secretKey);
     }
 
+    // Align with pre-unification (05): verify only JWT (signature + exp). Do not require
+    // in-memory session, so auth works on serverless (Vercel) where each request may hit a different instance.
     verifyToken(token) {
         try {
-            const decoded = jwt.verify(token, this.secretKey);
-            
-            // Check if session exists and is not expired
-            const session = this.sessions.get(decoded.sessionId);
-            if (!session) {
-                console.log('Session not found for token');
-                return null;
-            }
-
-            // Check session timeout
-            if (Date.now() - session.loginTime > this.sessionTimeout) {
-                console.log('Session expired');
-                this.sessions.delete(decoded.sessionId);
-                return null;
-            }
-
-            return decoded;
+            return jwt.verify(token, this.secretKey);
         } catch (error) {
             console.log('Token verification failed:', error.message);
             return null;
