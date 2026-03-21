@@ -81,9 +81,13 @@ jspm_packages/
 ehthumbs.db
 Thumbs.db
 
-# IDE files
+# IDE / local tooling
+.cursor/
 .vscode/
 .idea/
+
+# Local deploy bump file (noise in PRs)
+force-deploy.txt
 *.swp
 *.swo
 *~

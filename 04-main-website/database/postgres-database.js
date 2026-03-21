@@ -8,12 +8,19 @@ class PostgresDatabase {
             return;
         }
         
-        console.log('🔍 [DATABASE] DATABASE_URL found:', process.env.DATABASE_URL.substring(0, 50) + '...');
+        const isProdLike = process.env.NODE_ENV === 'production' || process.env.VERCEL === '1';
+        if (isProdLike) {
+            console.log('🔍 [DATABASE] DATABASE_URL configured (credentials not logged)');
+        } else {
+            console.log('🔍 [DATABASE] DATABASE_URL found:', process.env.DATABASE_URL.substring(0, 50) + '...');
+        }
         
         try {
             // Parse PostgreSQL connection string manually (same as before when gallery worked)
             const connectionString = process.env.DATABASE_URL;
-            console.log('🔍 [DATABASE] Raw connection string:', connectionString.substring(0, 50) + '...');
+            if (!isProdLike) {
+                console.log('🔍 [DATABASE] Raw connection string:', connectionString.substring(0, 50) + '...');
+            }
             
             const match = connectionString.match(/^postgres(ql)?:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/([^?]+)(\?.*)?$/);
             
@@ -23,7 +30,11 @@ class PostgresDatabase {
             
             const [, , username, password, hostname, port, database] = match;
             
-            console.log('🔍 [DATABASE] Parsed components:', { hostname, port: parseInt(port), database, username, hasPassword: !!password });
+            if (isProdLike) {
+                console.log('🔍 [DATABASE] Parsed components:', { hostname, port: parseInt(port), database });
+            } else {
+                console.log('🔍 [DATABASE] Parsed components:', { hostname, port: parseInt(port), database, username, hasPassword: !!password });
+            }
             
             this.pool = new Pool({
                 host: hostname,

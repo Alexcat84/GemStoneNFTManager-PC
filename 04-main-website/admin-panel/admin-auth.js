@@ -4,24 +4,26 @@ const PostgresDatabase = require('../database/postgres-database');
 
 class AdminAuth {
     constructor() {
+        const isProd = process.env.NODE_ENV === 'production' || process.env.VERCEL === '1';
+        if (isProd && !process.env.JWT_SECRET) {
+            throw new Error('JWT_SECRET is required in production (set in Vercel / hosting env)');
+        }
         this.secretKey = process.env.JWT_SECRET || 'GemSpots2025!@#MainWebsite$%^&()+{}|:<>?[]\\;\',./~-=_+{}|:<>?[]\\;\',./~-=_';
         this.sessionTimeout = 30 * 60 * 1000; // 30 minutes
         this.sessions = new Map();
         this.database = new PostgresDatabase();
         
-        console.log('AdminAuth initialized with JWT_SECRET:', this.secretKey ? 'SET' : 'NOT SET');
+        console.log('AdminAuth initialized; JWT_SECRET:', process.env.JWT_SECRET ? 'from env' : 'using dev fallback only');
     }
 
     async login(username, password) {
         try {
-            console.log('🔐 Login attempt for user:', username);
-            console.log('🔐 Password provided:', password);
+            console.log('🔐 Login attempt for user:', username || '(empty)');
             
             const user = await this.database.getAdminByUsername(username);
             console.log('🔐 User found:', user ? 'YES' : 'NO');
             if (user) {
                 console.log('🔐 User details:', { id: user.id, username: user.username, role: user.role });
-                console.log('🔐 Stored hash:', user.password_hash);
             }
             
             if (!user) {
