@@ -4,8 +4,6 @@
 The main e-commerce website for GemStone NFT Manager, featuring a public product gallery, shopping cart functionality, and admin panel for product management.
 
 ## 🔒 Production & security
-See **`../docs/INFORME-AUDITORIA-PRODUCCION.md`** for the audit report, env checklist, and dangerous-route policy.
-
 **Required on Vercel / production:** `JWT_SECRET` (strong random), `DATABASE_URL`, Stripe keys as needed.  
 **Optional:** `CORS_ORIGIN` (comma-separated allowed origins).  
 **Emergency DB routes** (`/api/admin/fix-password`, `/api/admin/migrate-database`): only registered when `ENABLE_DANGEROUS_ADMIN_DB_ROUTES=true` **and** requests include header `X-Maintenance-Secret` matching `MAINTENANCE_SECRET` (≥16 chars).
