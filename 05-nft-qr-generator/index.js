@@ -1,3 +1,7 @@
+/**
+ * Legacy standalone QR + admin server. Canonical web + admin + Stripe: ../04-main-website.
+ * If this app is deployed publicly, keep QR management APIs authenticated (aligned with 04).
+ */
 const express = require('express'); // Updated v2
 const path = require('path');
 const fs = require('fs');
@@ -20,7 +24,12 @@ app.set('trust proxy', 1);
 app.use(helmet({
   contentSecurityPolicy: false
 }));
-app.use(cors());
+if (process.env.CORS_ORIGIN) {
+  const corsOrigins = process.env.CORS_ORIGIN.split(',').map((s) => s.trim()).filter(Boolean);
+  app.use(cors({ origin: corsOrigins.length ? corsOrigins : true, credentials: false }));
+} else {
+  app.use(cors());
+}
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'assets')));
@@ -144,8 +153,10 @@ app.get('/api/health', (req, res) => {
 const requireAuth = (req, res, next) => {
   const token = req.headers.authorization?.replace('Bearer ', '') || req.query.token;
   
-  console.log('Auth check - token:', token ? 'present' : 'missing');
-  console.log('Auth check - URL:', req.url);
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('Auth check - token:', token ? 'present' : 'missing');
+    console.log('Auth check - URL:', req.url);
+  }
   
   if (!token) {
     console.log('No token provided');
@@ -166,7 +177,9 @@ const requireAuth = (req, res, next) => {
     }
   }
   
-  console.log('Token valid for user:', decoded.username);
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('Token valid for user:', decoded.username);
+  }
   req.user = decoded;
   next();
 };
@@ -221,7 +234,7 @@ app.post('/api/change-password', requireAuth, async (req, res) => {
   }
 });
 
-app.post('/api/qr/generate', async (req, res) => {
+app.post('/api/qr/generate', requireServices, requireAuth, async (req, res) => {
   try {
     const { url, status = 'ready', nft_url = null, estimated_ready_date = null, notes = null } = req.body;
     
@@ -239,7 +252,7 @@ app.post('/api/qr/generate', async (req, res) => {
   }
 });
 
-app.get('/api/qrs', async (req, res) => {
+app.get('/api/qrs', requireServices, requireAuth, async (req, res) => {
   try {
     const qrs = await qrGenerator.getAllQRs();
     res.json({ success: true, qrs });
@@ -265,7 +278,7 @@ app.get('/api/qr/view/:qrId', async (req, res) => {
   }
 });
 
-app.put('/api/qr/update/:qrId', async (req, res) => {
+app.put('/api/qr/update/:qrId', requireServices, requireAuth, async (req, res) => {
   try {
     const { qrId } = req.params;
     const updates = req.body;
@@ -289,7 +302,7 @@ app.put('/api/qr/update/:qrId', async (req, res) => {
   }
 });
 
-app.get('/api/qr/details/:qrId', async (req, res) => {
+app.get('/api/qr/details/:qrId', requireServices, requireAuth, async (req, res) => {
   try {
     const { qrId } = req.params;
     const qr = await qrGenerator.getQRById(qrId);

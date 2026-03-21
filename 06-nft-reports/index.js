@@ -1,3 +1,4 @@
+/** Reports-only app. Canonical admin + reports live in ../04-main-website (/api/admin/reports/*). */
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
@@ -16,7 +17,12 @@ app.set('trust proxy', 1);
 app.use(helmet({
   contentSecurityPolicy: false
 }));
-app.use(cors());
+if (process.env.CORS_ORIGIN) {
+  const corsOrigins = process.env.CORS_ORIGIN.split(',').map((s) => s.trim()).filter(Boolean);
+  app.use(cors({ origin: corsOrigins.length ? corsOrigins : true, credentials: false }));
+} else {
+  app.use(cors());
+}
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'admin-panel')));
@@ -50,10 +56,10 @@ app.get('/', (req, res) => {
 const requireAuth = (req, res, next) => {
   const token = req.headers.authorization?.replace('Bearer ', '') || req.query.token;
   
-  console.log('Auth check - token:', token ? 'present' : 'missing');
-  console.log('Auth check - URL:', req.url);
-  console.log('Auth check - headers:', req.headers.authorization ? 'present' : 'missing');
-  console.log('Auth check - query:', req.query.token ? 'present' : 'missing');
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('Auth check - token:', token ? 'present' : 'missing');
+    console.log('Auth check - URL:', req.url);
+  }
   
   if (!token) {
     console.log('No token provided');
@@ -74,7 +80,9 @@ const requireAuth = (req, res, next) => {
     }
   }
   
-  console.log('Token valid for user:', decoded.username);
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('Token valid for user:', decoded.username);
+  }
   req.user = decoded;
   next();
 };

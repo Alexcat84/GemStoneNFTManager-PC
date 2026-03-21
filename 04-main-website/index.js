@@ -64,7 +64,12 @@ app.use(compression());
 app.use(helmet({
   contentSecurityPolicy: false
 }));
-app.use(cors());
+if (process.env.CORS_ORIGIN) {
+  const corsOrigins = process.env.CORS_ORIGIN.split(',').map((s) => s.trim()).filter(Boolean);
+  app.use(cors({ origin: corsOrigins.length ? corsOrigins : true, credentials: false }));
+} else {
+  app.use(cors());
+}
 // Stripe webhook needs raw body for signature verification (must be before express.json)
 app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), (req, res) => {
   if (!stripe || !process.env.STRIPE_WEBHOOK_SECRET) {
@@ -105,8 +110,8 @@ app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), (req,
   }
   res.sendStatus(200);
 });
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(express.json({ limit: '2mb' }));
+app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/admin-panel', express.static(path.join(__dirname, 'admin-panel')));
@@ -137,6 +142,14 @@ const limiter = rateLimit({
   trustProxy: true, // Trust Vercel's proxy
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: { success: false, message: 'Too many login attempts. Try again later.' },
+  standardHeaders: true,
+  trustProxy: true,
+  legacyHeaders: false,
 });
 app.use(limiter);
 
@@ -214,6 +227,30 @@ const requireAuth = (req, res, next) => {
   req.user = decoded;
   next();
 };
+
+/** Positive integer path/body IDs only (rejects NaN, decimals, negative). */
+function parsePositiveIntegerId(raw) {
+  if (raw === undefined || raw === null) return null;
+  const s = String(raw).trim();
+  if (!/^\d+$/.test(s)) return null;
+  const n = Number(s);
+  if (!Number.isSafeInteger(n) || n < 1) return null;
+  return n;
+}
+
+/** Only for emergency DB maintenance — requires ENABLE_DANGEROUS_ADMIN_DB_ROUTES=true and X-Maintenance-Secret header */
+function maintenanceSecretGate(req, res, next) {
+  const secret = process.env.MAINTENANCE_SECRET;
+  if (!secret || secret.length < 16) {
+    console.error('[SECURITY] MAINTENANCE_SECRET missing or shorter than 16 chars; dangerous routes blocked');
+    return res.status(503).json({ success: false, message: 'Service unavailable' });
+  }
+  const sent = req.get('x-maintenance-secret') || '';
+  if (sent !== secret) {
+    return res.status(403).json({ success: false, message: 'Forbidden' });
+  }
+  next();
+}
 
 // API Routes for GemSpots data
 app.get('/api/gemspots', async (req, res) => {
@@ -325,8 +362,8 @@ app.get('/api/gemspots', async (req, res) => {
   }
 });
 
-// Debug endpoint to check database status
-app.get('/api/debug/products', async (req, res) => {
+// Debug endpoint — admin only (was public; security hardening)
+app.get('/api/debug/products', requireAuth, async (req, res) => {
   try {
     console.log('🔍 [DEBUG] Checking database status...');
     
@@ -351,11 +388,9 @@ app.get('/api/debug/products', async (req, res) => {
     });
   } catch (error) {
     console.error('❌ [DEBUG] Error:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: error.message,
-      stack: error.stack 
-    });
+    const payload = { success: false, error: error.message };
+    if (process.env.NODE_ENV !== 'production') payload.stack = error.stack;
+    res.status(500).json(payload);
   }
 });
 
@@ -446,7 +481,10 @@ app.get('/api/gallery', async (req, res) => {
 // API endpoint to get a specific product by ID
 app.get('/api/gemspots/:id', async (req, res) => {
   try {
-    const productId = parseInt(req.params.id);
+    const productId = parsePositiveIntegerId(req.params.id);
+    if (productId == null) {
+      return res.status(400).json({ success: false, error: 'Invalid product id' });
+    }
     const products = await database.getAllProducts();
     const product = products.find(p => p.id === productId);
     
@@ -492,7 +530,7 @@ app.get('/api/gemspots/:id', async (req, res) => {
 });
 
 // Admin API Routes
-app.get('/api/admin/table-structure', async (req, res) => {
+app.get('/api/admin/table-structure', requireAuth, async (req, res) => {
     try {
         const client = await database.pool.connect();
         const result = await client.query(`
@@ -525,8 +563,13 @@ app.post('/api/stock/check', async (req, res) => {
                 message: 'Product ID and quantity are required' 
             });
         }
+        const pid = parsePositiveIntegerId(productId);
+        const qty = parsePositiveIntegerId(quantity);
+        if (pid == null || qty == null) {
+            return res.status(400).json({ success: false, message: 'Invalid product ID or quantity' });
+        }
 
-        const stockCheck = await stockManager.checkStock(productId, quantity);
+        const stockCheck = await stockManager.checkStock(pid, qty);
         res.json(stockCheck);
     } catch (error) {
         console.error('Error checking stock:', error);
@@ -547,9 +590,14 @@ app.post('/api/stock/reserve', async (req, res) => {
                 message: 'Session ID, product ID, and quantity are required' 
             });
         }
+        const pid = parsePositiveIntegerId(productId);
+        const qty = parsePositiveIntegerId(quantity);
+        if (pid == null || qty == null || typeof sessionId !== 'string' || sessionId.length > 200) {
+            return res.status(400).json({ success: false, message: 'Invalid session, product ID, or quantity' });
+        }
 
         // Check stock availability first
-        const stockCheck = await stockManager.checkStock(productId, quantity);
+        const stockCheck = await stockManager.checkStock(pid, qty);
         if (!stockCheck.available) {
             return res.status(400).json({
                 success: false,
@@ -559,12 +607,12 @@ app.post('/api/stock/reserve', async (req, res) => {
         }
 
         // Reserve stock
-        stockManager.reserveStock(sessionId, productId, quantity);
+        stockManager.reserveStock(sessionId, pid, qty);
         
         res.json({ 
             success: true, 
             message: 'Stock reserved successfully',
-            reservedQuantity: quantity
+            reservedQuantity: qty
         });
     } catch (error) {
         console.error('Error reserving stock:', error);
@@ -577,7 +625,7 @@ app.post('/api/stock/reserve', async (req, res) => {
 
 app.post('/api/stock/release', async (req, res) => {
     try {
-        const { sessionId, productId, quantity } = req.body;
+        const { sessionId, productId } = req.body;
         
         if (!sessionId || !productId) {
             return res.status(400).json({ 
@@ -585,9 +633,13 @@ app.post('/api/stock/release', async (req, res) => {
                 message: 'Session ID and product ID are required' 
             });
         }
+        const pid = parsePositiveIntegerId(productId);
+        if (pid == null || typeof sessionId !== 'string' || sessionId.length > 200) {
+            return res.status(400).json({ success: false, message: 'Invalid session or product ID' });
+        }
 
         // Release stock reservation
-        stockManager.releaseReservation(sessionId, productId);
+        stockManager.releaseReservation(sessionId, pid);
         
         res.json({ 
             success: true, 
@@ -621,7 +673,10 @@ app.get('/api/stock/status', async (req, res) => {
 // Product Variants API routes
 app.get('/api/products/:id/variants', async (req, res) => {
     try {
-        const productId = req.params.id;
+        const productId = parsePositiveIntegerId(req.params.id);
+        if (productId == null) {
+            return res.status(400).json({ success: false, error: 'Invalid product id' });
+        }
         const variants = await database.getProductVariants(productId);
         res.json({ success: true, variants });
     } catch (error) {
@@ -632,7 +687,10 @@ app.get('/api/products/:id/variants', async (req, res) => {
 
 app.get('/api/products/:id/variants/available', async (req, res) => {
     try {
-        const productId = req.params.id;
+        const productId = parsePositiveIntegerId(req.params.id);
+        if (productId == null) {
+            return res.status(400).json({ success: false, error: 'Invalid product id' });
+        }
         const variants = await database.getAvailableVariants(productId);
         res.json({ success: true, variants });
     } catch (error) {
@@ -643,7 +701,10 @@ app.get('/api/products/:id/variants/available', async (req, res) => {
 
 app.post('/api/admin/products/:id/variants', requireAuth, async (req, res) => {
     try {
-        const productId = req.params.id;
+        const productId = parsePositiveIntegerId(req.params.id);
+        if (productId == null) {
+            return res.status(400).json({ success: false, error: 'Invalid product id' });
+        }
         const variantData = req.body;
         
         const variant = await database.addProductVariant(productId, variantData);
@@ -656,7 +717,10 @@ app.post('/api/admin/products/:id/variants', requireAuth, async (req, res) => {
 
 app.put('/api/admin/variants/:variantId/status', requireAuth, async (req, res) => {
     try {
-        const variantId = req.params.variantId;
+        const variantId = parsePositiveIntegerId(req.params.variantId);
+        if (variantId == null) {
+            return res.status(400).json({ success: false, error: 'Invalid variant id' });
+        }
         const { status } = req.body;
         
         const variant = await database.updateVariantStatus(variantId, status);
@@ -669,7 +733,10 @@ app.put('/api/admin/variants/:variantId/status', requireAuth, async (req, res) =
 
 app.delete('/api/admin/variants/:variantId', requireAuth, async (req, res) => {
     try {
-        const variantId = req.params.variantId;
+        const variantId = parsePositiveIntegerId(req.params.variantId);
+        if (variantId == null) {
+            return res.status(400).json({ success: false, error: 'Invalid variant id' });
+        }
         
         const variant = await database.deleteProductVariant(variantId);
         res.json({ success: true, variant });
@@ -833,7 +900,7 @@ app.post('/api/checkout', async (req, res) => {
     }
 });
 
-app.post('/api/admin/login', async (req, res) => {
+app.post('/api/admin/login', loginLimiter, async (req, res) => {
   try {
     const { username, password } = req.body;
     const result = await adminAuth.login(username, password);
@@ -871,8 +938,8 @@ app.post('/api/admin/change-password', requireAuth, async (req, res) => {
   }
 });
 
-// Diagnostic endpoint
-app.get('/api/admin/diagnostic', async (req, res) => {
+// Diagnostic endpoint (authenticated — was public; security hardening)
+app.get('/api/admin/diagnostic', requireAuth, async (req, res) => {
   try {
     console.log('🔍 [DIAGNOSTIC] Starting database diagnostic...');
     
@@ -910,49 +977,36 @@ app.get('/api/admin/diagnostic', async (req, res) => {
     });
   } catch (error) {
     console.error('❌ [DIAGNOSTIC ERROR]:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: error.message,
-      stack: error.stack
-    });
+    const diagPayload = { success: false, error: error.message };
+    if (process.env.NODE_ENV !== 'production') {
+      diagPayload.stack = error.stack;
+    }
+    res.status(500).json(diagPayload);
   }
 });
 
-// Fix password endpoint
-app.post('/api/admin/fix-password', async (req, res) => {
-  try {
-    console.log('🔧 [FIX PASSWORD] Starting password fix...');
-    
-    const bcrypt = require('bcryptjs');
-    const correctHash = '$2a$10$KtGWhWtpuuskGKVkj9Lq6eJEVKcNLtCop11ofxZSi.3PVyHnv3i4u';
-    
-    // Update admin password in database
-    const client = await database.pool.connect();
-    const result = await client.query(
-      'UPDATE admin_users SET password_hash = $1 WHERE username = $2 RETURNING *',
-      [correctHash, 'admin']
-    );
-    
-    client.release();
-    
-    console.log('🔧 [FIX PASSWORD] Password updated successfully');
-    
-    res.json({
-      success: true,
-      message: 'Password updated successfully',
-      user: result.rows[0]
-    });
-  } catch (error) {
-    console.error('❌ [FIX PASSWORD ERROR]:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: error.message
-    });
-  }
-});
+// Emergency maintenance only — disabled unless ENABLE_DANGEROUS_ADMIN_DB_ROUTES=true + X-Maintenance-Secret (see docs/INFORME-AUDITORIA-PRODUCCION.md)
+if (process.env.ENABLE_DANGEROUS_ADMIN_DB_ROUTES === 'true') {
+  console.warn('[SECURITY] Dangerous admin DB routes ENABLED (fix-password, migrate-database). Use only in controlled environments.');
+  app.post('/api/admin/fix-password', maintenanceSecretGate, async (req, res) => {
+    try {
+      console.log('🔧 [FIX PASSWORD] Starting password fix...');
+      const correctHash = '$2a$10$KtGWhWtpuuskGKVkj9Lq6eJEVKcNLtCop11ofxZSi.3PVyHnv3i4u';
+      const client = await database.pool.connect();
+      await client.query(
+        'UPDATE admin_users SET password_hash = $1 WHERE username = $2 RETURNING id, username',
+        [correctHash, 'admin']
+      );
+      client.release();
+      console.log('🔧 [FIX PASSWORD] Password updated successfully');
+      res.json({ success: true, message: 'Password updated successfully' });
+    } catch (error) {
+      console.error('❌ [FIX PASSWORD ERROR]:', error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
 
-// Database migration endpoint
-app.post('/api/admin/migrate-database', async (req, res) => {
+  app.post('/api/admin/migrate-database', maintenanceSecretGate, async (req, res) => {
   try {
     console.log('🔄 [MIGRATION v2.0] Starting database migration...');
     
@@ -1022,13 +1076,14 @@ app.post('/api/admin/migrate-database', async (req, res) => {
     });
   } catch (error) {
     console.error('❌ [MIGRATION v2.0 ERROR]:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: error.message,
-      stack: error.stack
-    });
+    const payload = { success: false, error: error.message };
+    if (process.env.NODE_ENV !== 'production') {
+      payload.stack = error.stack;
+    }
+    res.status(500).json(payload);
   }
-});
+  });
+}
 
 app.get('/api/admin/products', requireAuth, async (req, res) => {
   try {

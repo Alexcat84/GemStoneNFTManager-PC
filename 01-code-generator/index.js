@@ -1,3 +1,7 @@
+/**
+ * Desktop Electron app (local SQLite). Not part of the public web stack.
+ * Web storefront + admin + payments: 04-main-website.
+ */
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const GemStoneCodeDatabase = require('./src/database/database.js');

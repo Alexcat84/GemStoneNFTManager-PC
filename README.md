@@ -15,10 +15,14 @@
 
 ## 🎯 Project Overview
 
-**GemStone NFT Manager** is a comprehensive monorepo project that manages premium crystal planters with NFT certificates. The project consists of two main applications:
+**GemStone NFT Manager** is a comprehensive monorepo project that manages premium crystal planters with NFT certificates.
 
-1. **Main Website** (`04-main-website`) - Public-facing e-commerce site
-2. **QR Generator** (`05-nft-qr-generator`) - Admin panel for NFT QR code generation
+**Canonical production web stack:** **`04-main-website`** (public site, Stripe, unified admin: products, QR, codes, reports, PostgreSQL). Deploy this for the live site.
+
+**Other packages:**
+1. **`01-code-generator`** — Desktop Electron app (local SQLite); standalone tooling, not the web API.
+2. **`05-nft-qr-generator`** — Legacy Express server (overlaps 04). Prefer 04 for new work; secure if deployed separately.
+3. **`06-nft-reports`** — Legacy reports-only Express app; reports are integrated in **04** under `/api/admin/reports/*`.
 
 ### Key Features
 - 🛒 E-commerce functionality with shopping cart
@@ -34,10 +38,11 @@
 ### Monorepo Structure
 ```
 GemStoneNFTManager-PC/
-├── 04-main-website/          # Main e-commerce website
-├── 05-nft-qr-generator/      # QR Generator admin panel
-├── vercel.json               # Vercel deployment configuration (deleted)
-└── README.md                 # This documentation
+├── 01-code-generator/        # Electron desktop (local DB)
+├── 04-main-website/          # PRIMARY: e-commerce + Stripe + unified admin API
+├── 05-nft-qr-generator/      # Legacy Express (QR/admin) — align with 04 or do not expose publicly unauthenticated
+├── 06-nft-reports/           # Legacy reports server — prefer 04 admin reports
+└── README.md
 ```
 
 ### Technology Stack
